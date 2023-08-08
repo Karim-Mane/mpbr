@@ -42,9 +42,19 @@ You can install the development version of {{ packagename }} from
 pak::pak("{{ gh_repo }}")
 ```
 
-## Example
+## Create the `SNPdata` object
+The functions in the {{ packagename }} require a **SNPdata** object. This can be generated with the `get_snpdata()` function.
 
-These examples illustrate some of the current functionalities
+```{r echo=TRUE, eval=FALSE}
+snpdata <- get_snpdata(
+  vcf_file = system.file("extdata", "file.vcf.gz", package = "mpbr"), 
+  meta_file = system.file("extdata", "metadata.RDS", package = "mpbr"), 
+  output_dir = "/path/to/output/dir", 
+  gaf = system.file("extdata", "Pf_gene_ontology.RDS", package = "mpbr"), 
+  gff = system.file("extdata", "PlasmoDB-56_Pfalciparum3D7.gff", 
+                    package = "mpbr")
+)
+```
 
 
 ## Development

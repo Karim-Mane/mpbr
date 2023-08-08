@@ -1,9 +1,9 @@
 #' Generate the SNPdata object
 #'
 #' This function generate the input data needed for whole genome SNP data genotyped from malaria parasite
-#' @param vcf.file the input VCF file (required)
-#' @param meta.file the metadata file (required)
-#' @param output.dir the path to the folder where to store the output files (optional)
+#' @param vcf_file the input VCF file (required)
+#' @param meta_file the metadata file (required)
+#' @param output_dir the path to the folder where to store the output files (optional)
 #' @param gaf the gene ontology annotation file (optional). If not provided, the default file obtained from https://plasmodb.org/plasmo/app/downloads/Current_Release/Pfalciparum3D7/gaf/ will be used
 #' @param gff the gene annotation file (optional). If not provided, the default file obtained from https://plasmodb.org/plasmo/app/downloads/Current_Release/Pfalciparum3D7/gff/ will be used
 #' @return an object of class SNPdata with 5 elements
@@ -15,16 +15,16 @@
 #'   \item index: an integer
 #'   }
 #' @details use the print(snpdata) function to print the created object
-#' @usage snpdata=get_snpdata(vcf.file = "file.vcf.gz", meta.file = "file.txt", output.dir = "/path/to/output/dir")
+#' @usage snpdata=get_snpdata(vcf_file = "file.vcf.gz", meta_file = "file.txt", output_dir = "/path/to/output/dir")
 #' @export
 
-get_snpdata = function(vcf.file=NULL, meta.file=NULL, output.dir=NULL, gaf=NULL, gff=NULL){
-    if(is.null(vcf.file)) stop(" Please provide an input VCF file")
-    if(!is.null(vcf.file) & !file.exists(vcf.file)) stop(vcf.file, " not found!")
-    if(is.null(meta.file)) stop(" Please provide a metadata file")
-    if(!is.null(meta.file) & !file.exists(meta.file)) stop(meta.file, " not found!")
-    if(is.null(output.dir)) output.dir = tempdir()
-    if(!is.null(output.dir) & !dir.exists(output.dir)) system(sprintf("mkdir -p %s",output.dir))
+get_snpdata = function(vcf_file=NULL, meta_file=NULL, output_dir=NULL, gaf=NULL, gff=NULL){
+    if(is.null(vcf_file)) stop(" Please provide an input VCF file")
+    if(!is.null(vcf_file) & !file.exists(vcf_file)) stop(vcf_file, " not found!")
+    if(is.null(meta_file)) stop(" Please provide a metadata file")
+    if(!is.null(meta_file) & !file.exists(meta_file)) stop(meta_file, " not found!")
+    if(is.null(output_dir)) output_dir = tempdir()
+    if(!is.null(output_dir) & !dir.exists(output_dir)) system(sprintf("mkdir -p %s",output_dir))
     if(!is.null(gaf)){
         if(file.exists(gaf)) go = fread(gaf, nThread = 4, sep="\t")
         else stop(gaf, " not found")
@@ -46,18 +46,18 @@ get_snpdata = function(vcf.file=NULL, meta.file=NULL, output.dir=NULL, gaf=NULL,
     }
 
     ## get the sample IDs
-    ids = paste0(output.dir,'/','SampleIDs.txt')
-    system(sprintf("bcftools query -l %s > %s", vcf.file, ids))
+    ids = paste0(output_dir,'/','SampleIDs.txt')
+    system(sprintf("bcftools query -l %s > %s", vcf_file, ids))
     sampleIDs = fread(ids, header = FALSE)
 
     ## extracting the good quality SNPs
-    # filtered = paste0(output.dir,'/','Filtered.vcf.gz')
-    # system(sprintf("bcftools view --threads 4 -i'N_ALT=1 && TYPE=\"%s\" && MQ>=%d && FORMAT/DP>=%d && FILTER=\"PASS\" && CDS && VQSLOD>=2' -o %s -Oz %s", variant, min.mq, min.dp, filtered, vcf.file))  #&& VQSLOD>=3
+    # filtered = paste0(output_dir,'/','Filtered.vcf.gz')
+    # system(sprintf("bcftools view --threads 4 -i'N_ALT=1 && TYPE=\"%s\" && MQ>=%d && FORMAT/DP>=%d && FILTER=\"PASS\" && CDS && VQSLOD>=2' -o %s -Oz %s", variant, min.mq, min.dp, filtered, vcf_file))  #&& VQSLOD>=3
 
     ## extracting the genotype data
-    genotypes = paste0(output.dir,'/','Genotypes.txt')
+    genotypes = paste0(output_dir,'/','Genotypes.txt')
     expression = '%CHROM\t%POS\t%REF\t%ALT\t%QUAL[\t%GT]\n'
-    system(sprintf("bcftools query -f'%s' %s > %s", expression, vcf.file, genotypes))
+    system(sprintf("bcftools query -f'%s' %s > %s", expression, vcf_file, genotypes))
     genotypeF = fread(genotypes, header = FALSE, nThread = 4)
     names(genotypeF) = c("Chrom","Pos","Ref","Alt","Qual",sampleIDs$V1)
 
@@ -70,14 +70,14 @@ get_snpdata = function(vcf.file=NULL, meta.file=NULL, output.dir=NULL, gaf=NULL,
     snps[snps=="0/1" | snps=="1/0"]="2"
     snps[snps=="./." | snps==".|."]=NA
     snps=apply(snps, 2, function(x) as.integer(x))
-    meta = add_metadata(sampleIDs,meta.file)
+    meta = add_metadata(sampleIDs,meta_file)
     meta$percentage.missing.sites = colSums(is.na(snps))/nrow(snps)
     details$percentage.missing.samples = rowSums(is.na(snps))/ncol(snps)
 
     genomic.coordinates = details %>% select(Chrom,Pos)
     details$gene = get_gene_annotation(genomic.coordinates, go, bed)
 
-    snp.table = list(meta, details, snps, vcf.file, index=0)
+    snp.table = list(meta, details, snps, vcf_file, index=0)
     names(snp.table) = c("meta","details","GT","vcf","index")
     class(snp.table)="SNPdata"
     snp.table
@@ -173,9 +173,9 @@ filter_snps_samples=function (snpdata, min.qual=10, max.missing.sites=0.2, max.m
                 }
             }
             f2c = x %>% select(Chrom, Pos)
-            output.dir=dirname(snpdata$vcf)
-            fwrite(f2c, paste0(output.dir,"/loci_to_be_retained.txt"), col.names = FALSE, row.names = FALSE, quote = FALSE, sep = "\t", nThread = 4)
-            snpdata$vcf = remove_snps_from_vcf(snpdata$vcf, "loci_to_be_retained.txt", output.dir, index = snpdata$index)
+            output_dir=dirname(snpdata$vcf)
+            fwrite(f2c, paste0(output_dir,"/loci_to_be_retained.txt"), col.names = FALSE, row.names = FALSE, quote = FALSE, sep = "\t", nThread = 4)
+            snpdata$vcf = remove_snps_from_vcf(snpdata$vcf, "loci_to_be_retained.txt", output_dir, index = snpdata$index)
         }else if(length(idx)==0){
             stop("No locus in VCF file has satisfied specified the QC metrics")
         }else if(length(idx)==nrow(snpdata$details)){
@@ -187,8 +187,8 @@ filter_snps_samples=function (snpdata, min.qual=10, max.missing.sites=0.2, max.m
             cat("the following samples will be removed:\n",paste(snpdata$meta$sample,collapse = "\n"))
             snpdata$meta = snpdata$meta[idx,]
             # x = x[,idx]
-            fwrite(snpdata$meta$sample, paste0(output.dir,"/samples_to_be_dropped.txt"), col.names = FALSE, row.names = FALSE, quote = FALSE, sep = "\t", nThread = 4)
-            snpdata$vcf = remove_samples_from_vcf(snpdata$vcf, "samples_to_be_dropped.txt", output.dir, index = snpdata$index)
+            fwrite(snpdata$meta$sample, paste0(output_dir,"/samples_to_be_dropped.txt"), col.names = FALSE, row.names = FALSE, quote = FALSE, sep = "\t", nThread = 4)
+            snpdata$vcf = remove_samples_from_vcf(snpdata$vcf, "samples_to_be_dropped.txt", output_dir, index = snpdata$index)
         }else if(length(idx)==0){
             stop("No sample in VCF file has satisfied the specified QC metrics")
         }else if(length(idx)==nrow(snpdata$meta)){
