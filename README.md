@@ -17,13 +17,17 @@ coverage](https://codecov.io/gh/%7B%7B%20gh_repo%20%7D%7D/branch/main/graph/badg
 [![lifecycle-concept](https://raw.githubusercontent.com/reconverse/reconverse.github.io/master/images/badge-concept.svg)](https://www.reconverse.org/lifecycle.html#concept)
 <!-- badges: end -->
 
-{{ packagename }} provides functions to ….
+{{ packagename }} provides functions to perform population genomics
+analyses using genome-wide Single Nucleotide Polymorphisms (SNPs) from
+the malaria parasite *Plasmodium falciparum*.
 
 <!-- This sentence is optional and can be removed -->
 
-{{ packagename }} is developed at the [CENTER\|similar](url) at the
-[UNIVERSITY\|similar](url) as part of the [Epiverse-TRACE
-program](https://data.org/initiatives/epiverse/).
+{{ packagename }} is developed at the [Medical Research Council, The
+Gambia Unit at London School of Hygiene and Tropical
+Medicine](https://www.lshtm.ac.uk/research/units/mrc-gambia) as part of
+the [Malaria Population Genomics
+(MPB)](https://data.org/initiatives/epiverse/) initiative.
 
 ## Installation
 
