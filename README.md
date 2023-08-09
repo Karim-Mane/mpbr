@@ -65,10 +65,10 @@ command below:
 
 ``` r
 # OPEN THE VIGNETTE WITHIN RSTUDIO
-vignette("readepi")
+vignette("mpbr")
 
 # OPEN THE VIGNETTE IN YOUR WEB BROWSER.
-browseVignettes("readepi")
+browseVignettes("mpbr")
 ```
 
 ## Development

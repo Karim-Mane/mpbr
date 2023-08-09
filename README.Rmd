@@ -63,10 +63,10 @@ The vignette of the {{ packagename }} contains detailed illustrations about the 
 
 ```{r "vignette", echo = TRUE, eval = FALSE}
 # OPEN THE VIGNETTE WITHIN RSTUDIO
-vignette("readepi")
+vignette("mpbr")
 
 # OPEN THE VIGNETTE IN YOUR WEB BROWSER.
-browseVignettes("readepi")
+browseVignettes("mpbr")
 ```
 
 ## Development
