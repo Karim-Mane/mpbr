@@ -7,13 +7,25 @@ Authors@R: c(
     person(given = "Alfred Amambua", family = "Ngwa", , email = "Alfred.Ngwa@lshtm.ac.uk", role = c("aut")),
     person(given = "David", family = "Jeffries", , email = "djeffries@mrc.gm", role = c("aut"))
   )
-Description: Your package description. It must end with a period (".") and
-    include relevant bibliographical references if applicable, using the 
-    following format: Author et al. (2023) <doi:10.5281/zenodo.6619350>.
+Description: provides functions to perform population genomics analyses using 
+    genome-wide Single Nucleotide Polymorphisms (SNPs) from the malaria 
+    parasite Plasmodium falciparum.
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.3
+biocViews:
+import:
+    data.table,
+    dplyr,
+    SeqArray,
+    moimix,
+    statip,
+    parallel,
+    isoRelate,
+    Rfast,
+    utils,
+    GenomicRanges
 Suggests: 
     knitr,
     rmarkdown,
