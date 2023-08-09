@@ -42,7 +42,9 @@ pak::pak("{{ gh_repo }}")
 ## Create the `SNPdata` object
 
 The functions in the {{ packagename }} require a **SNPdata** object.
-This can be generated with the `get_snpdata()` function.
+This can be generated with the `get_snpdata()` function.  
+The function’s arguments and returned object are described in the
+vignette and the function documentation.
 
 ``` r
 snpdata <- get_snpdata(
@@ -53,6 +55,20 @@ snpdata <- get_snpdata(
   gff = system.file("extdata", "PlasmoDB-56_Pfalciparum3D7.gff", 
                     package = "mpbr")
 )
+```
+
+## Package Vignettes
+
+The vignette of the {{ packagename }} contains detailed illustrations
+about the use of each function. This can be accessed by typing the
+command below:
+
+``` r
+# OPEN THE VIGNETTE WITHIN RSTUDIO
+vignette("readepi")
+
+# OPEN THE VIGNETTE IN YOUR WEB BROWSER.
+browseVignettes("readepi")
 ```
 
 ## Development
