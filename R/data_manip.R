@@ -1,93 +1,130 @@
-#' Generate the SNPdata object
+#' Create the `SNPdata` object
 #'
-#' This function generate the input data needed for whole genome SNP data genotyped from malaria parasite
+#' This function generate the input data needed for whole genome SNPs data 
+#' genotyped from malaria parasite
+#' 
 #' @param vcf_file the input VCF file (required)
 #' @param meta_file the metadata file (required)
-#' @param output_dir the path to the folder where to store the output files (optional)
-#' @param gaf the gene ontology annotation file (optional). If not provided, the default file obtained from https://plasmodb.org/plasmo/app/downloads/Current_Release/Pfalciparum3D7/gaf/ will be used
-#' @param gff the gene annotation file (optional). If not provided, the default file obtained from https://plasmodb.org/plasmo/app/downloads/Current_Release/Pfalciparum3D7/gff/ will be used
-#' @return an object of class SNPdata with 5 elements
+#' @param output_dir the path to the folder where the output files will
+#'    be stored (optional)
+#' @param gaf the gene ontology annotation file (optional). If not provided, the
+#'    default file obtained from the [PlasmoDB]( 
+#' https://plasmodb.org/plasmo/app/downloads/Current_Release/Pfalciparum3D7/gaf/)
+#'    will be used
+#' @param gff the gene annotation file (optional). If not provided, the default
+#'    file obtained from the [PlasmoDB](
+#' https://plasmodb.org/plasmo/app/downloads/Current_Release/Pfalciparum3D7/gff/)
+#'    will be used
+#' @param num_threads the number of threads to be used when reading in the data
+#'    from the VCF file. default is 4
+#'    
+#' @return an object of class `SNPdata` with 5 elements
 #' \enumerate{
-#'   \item meta: a data frame that contains the sample's metadata
-#'   \item details: a data frame with SNPs genomic coordinates, fraction of missing data per SNP and their correspondent gene names and descriptions
-#'   \item GT: an integer matrix with the genotype data. 0='reference allele', 1='alternate allele', 2='mixed allele', NA='missing allele'
-#'   \item vcf: the vcf file from which the data is generated
-#'   \item index: an integer
+#'   \item meta: a `data.frame` that contains the sample's metadata
+#'   \item details: a `data.frame` with SNPs genomic coordinates, the fraction 
+#'      of missing data per SNP and the names and descriptions of the gene on
+#'      which they are located 
+#'   \item GT: an integer `matrix` with the genotype data. 0='reference allele',
+#'      1='alternate allele', 2='mixed allele', NA='missing allele'
+#'   \item vcf: the full path to the VCF file from which the data is generated
+#'   \item index: an integer. this is used as some kind of label that can tell
+#'      the how many times the VCF files has been modified.
 #'   }
-#' @details use the print(snpdata) function to print the created object
-#' @usage snpdata=get_snpdata(vcf_file = "file.vcf.gz", meta_file = "file.txt", output_dir = "/path/to/output/dir")
+#'   
+#' @examples
+#' \dontrun{
+#'  snpdata <- get_snpdata(
+#'   vcf_file = "file.vcf.gz",
+#'   meta_file = "file.txt",
+#'   output_dir = system.file("extdata", package = "mpbr")
+#'  )
+#' }
 #' @export
+#' 
+get_snpdata = function(vcf_file = NULL, meta_file = NULL, output_dir = NULL, 
+                       gaf = NULL, gff = NULL, num_threads = 4) {
+  checkmate::assert_file_exists(vcf_file)
+  checkmate::assert_file_exists(meta_file)
+  checkmate::assert_directory_exists(output_dir)
+  checkmate::assert_character(gaf, any.missing = FALSE, len = 1, null.ok = TRUE)
+  
+  # import the GAF file file if provided by the user
+  # use the existing GAF file if the gaf argument is set to NULL
+  if (all(!is.null(gaf) && file.exists(gaf))) {
+      go <- data.table::fread(gaf, nThread = num_threads, sep="\t")
+  } else {
+      go <- data.table::fread(
+        system.file("extdata", "Pf_gene_ontology.txt", package = "mpbr"),
+        nThread = num_threads,
+        sep="\t"
+      )
+  }
+  
+  # if the path to the GFF file is provided by the user, convert it into BED
+  # format and import it.
+  # if not provided, use the predefined BED file
+  if (all(!is.null(gff) && file.exists(gff))) {
+    bed <- file.path(dirname(vcf_file), "file.bed")
+    system(sprintf("gff2bed < %s > %s", gff, bed))
+    bed <- data.table::fread(bed, nThread = num_threads, sep = "\t")
+  } else {
+    bed <- data.table::fread(
+      system.file("extdata", "file.bed", package = "mpbr"),
+      nThread = 4,
+      sep = "\t"
+    )
+  }
 
-get_snpdata = function(vcf_file=NULL, meta_file=NULL, output_dir=NULL, gaf=NULL, gff=NULL){
-    if(is.null(vcf_file)) stop(" Please provide an input VCF file")
-    if(!is.null(vcf_file) & !file.exists(vcf_file)) stop(vcf_file, " not found!")
-    if(is.null(meta_file)) stop(" Please provide a metadata file")
-    if(!is.null(meta_file) & !file.exists(meta_file)) stop(meta_file, " not found!")
-    if(is.null(output_dir)) output_dir = tempdir()
-    if(!is.null(output_dir) & !dir.exists(output_dir)) system(sprintf("mkdir -p %s",output_dir))
-    if(!is.null(gaf)){
-        if(file.exists(gaf)) go = fread(gaf, nThread = 4, sep="\t")
-        else stop(gaf, " not found")
-    }else{
-        gaf=system.file("extdata", "Pf_gene_ontology.txt", package="rSNPdata")
-        go = fread(gaf, nThread = 4, sep="\t")
-    }
-    if(!is.null(gff)){
-        if(file.exists(gff)){
-            bed = paste0(dirname(vcf),"/file.bed")
-            system(sprintf("gff2bed < %s > %s", gff, bed))
-            bed = fread(bed, nThread = 4, sep = "\t")
-        }else{
-            stop(gff, " not found")
-        }
-    }else{
-        gff=system.file("extdata", "file.bed", package="rSNPdata")
-        bed = fread(gff, nThread = 4, sep = "\t")
-    }
+  ## get the sample IDs
+  ids <- file.path(output_dir ,'sample_ids.txt')
+  system(sprintf("bcftools query -l %s > %s", vcf_file, ids))
+  sample_ids <- data.table::fread(ids, header = FALSE)
 
-    ## get the sample IDs
-    ids = paste0(output_dir,'/','SampleIDs.txt')
-    system(sprintf("bcftools query -l %s > %s", vcf_file, ids))
-    sampleIDs = fread(ids, header = FALSE)
+  ## extracting the genotype data
+  genotypes <- file.path(output_dir, 'Genotypes.txt')
+  expression <- '%CHROM\t%POS\t%REF\t%ALT\t%QUAL[\t%GT]\n'
+  system(sprintf("bcftools query -f'%s' %s > %s", 
+                 expression, 
+                 vcf_file, 
+                 genotypes))
+  genotype_f <- data.table::fread(genotypes, header = FALSE,
+                                  nThread = num_threads)
+  names(genotype_f) <- c("Chrom", "Pos", "Ref", "Alt", "Qual", sample_ids$V1)
 
-    ## extracting the good quality SNPs
-    # filtered = paste0(output_dir,'/','Filtered.vcf.gz')
-    # system(sprintf("bcftools view --threads 4 -i'N_ALT=1 && TYPE=\"%s\" && MQ>=%d && FORMAT/DP>=%d && FILTER=\"PASS\" && CDS && VQSLOD>=2' -o %s -Oz %s", variant, min.mq, min.dp, filtered, vcf_file))  #&& VQSLOD>=3
+  ## making the details and the meta tables
+  details <- genotype_f %>% dplyr::select(Chrom, Pos, Ref, Alt, Qual)
+  names(sample_ids) <- "sample"
+  snps <- as.matrix(subset(genotype_f, select = -c(1:5)))
+  snps[snps == "0/0"] <- "0"
+  snps[snps == "1/1"] <- "1"
+  snps[snps == "0/1" | snps == "1/0"] <- "2"
+  snps[snps == "./." | snps == ".|."] <- NA
+  snps <- apply(snps, 2, function(x) as.integer(x))
+  meta <- add_metadata(sample_ids, meta_file)
+  meta$percentage.missing.sites      <- colSums(is.na(snps)) / nrow(snps)
+  details$percentage.missing.samples <- rowSums(is.na(snps)) / ncol(snps)
+  
+  # adding the annotation data to the details table
+  genomic.coordinates <- details %>% dplyr::select(Chrom, Pos)
+  details$gene <- get_gene_annotation(genomic.coordinates, go, bed)
 
-    ## extracting the genotype data
-    genotypes = paste0(output_dir,'/','Genotypes.txt')
-    expression = '%CHROM\t%POS\t%REF\t%ALT\t%QUAL[\t%GT]\n'
-    system(sprintf("bcftools query -f'%s' %s > %s", expression, vcf_file, genotypes))
-    genotypeF = fread(genotypes, header = FALSE, nThread = 4)
-    names(genotypeF) = c("Chrom","Pos","Ref","Alt","Qual",sampleIDs$V1)
-
-    ## the tables
-    details = genotypeF %>% select(Chrom,Pos,Ref,Alt,Qual)
-    names(sampleIDs) = "sample"
-    snps = as.matrix(subset(genotypeF, select=-c(1:5)))
-    snps[snps=="0/0"]="0"
-    snps[snps=="1/1"]="1"
-    snps[snps=="0/1" | snps=="1/0"]="2"
-    snps[snps=="./." | snps==".|."]=NA
-    snps=apply(snps, 2, function(x) as.integer(x))
-    meta = add_metadata(sampleIDs,meta_file)
-    meta$percentage.missing.sites = colSums(is.na(snps))/nrow(snps)
-    details$percentage.missing.samples = rowSums(is.na(snps))/ncol(snps)
-
-    genomic.coordinates = details %>% select(Chrom,Pos)
-    details$gene = get_gene_annotation(genomic.coordinates, go, bed)
-
-    snp.table = list(meta, details, snps, vcf_file, index=0)
-    names(snp.table) = c("meta","details","GT","vcf","index")
-    class(snp.table)="SNPdata"
-    snp.table
+  # making the SNPdata class and return the corresponding object
+  snp_table <- list(
+    meta = meta,
+    details = details,
+    GT = snps,
+    vcf = vcf_file,
+    index = 0
+  )
+  class(snp_table) <- "SNPdata"
+  snp_table
 }
 
-add_metadata = function(sampleIDs, metadata){
+add_metadata = function(sample_ids, metadata){
     meta = fread(metadata, key = "sample")
-    setkey(sampleIDs, "sample")
+    setkey(sample_ids, "sample")
     samples=meta$sample
-    if(any(!(samples %in% sampleIDs$sample))){
+    if(any(!(samples %in% sample_ids$sample))){
         warning("Incomplete meta data - should include all samples")
     }
     meta=data.frame(sample=samples) %>% left_join(meta,by="sample")
