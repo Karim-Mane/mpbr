@@ -4,25 +4,36 @@
 \alias{compute_MAF}
 \title{Calculate minor allele frequency (MAF)}
 \usage{
-snpdata = compute_MAF(snpdata, include.het=FALSE, mat.name="GT")
+compute_MAF(snpdata, include_het = FALSE, mat_name = "GT")
 }
 \arguments{
-\item{snpdata}{a SNPdata object}
+\item{snpdata}{a \code{SNPdata} object}
 
-\item{include.het}{whether to account for the heterozygous allele or not. this is only used when mat.name="GT"}
+\item{include_het}{whether to account for the heterozygous allele or not.
+This is only used when \code{mat_name = "GT"}}
 
-\item{mat.name}{the name of the matrix to use. default is "GT"}
+\item{mat_name}{the name of the matrix to use. default is "GT"}
 }
 \value{
-a SNPdata object with 2 additional columns in the details data frame
+a \code{SNPdata} object with 2 additional columns in the \strong{details}
+table.
 \enumerate{
-\item MAF: {minor allele frequency of each snps
-\item MAF_allele: 1 if the alternate allele is the minor allele. 0 otherwise
+\item MAF: minor allele frequency of each SNPs
+\item MAF_allele: 1 if the alternate allele is the minor allele.
+0 otherwise
 }
 }
 \description{
-Uses the SNPdata object to calculate the MAF at every loci
+Uses the \code{SNPdata} object to calculate the MAF at every loci
 }
 \details{
-if include.het=FALSE, the mixed allele will not be considered in the MAF calculation
+if \code{include_het = FALSE}, the mixed allele will not be considered in
+the MAF calculation
+}
+\examples{
+ snpdata <- compute_MAF(
+ snpdata,
+ include_het = FALSE,
+ mat_name = "GT"
+ )
 }

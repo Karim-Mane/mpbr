@@ -105,8 +105,8 @@ get_snpdata = function(vcf_file = NULL, meta_file = NULL, output_dir = NULL,
   details$percentage.missing.samples <- rowSums(is.na(snps)) / ncol(snps)
   
   # adding the annotation data to the details table
-  genomic.coordinates <- details %>% dplyr::select(Chrom, Pos)
-  details$gene <- get_gene_annotation(genomic.coordinates, go, bed)
+  genomic_coordinates <- details %>% dplyr::select(Chrom, Pos)
+  details$gene <- get_gene_annotation(genomic_coordinates, go, bed)
 
   # making the SNPdata class and return the corresponding object
   snp_table <- list(
@@ -120,155 +120,333 @@ get_snpdata = function(vcf_file = NULL, meta_file = NULL, output_dir = NULL,
   snp_table
 }
 
-add_metadata = function(sample_ids, metadata){
-    meta = fread(metadata, key = "sample")
-    setkey(sample_ids, "sample")
-    samples=meta$sample
-    if(any(!(samples %in% sample_ids$sample))){
-        warning("Incomplete meta data - should include all samples")
+
+#' Build the sample metadata table
+#'
+#' @param sample_ids a `vector` of sample IDs. This should be in the same order
+#'    as they appear in the input VCF file.
+#' @param metadata the path to the sample metadata file
+#'
+#' @return an object of class `data.frame` that contains the sample metadata
+#' @keywords internal
+#'
+#' @examples
+add_metadata <- function(sample_ids, metadata) {
+    meta <- data.table::fread(metadata, key = "sample", nThread = 4)
+    samples <- meta$sample
+    
+    # check if there is any sample from the VCF file that is not present in the 
+    # provided sample metadata file
+    are_in_meta_file <- sample_ids$sample %in% samples
+    if (any(!are_in_meta_file)) {
+        warning(sprintf("Incomplete meta data - the following samples in the
+                        VCF file are not found in metadata file:%s %s",
+                        "\n",
+                        glue::glue_collapse(
+                          sample_ids$sample[!are_in_meta_file],
+                          sep = ", ")), 
+                call. = FALSE)
     }
-    meta=data.frame(sample=samples) %>% left_join(meta,by="sample")
+    
+    # check if there is any sample from the metadata file that is not found in
+    # the input VCF file
+    are_in_vcf_file <- samples %in% sample_ids$sample
+    if (any(!are_in_vcf_file)) {
+      warning(sprintf("The following samples are removed from metadata file as
+                      as they are not found in the VCF file: %s",
+                      glue::glue_collapse(samples[!are_in_vcf_file], 
+                                          sep = ", ")),
+              call. = FALSE)
+      meta <- meta[-(!are_in_vcf_file), ]
+    }
+    
+    # joining the samples IDs from the VCF file with the sample metadata
+    meta <- data.frame(sample = samples) %>% 
+      dplyr::left_join(meta, by = "sample")
+    
     meta
 }
 
-get_gene_annotation = function(genomic.coordinates, go, bed){
-    genes = as.character(mclapply(bed$V10, get_clean_name, mc.cores=4))
-    genes = as.character(mclapply(genes, rm.prf1, mc.cores=4))
-    genes = as.character(mclapply(genes, rm.prf2, mc.cores=4))
-    genes = as.character(mclapply(genes, rm.suf, mc.cores=4))
-    genes = data.table(genes)
-    genes = cbind(bed$V1, bed$V2, bed$V3, genes)
-    names(genes) = c("chrom","start","end","gene_id")
-    go = subset(go, select = c(2,10))
-    names(go) = c("gene_id","gene_name")
-    setkey(go,"gene_id")
-    setkey(genes, "gene_id")
+#' Add gene ontology and names annotation details to every SNPs in the table
+#' that contains their genomic coordinates
+#'
+#' @param genomic_coordinates the table with SNPs genomic coordinates
+#' @param go a `data.frame` with the gene ontology annotation details 
+#' @param bed a `data.frame` with the gene name annotation
+#' @param num_cores the number of cores to be used
+#'
+#' @return an object of type `data.frame` with the SNPs genomic coordinates and
+#'    their corresponding annotation details
+#' @keywords internal
+#'
+#' @examples
+get_gene_annotation <- function(genomic_coordinates, go, bed, num_cores = 4) {
+    genes <- as.character(parallel::mclapply(bed$V10, 
+                                             get_clean_name, 
+                                             mc.cores = num_cores))
+    genes <- as.character(parallel::mclapply(genes, rm.prf1, 
+                                             mc.cores = num_cores))
+    genes <- as.character(parallel::mclapply(genes, rm.prf2,
+                                             mc.cores = num_cores))
+    genes <- as.character(parallel::mclapply(genes, rm.suf,
+                                             mc.cores = num_cores))
+    genes <- data.table::data.table(genes)
+    genes <- cbind(bed$V1, bed$V2, bed$V3, genes)
+    names(genes) <- c("chrom", "start", "end", "gene_id")
+    go <- subset(go, select = c(2,10))
+    names(go) <- c("gene_id", "gene_name")
+    data.table::setkey(go, "gene_id")
+    data.table::setkey(genes, "gene_id")
 
-    test = genes %>% left_join(go)
-    test = distinct(test, chrom, start,end,gene_id,gene_name)
-    resultat = gene_annotation(test,genomic.coordinates)
-    resultat = gsub("NA:","",resultat)
+    test <- genes %>% dplyr::left_join(go)
+    test <- dplyr::distinct(test, chrom, start, end, gene_id, gene_name)
+    resultat <- gene_annotation(test, genomic_coordinates)
+    resultat <- gsub("NA:", "", resultat)
     resultat
 }
 
-get_clean_name = function(y){unlist(strsplit(unlist(strsplit(y,"ID="))[2],";"))[1]}
-rm.prf1 = function(x){as.character(gsub("exon_","",x))}
-rm.prf2 = function(x){as.character(gsub("utr_","",x))}
-rm.suf = function(x){as.character(unlist(strsplit(x,".",fixed = TRUE))[1])}
 
-gene_annotation = function(target_gtf,genomic.coordinates){
-    names(genomic.coordinates)=c("chrom","start")
-    genomic.coordinates$end = genomic.coordinates$start
-    #genomic.coordinates$index=1:nrow(genomic.coordinates)
-    subject = IRanges(target_gtf$start, target_gtf$end)
-    query = IRanges(genomic.coordinates$start, genomic.coordinates$end)
-    my.overlaps = data.table(as.matrix(findOverlaps(query, subject, type="within")))
-    my.overlaps$gene = target_gtf$gene_name[my.overlaps$subjectHits]
-    the.genes = my.overlaps[,paste(unique(gene), collapse = ":"), by=queryHits]
-    names(the.genes)[2]="gene"
-    genomic.coordinates$gene=NA
-    genomic.coordinates$gene[the.genes$queryHits]=the.genes$gene
-    return(genomic.coordinates$gene)
+#' clean gene names
+#'
+#' @param y the gene name
+#'
+#' @return a string with the cleaned gene name
+#' @keywords internal
+#'
+#' @examples
+get_clean_name <- function(y) {
+  unlist(strsplit(
+    unlist(strsplit(y,"ID=", fixed = TRUE))[2],
+    ";", fixed = TRUE))[1]
 }
 
-#' Print SNPdata
-#' @param snpdata SNPdata object
-#' @return NULL
-#' @usage  print(snpdata)
+#' remove the "exon_" prefix from character string
+#'
+#' @param x the input character string
+#'
+#' @return the input character string without the prefix "exon_"
+#' @keywords internal
+#'
+#' @examples
+rm.prf1 <- function(x) {
+  as.character(gsub("exon_", "", x, fixed = TRUE))
+}
+
+#' remove the "utr_" preffix from a character
+#'
+#' @param x the input character string
+#'
+#' @return the input character string without the preffix "utr_"
+#' @keywords internal
+#'
+#' @examples
+rm.prf2 <- function(x) {
+  as.character(gsub("utr_", "", x, fixed = TRUE))
+}
+
+#' split a character on '.'
+#'
+#' @param x the input character string
+#'
+#' @return a `vector` of `character` obtained after spliting the input character
+#'    based on '.'
+#' @keywords internal
+#'
+#' @examples
+rm.suf <- function(x) {
+  as.character(unlist(strsplit(x, ".", fixed = TRUE))[1])
+}
+
+#' Associate each SNPs to a gene name on which it belongs
+#'
+#' @param target_gtf a `data.frame` with the gene annotation
+#' @param genomic_coordinates a `data.frame` with the SNPs genomic coordinates
+#'
+#' @return a `vector` with gene annotation. This should be of the same length as
+#'    the number of SNPs. 
+#' @keywords internal
+#'
+#' @examples
+gene_annotation <- function (target_gtf, genomic_coordinates) {
+    names(genomic_coordinates) <- c("chrom", "start")
+    genomic_coordinates$end <- genomic_coordinates$start
+    subject <- GenomicRanges::IRanges(target_gtf$start, target_gtf$end)
+    query <- GenomicRanges::IRanges(genomic_coordinates$start, 
+                                    genomic_coordinates$end)
+    my_overlaps <- data.table::data.table(as.matrix(
+      GenomicRanges::findOverlaps(query, 
+                                  subject, 
+                                  type="within")))
+    my_overlaps$gene <- target_gtf$gene_name[my_overlaps$subjectHits]
+    the_genes <- my_overlaps[, paste(unique(gene), collapse = ":"), 
+                             by = queryHits]
+    names(the_genes)[2] <- "gene"
+    genomic_coordinates$gene <- NA
+    genomic_coordinates$gene[the_genes$queryHits] <- the_genes$gene
+    
+    return(genomic_coordinates$gene)
+}
+
+#' Print the `SNPdata` object
+#' 
+#' @param snpdata the `SNPdata` object
+#'
+#' @examples
+#' print(snpdata)
+#'   
 #' @export
-print.SNPdata=function(snpdata){
+print.SNPdata <- function(snpdata) {
     print(head(snpdata$meta))
     print(head(snpdata$details))
-    cat(sprintf("Data contains: %d samples for %d snp loci\n",dim(snpdata$GT)[2],dim(snpdata$GT)[1]))
-    cat(sprintf("Data is generated from: %s\n",snpdata$vcf))
+    message(sprintf("Data contains: %d samples for %d snp loci\n",
+                    dim(snpdata$GT)[2],
+                    dim(snpdata$GT)[1]))
+    message(sprintf("Data is generated from: %s\n",snpdata$vcf))
 }
 
-#' Filter loci and samples (requires bcftools and tabix to be installed)
+#' Filter loci and samples (requires **bcftools** and **tabix** to be installed)
 #'
-#' This function generate the input data needed for whole genome SNP data genotyped from malaria parasite
-#' @param snpdata a SNPdata object
-#' @param min.qual the minimum call quality score below which a loci will be discarded. default=10
-#' @param max.missing.sites the maximum fraction of missing sites above which a sample should be discarded. default=0.2
-#' @param max.missing.samples the maximum fraction of missing samples above which a loci should be discarded. default=0.2
-#' @param maf.cutoff the MAF cut-off. loci with a MAF < maf.cutoff will be discarded
+#' This function filters the SNPs and samples based on the specified conditions
+#' 
+#' @param snpdata a `SNPdata` object
+#' @param min_qual the minimum call quality score below which a loci will be 
+#'    discarded. default = 10
+#' @param max_missing_sites the maximum fraction of missing sites above which
+#'    a sample should be discarded. default = 0.2
+#' @param max_missing_samples the maximum fraction of missing samples above
+#'    which a loci should be discarded. default = 0.2
+#' @param maf_cutoff the MAF cut-off. loci with a MAF < maf_cutoff will be
+#'    discarded
+#'    
 #' @return a SNPdata object
-#' @usage snpdata = filter_snps_samples(snpdata, min.qual=10, max.missing.sites=0.2, max.missing.samples=0.2, maf.cutoff=0.01)
+#' @examples
+#'  snpdata <- filter_snps_samples(
+#'  snpdata, 
+#'  min_qual = 10, 
+#'  max_missing_sites = 0.2, 
+#'  max_missing_samples = 0.2, 
+#'  maf_cutoff=0.01
+#'  )
 #' @export
-filter_snps_samples=function (snpdata, min.qual=10, max.missing.sites=0.2, max.missing.samples=0.2, maf.cutoff=0.01){
-    x=snpdata$details
-    fields = c("GT","Phased","Phased_Imputed")
-    if (missing(min.qual) & missing(max.missing.sites) & missing(max.missing.samples))
+#' 
+filter_snps_samples <- function (snpdata, min_qual=10, 
+                                 max_missing_sites=0.2, max_missing_samples=0.2,
+                                 maf_cutoff=0.01) {
+    x <- snpdata$details
+    fields <- c("GT", "Phased", "Phased_Imputed")
+    if (all(missing(min_qual) &&
+            missing(max_missing_sites) &&
+            missing(max_missing_samples))) {
         return(snpdata)
-    else {
-        idx = which(x$Qual >= min.qual & x$percentage.missing.samples <= max.missing.samples & x$MAF >= maf.cutoff)
-        if(length(idx)>0 & length(idx)<nrow(snpdata$details)){
-            x = x[idx,]
-            snpdata$details = x
-            for(field in fields){
-                if(field %in% names(snpdata)){
-                    snpdata[[field]] = snpdata[[field]][idx,]
+    } else {
+        idx <- which(x$Qual >= min_qual & 
+                      x$percentage.missing.samples <= max_missing_samples & 
+                      x$MAF >= maf_cutoff)
+        if (all(length(idx) > 0 && length(idx) < nrow(snpdata$details))) {
+            x <- x[idx, ]
+            snpdata$details <- x
+            for (field in fields) {
+                if (field %in% names(snpdata)) {
+                    snpdata[[field]] <- snpdata[[field]][idx, ]
                 }
             }
-            f2c = x %>% select(Chrom, Pos)
-            output_dir=dirname(snpdata$vcf)
-            fwrite(f2c, paste0(output_dir,"/loci_to_be_retained.txt"), col.names = FALSE, row.names = FALSE, quote = FALSE, sep = "\t", nThread = 4)
-            snpdata$vcf = remove_snps_from_vcf(snpdata$vcf, "loci_to_be_retained.txt", output_dir, index = snpdata$index)
-        }else if(length(idx)==0){
+            f2c <- x %>% dplyr::select(Chrom, Pos)
+            output_dir <- dirname(snpdata$vcf)
+            data.table::fwrite(
+              f2c, 
+              file.path(output_dir, "loci_to_be_retained.txt"),
+              col.names = FALSE,
+              row.names = FALSE,
+              quote = FALSE,
+              sep = "\t",
+              nThread = 4)
+            snpdata$vcf <- remove_snps_from_vcf(
+              snpdata$vcf, "loci_to_be_retained.txt", 
+              output_dir, 
+              index = snpdata$index
+            )
+        } else if (length(idx) == 0) {
             stop("No locus in VCF file has satisfied specified the QC metrics")
-        }else if(length(idx)==nrow(snpdata$details)){
+        } else if (length(idx) == nrow(snpdata$details)) {
             message("all loci have satisfied the specified QC metrics")
         }
 
-        idx = which(snpdata$meta$percentage.missing.sites<=max.missing.sites)
-        if(length(idx)>0 & length(idx)<nrow(snpdata$meta)){
-            cat("the following samples will be removed:\n",paste(snpdata$meta$sample,collapse = "\n"))
-            snpdata$meta = snpdata$meta[idx,]
-            # x = x[,idx]
-            fwrite(snpdata$meta$sample, paste0(output_dir,"/samples_to_be_dropped.txt"), col.names = FALSE, row.names = FALSE, quote = FALSE, sep = "\t", nThread = 4)
-            snpdata$vcf = remove_samples_from_vcf(snpdata$vcf, "samples_to_be_dropped.txt", output_dir, index = snpdata$index)
-        }else if(length(idx)==0){
-            stop("No sample in VCF file has satisfied the specified QC metrics")
-        }else if(length(idx)==nrow(snpdata$meta)){
-            message("all samples have satisfied the specified QC metrics")
+        idx <- which(snpdata$meta$percentage.missing.sites <= max_missing_sites)
+        if (all(length(idx) > 0 & length(idx) < nrow(snpdata$meta))) {
+            message("the following samples will be removed:\n",
+                    paste(snpdata$meta$sample, collapse = "\n"))
+            snpdata$meta <- snpdata$meta[idx, ]
+            data.table::fwrite(
+              snpdata$meta$sample,
+              file.path(output_dir, "samples_to_be_dropped.txt"),
+              col.names = FALSE, row.names = FALSE,
+              quote = FALSE, sep = "\t", nThread = 4
+            )
+            snpdata$vcf <- remove_samples_from_vcf(
+              snpdata$vcf, 
+              "samples_to_be_dropped.txt",
+              output_dir,
+              index = snpdata$index
+            )
+        } else if (length(idx) == 0) {
+            stop("No sample in VCF file has satisfied the specified QC metrics.")
+        } else if (length(idx) == nrow(snpdata$meta)) {
+            message("All samples have satisfied the specified QC metrics.")
         }
     }
 
-    snpdata$index=snpdata$index+1
+    snpdata$index <- snpdata$index + 1
     snpdata
 }
 
 #' Calculate minor allele frequency (MAF)
 #'
-#' Uses the SNPdata object to calculate the MAF at every loci
-#' @param snpdata a SNPdata object
-#' @param include.het whether to account for the heterozygous allele or not. this is only used when mat.name="GT"
-#' @param mat.name the name of the matrix to use. default is "GT"
-#' @return a SNPdata object with 2 additional columns in the details data frame
+#' Uses the `SNPdata` object to calculate the MAF at every loci
+#' 
+#' @param snpdata a `SNPdata` object
+#' @param include_het whether to account for the heterozygous allele or not.
+#'    This is only used when `mat_name = "GT"`
+#' @param mat_name the name of the matrix to use. default is "GT"
+#' 
+#' @return a `SNPdata` object with 2 additional columns in the **details**
+#'    table.
 #' \enumerate{
-#'   \item MAF: {minor allele frequency of each snps
-#'   \item MAF_allele: 1 if the alternate allele is the minor allele. 0 otherwise
+#'   \item MAF: minor allele frequency of each SNPs
+#'   \item MAF_allele: 1 if the alternate allele is the minor allele.
+#'         0 otherwise
 #' }
-#' @details if include.het=FALSE, the mixed allele will not be considered in the MAF calculation
-#' @usage snpdata = compute_MAF(snpdata, include.het=FALSE, mat.name="GT")
+#' 
+#' @details if `include_het = FALSE`, the mixed allele will not be considered in
+#'    the MAF calculation
+#'    
+#' @examples
+#'  snpdata <- compute_MAF(
+#'  snpdata,
+#'  include_het = FALSE,
+#'  mat_name = "GT"
+#'  )
 #' @export
-compute_MAF = function(snpdata, include.het=FALSE, mat.name="GT"){
-    x = snpdata[[mat.name]]
-    ref = rowSums(x==0, na.rm = TRUE)
-    alt = rowSums(x==1, na.rm = TRUE)
-    het = rowSums(x==2, na.rm = TRUE)
-    if(!include.het){
-        res = apply(cbind(ref,alt), 1, getMaf)
-    }else{
-        res = apply(cbind(ref,alt,het), 1, getMaf)
+#' 
+compute_MAF <- function(snpdata, include_het = FALSE, mat_name = "GT") {
+    x   <- snpdata[[mat_name]]
+    ref <- rowSums(x == 0, na.rm = TRUE)
+    alt <- rowSums(x == 1, na.rm = TRUE)
+    het <- rowSums(x == 2, na.rm = TRUE)
+    tmp_mat <- ifelse(!include_het, cbind(ref, alt), cbind(ref, alt, het))
+    res <- apply(tmp_mat, 1, getMaf)
+    if (!("MAF" %in% names(snpdata$details))) {
+        snpdata$details$MAF <- as.numeric(res[1, ])
+        snpdata$details$MAF_allele <- as.factor(as.character(
+          as.numeric(round(res[2, ]))))
+        levels(snpdata$details$MAF_allele) <- dplyr::recode_factor(
+          snpdata$details$MAF_allele, 
+          REF = "0", ALT = "1", HET = "2", REF_ALT = "3", REF_ALT_HET = "4"
+        )
+    } else {
+        new.maf <- paste0("MAF_", mat_name)
+        snpdata$details[[new.maf]] <- as.numeric(res[1, ])
     }
-    if(!("MAF" %in% names(snpdata$details))){
-        snpdata$details$MAF=as.numeric(res[1,])
-        snpdata$details$MAF_allele = as.factor(as.character(as.numeric(round(res[2,]))))
-        levels(snpdata$details$MAF_allele) = dplyr::recode_factor(snpdata$details$MAF_allele, REF="0", ALT="1", HET="2", REF_ALT="3",REF_ALT_HET="4")
-    }else{
-        new.maf = paste0("MAF_",mat.name)
-        snpdata$details[[new.maf]] = as.numeric(res[1,])
-    }
+    
     snpdata
 }
 
@@ -307,6 +485,7 @@ getMaf = function(mat){
             allele = 4
         }
     }
+  
     return(c(maf, allele))
 }
 
@@ -370,7 +549,7 @@ phase_mixed_genotypes = function(snpdata, nsim=100){
         mat = apply(tmp.snpdata$GT, 1, phaseData, depth=depth)
         tmp.snpdata[["Phased"]]=t(mat)
         saveRDS(t(mat), paste0(path,"/sim",i,".RDS"))
-        res.snpdata = compute_MAF(tmp.snpdata, include.het=FALSE, mat.name="Phased")
+        res.snpdata = compute_MAF(tmp.snpdata, include_het=FALSE, mat_name="Phased")
         correlations[i] = cor(res.snpdata$details[["MAF_Phased"]], res.snpdata$details[["MAF"]])
         setTxtProgressBar(pb, i)
     }
@@ -449,7 +628,7 @@ impute_missing_genotypes = function(snpdata, genotype="Phased", nsim=100){
         mat = apply(tmp.snpdata[[field]], 1, impute)
         tmp.snpdata[["Imputed"]]=t(mat)
         saveRDS(t(mat), paste0(path,"/sim",i,".RDS"))
-        res.snpdata = compute_MAF(tmp.snpdata, include.het=FALSE, mat.name="Imputed")
+        res.snpdata = compute_MAF(tmp.snpdata, include_het=FALSE, mat_name="Imputed")
         correlations[i] = cor(res.snpdata$details[["MAF_Imputed"]], res.snpdata$details[["MAF"]])
         setTxtProgressBar(pb, i)
     }

@@ -2,13 +2,17 @@
 % Please edit documentation in R/data_manip.R
 \name{print.SNPdata}
 \alias{print.SNPdata}
-\title{Print SNPdata}
+\title{Print the \code{SNPdata} object}
 \usage{
-print(snpdata)
+\method{print}{SNPdata}(snpdata)
 }
 \arguments{
-\item{snpdata}{SNPdata object}
+\item{snpdata}{the \code{SNPdata} object}
 }
 \description{
-Print SNPdata
+Print the \code{SNPdata} object
+}
+\examples{
+print(snpdata)
+  
 }

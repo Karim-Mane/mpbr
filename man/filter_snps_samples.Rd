@@ -2,24 +2,43 @@
 % Please edit documentation in R/data_manip.R
 \name{filter_snps_samples}
 \alias{filter_snps_samples}
-\title{Filter loci and samples (requires bcftools and tabix to be installed)}
+\title{Filter loci and samples (requires \strong{bcftools} and \strong{tabix} to be installed)}
 \usage{
-snpdata = filter_snps_samples(snpdata, min.qual=10, max.missing.sites=0.2, max.missing.samples=0.2, maf.cutoff=0.01)
+filter_snps_samples(
+  snpdata,
+  min_qual = 10,
+  max_missing_sites = 0.2,
+  max_missing_samples = 0.2,
+  maf_cutoff = 0.01
+)
 }
 \arguments{
-\item{snpdata}{a SNPdata object}
+\item{snpdata}{a \code{SNPdata} object}
 
-\item{min.qual}{the minimum call quality score below which a loci will be discarded. default=10}
+\item{min_qual}{the minimum call quality score below which a loci will be
+discarded. default = 10}
 
-\item{max.missing.sites}{the maximum fraction of missing sites above which a sample should be discarded. default=0.2}
+\item{max_missing_sites}{the maximum fraction of missing sites above which
+a sample should be discarded. default = 0.2}
 
-\item{max.missing.samples}{the maximum fraction of missing samples above which a loci should be discarded. default=0.2}
+\item{max_missing_samples}{the maximum fraction of missing samples above
+which a loci should be discarded. default = 0.2}
 
-\item{maf.cutoff}{the MAF cut-off. loci with a MAF < maf.cutoff will be discarded}
+\item{maf_cutoff}{the MAF cut-off. loci with a MAF < maf_cutoff will be
+discarded}
 }
 \value{
 a SNPdata object
 }
 \description{
-This function generate the input data needed for whole genome SNP data genotyped from malaria parasite
+This function filters the SNPs and samples based on the specified conditions
+}
+\examples{
+ snpdata <- filter_snps_samples(
+ snpdata, 
+ min_qual = 10, 
+ max_missing_sites = 0.2, 
+ max_missing_samples = 0.2, 
+ maf_cutoff=0.01
+ )
 }
