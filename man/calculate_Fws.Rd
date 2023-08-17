@@ -2,20 +2,25 @@
 % Please edit documentation in R/data_manip.R
 \name{calculate_Fws}
 \alias{calculate_Fws}
-\title{Calculate the complexity of infection in every sample (Fws)}
+\title{Calculate the complexity of the infection (COI) in every sample}
 \usage{
-snpdata =  calculate_Fws(snpdata)
+calculate_Fws(snpdata)
 }
 \arguments{
-\item{snpdata}{a SNPdata object}
+\item{snpdata}{a \code{SNPdata} object}
 }
 \value{
-a SNPdata object with an additional column in the meta table
+a \code{SNPdata} object with 2 additional columns in the meta table
 \enumerate{
 \item Fws: within host genetic diversity value
 \item COI: the complexity of infection: 1 for Fws>0.95, 2 for Fws<=0.95
 }
 }
 \description{
-Fws is the within host genetic diversity
+The COI is estimated here through the within host genetic diversity (Fws).
+using the {moimix} R package.
+}
+\examples{
+ snpdata <- calculate_Fws(snpdata)
+ 
 }

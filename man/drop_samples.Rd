@@ -2,18 +2,22 @@
 % Please edit documentation in R/data_manip.R
 \name{drop_samples}
 \alias{drop_samples}
-\title{Drop samples}
+\title{Drop a specific set of samples from the \code{SNPdata} object}
 \usage{
-snpdata = drop_samples(snpdata, samples.to.be.dropped)
+drop_samples(snpdata, samples_to_be_dropped)
 }
 \arguments{
-\item{snpdata}{a SNPdata object}
+\item{snpdata}{a \code{SNPdata} object}
 
-\item{samples.to.be.dropped}{a vector of samples to be dropped}
+\item{samples_to_be_dropped}{a vector of samples to be dropped}
 }
 \value{
-a SNPdata object where the specified samples have been removed
+a \code{SNPdata} object where the specified samples have been removed
 }
 \description{
-remove a set of samples from the SNPdata object
+Drop a specific set of samples from the \code{SNPdata} object
+}
+\examples{
+ snpdata <- drop_samples(snpdata, samples_to_be_dropped)
+ 
 }

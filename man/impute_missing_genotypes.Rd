@@ -4,21 +4,37 @@
 \alias{impute_missing_genotypes}
 \title{Impute missing genotypes}
 \usage{
-snpdata = impute_missing_genotypes(snpdata)
+impute_missing_genotypes(snpdata, genotype = "Phased", nsim = 100)
 }
 \arguments{
-\item{snpdata}{a SNPdata object}
+\item{snpdata}{a \code{SNPdata} object}
 
-\item{genotype}{the genotype table from which the missing data will be imputed}
+\item{genotype}{the genotype table from which the missing data will
+be imputed. This can be either the raw genotype matrix (\code{GT}) or the
+phased genotype matrix (\code{Phased})}
 
-\item{nsim}{an integer. the number of simulations}
+\item{nsim}{an integer that represents the number of simulations}
 }
 \value{
-a SNPdata object with an additional table named as "Phased_Imputed"
+a \code{SNPdata} object with an additional table named as:
+"Phased_Imputed" if the phased data was used for imputation or "Imputed"
+if the imputation was done on the raw genotypes.
 }
 \description{
-missing genotype imputation based on the MAF at any given locus. Imputation will be done nsim times and imputed data with highest correlation between MAF from raw data and MAF from imputed data will be retained
+Missing genotype imputation is performed based on the MAF at any given locus.
+Imputation will be done \code{nsim} times and imputed data with highest
+correlation between MAF from raw data and MAF from imputed data will be
+retained
 }
 \details{
-when both alleles are not supported by any read or the total number of reads supporting both alleles at a given site is < 5, the genotype will be phased based on a bernouli distribition using the MAF as a parameter. Similarly, when the total number of reads is > 5 and the number of reads supporting one of the allele is not 2 times the number of the other allele, the genotype is phased using a bernouli distribution
+When both alleles are not supported by any read or the total number
+of reads supporting both alleles at a given site is < 5, the genotype will
+be phased based on a Bernoulli distribution using the MAF as a parameter.
+Similarly, when the total number of reads is > 5 and the number of reads
+supporting one of the allele is not 2 times the number of the other
+allele, the genotype is phased using a Bernoulli distribution.
+}
+\examples{
+ snpdata <- impute_missing_genotypes(snpdata)
+ 
 }

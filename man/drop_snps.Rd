@@ -2,14 +2,20 @@
 % Please edit documentation in R/data_manip.R
 \name{drop_snps}
 \alias{drop_snps}
-\title{Drop set a SNPs}
+\title{Drop a of set SNPs from a \code{SNPdata} object}
 \usage{
-snpdata = drop_snps(snpdata, snp.to.be.dropped=NA, chrom="Pf3D7_05_v3", start=100, end=500)
+drop_snps(
+  snpdata,
+  snp_to_be_dropped = NULL,
+  chrom = NULL,
+  start = NULL,
+  end = NULL
+)
 }
 \arguments{
-\item{snpdata}{a SNPdata object}
+\item{snpdata}{a \code{SNPdata} object}
 
-\item{snp.to.be.dropped}{a data frame with 2 columns "Chrom" and "Pos"}
+\item{snp_to_be_dropped}{a \code{data.frame} with 2 columns" "Chrom" and "Pos"}
 
 \item{chrom}{the chromosome from which loci should be dropped}
 
@@ -18,11 +24,19 @@ snpdata = drop_snps(snpdata, snp.to.be.dropped=NA, chrom="Pf3D7_05_v3", start=10
 \item{end}{the end position of the region to be discarded}
 }
 \value{
-a SNPdata object where the specified SNPs have been removed
+a \code{SNPdata} object where the specified SNPs have been removed
 }
 \description{
-remove a set of SNPs from the SNPdata object
+Drop a of set SNPs from a \code{SNPdata} object
 }
 \details{
-when snp.to.be.dropped is not set to NA (i.e. the genomic coordinates of snps to be removed are in a data frame), then the rest of the arguments can be ignored or set to NA (chrom=NA, start=NA, end=NA)
+when snp_to_be_dropped is not set to NA (i.e. the genomic coordinates of snps to be removed are in a data frame), then the rest of the arguments can be ignored or set to NA (chrom=NA, start=NA, end=NA)
+}
+\examples{
+ snpdata <- drop_snps(snpdata,
+ snp_to_be_dropped = NULL,
+ chrom = "Pf3D7_05_v3", 
+ start = 100, 
+ end = 500
+ )
 }
