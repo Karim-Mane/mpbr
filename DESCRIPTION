@@ -2,38 +2,29 @@ Package: mpbr
 Title: Population Genomics analysis for Plasmodium falciparum
 Version: 0.0.1
 Authors@R: c(
-    person(given = "Karim", family = "Mané", , email = "karimanee@outlook.com", role = c("aut", "cre"),
-          comment = c(ORCID = "https://orcid.org/0000-0002-9892-2999")),
-    person(given = "Alfred Amambua", family = "Ngwa", , email = "Alfred.Ngwa@lshtm.ac.uk", role = c("aut")),
-    person(given = "David", family = "Jeffries", , email = "djeffries@mrc.gm", role = c("aut"))
+    person("Karim", "Mané", , "karimanee@outlook.com", role = c("aut", "cre"),
+           comment = c(ORCID = "https://orcid.org/0000-0002-9892-2999")),
+    person("Alfred Amambua", "Ngwa", , "Alfred.Ngwa@lshtm.ac.uk", role = "aut"),
+    person("David", "Jeffries", , "djeffries@mrc.gm", role = "aut")
   )
-Description: provides functions to perform population genomics analyses using 
-    genome-wide Single Nucleotide Polymorphisms (SNPs) from the malaria 
-    parasite Plasmodium falciparum.
+Description: provides functions to perform population genomics analyses
+    using genome-wide Single Nucleotide Polymorphisms (SNPs) from the
+    malaria parasite Plasmodium falciparum.
 License: MIT + file LICENSE
-Encoding: UTF-8
-Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.2.3
-biocViews:
-import:
-    data.table,
-    dplyr,
-    SeqArray,
-    moimix,
-    statip,
-    parallel,
-    isoRelate,
-    Rfast,
-    utils,
-    GenomicRanges
 Suggests: 
+    checkmate,
     knitr,
     rmarkdown,
     spelling,
-    testthat (>= 3.0.0),
-    checkmate
+    testthat (>= 3.0.0)
+VignetteBuilder: 
+    knitr
+biocViews:
+Config/Needs/website:epiverse-trace/epiversetheme
 Config/testthat/edition: 3
-Config/Needs/website:
-    epiverse-trace/epiversetheme
+Encoding: UTF-8
+import:data.table, dplyr, SeqArray, moimix, statip, parallel, isoRelate,
+    Rfast, utils, GenomicRanges
 Language: en-US
-VignetteBuilder: knitr
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.2.3

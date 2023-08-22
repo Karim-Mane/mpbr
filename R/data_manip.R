@@ -1,14 +1,14 @@
 #' Create the `SNPdata` object
 #'
-#' This function generate the input data needed for whole genome SNPs data 
+#' This function generate the input data needed for whole genome SNPs data
 #' genotyped from malaria parasite.
-#' 
+#'
 #' @param vcf_file the input VCF file (required)
 #' @param meta_file the metadata file (required)
 #' @param output_dir the path to the folder where the output files will
 #'    be stored (optional)
 #' @param gaf the gene ontology annotation file (optional). If not provided, the
-#'    default file obtained from the [PlasmoDB]( 
+#'    default file obtained from the [PlasmoDB](
 #' https://plasmodb.org/plasmo/app/downloads/Current_Release/Pfalciparum3D7/gaf/)
 #'    will be used
 #' @param gff the gene annotation file (optional). If not provided, the default
@@ -17,20 +17,20 @@
 #'    will be used
 #' @param num_threads the number of threads to be used when reading in the data
 #'    from the VCF file. default is 4
-#'    
+#'
 #' @return an object of class `SNPdata` with 5 elements
 #' \enumerate{
 #'   \item meta: a `data.frame` that contains the sample's metadata
-#'   \item details: a `data.frame` with SNPs genomic coordinates, the fraction 
+#'   \item details: a `data.frame` with SNPs genomic coordinates, the fraction
 #'      of missing data per SNP and the names and descriptions of the gene on
-#'      which they are located 
+#'      which they are located.
 #'   \item GT: an integer `matrix` with the genotype data. 0='reference allele',
 #'      1='alternate allele', 2='mixed allele', NA='missing allele'
 #'   \item vcf: the full path to the VCF file from which the data is generated
 #'   \item index: an integer. this is used as some kind of label that can tell
 #'      the how many times the VCF files has been modified.
 #'   }
-#'   
+#'
 #' @examples
 #' \dontrun{
 #'  snpdata <- get_snpdata(
@@ -40,8 +40,8 @@
 #'  )
 #' }
 #' @export
-#' 
-get_snpdata = function(vcf_file = NULL, meta_file = NULL, output_dir = NULL, 
+#'
+get_snpdata <- function(vcf_file = NULL, meta_file = NULL, output_dir = NULL,
                        gaf = NULL, gff = NULL, num_threads = 4) {
   checkmate::assert_file_exists(vcf_file)
   checkmate::assert_file_exists(meta_file)
@@ -50,7 +50,6 @@ get_snpdata = function(vcf_file = NULL, meta_file = NULL, output_dir = NULL,
   checkmate::assert_integer(num_threads, lower = 1,
                             upper = (parallel::detectCores() - 1),
                             any.missing = FALSE, null.ok = FALSE, len = 1)
-  
   # import the GAF file file if provided by the user
   # use the existing GAF file if the gaf argument is set to NULL
   if (all(!is.null(gaf) && file.exists(gaf))) {
@@ -59,10 +58,9 @@ get_snpdata = function(vcf_file = NULL, meta_file = NULL, output_dir = NULL,
       go <- data.table::fread(
         system.file("extdata", "Pf_gene_ontology.txt", package = "mpbr"),
         nThread = num_threads,
-        sep="\t"
+        sep = "\t"
       )
   }
-  
   # if the path to the GFF file is provided by the user, convert it into BED
   # format and import it.
   # if not provided, use the predefined BED file
@@ -79,25 +77,26 @@ get_snpdata = function(vcf_file = NULL, meta_file = NULL, output_dir = NULL,
   }
 
   ## get the sample IDs
-  ids <- file.path(output_dir ,'sample_ids.txt')
+  ids        <- file.path(output_dir, "sample_ids.txt")
   system(sprintf("bcftools query -l %s > %s", vcf_file, ids))
   sample_ids <- data.table::fread(ids, header = FALSE)
 
   ## extracting the genotype data
-  genotypes  <- file.path(output_dir, 'Genotypes.txt')
-  expression <- '%CHROM\t%POS\t%REF\t%ALT\t%QUAL[\t%GT]\n'
+  genotypes  <- file.path(output_dir, "Genotypes.txt")
+  expression <- "%CHROM\t%POS\t%REF\t%ALT\t%QUAL[\t%GT]\n"
   system(sprintf("bcftools query -f'%s' %s > %s", 
                  expression, 
                  vcf_file, 
                  genotypes))
-  genotype_f <- data.table::fread(genotypes, header = FALSE,
+  genotype_f <- data.table::fread(genotypes, 
+                                  header  = FALSE,
                                   nThread = num_threads)
   names(genotype_f) <- c("Chrom", "Pos", "Ref", "Alt", "Qual", sample_ids$V1)
 
   ## making the details and the meta tables
   details <- genotype_f %>% dplyr::select(Chrom, Pos, Ref, Alt, Qual)
   names(sample_ids) <- "sample"
-  snps <- as.matrix(subset(genotype_f, select = -c(1:5)))
+  snps    <- as.matrix(subset(genotype_f, select = -c(1:5)))
   snps[snps == "0/0"]                 <- "0"
   snps[snps == "1/1"]                 <- "1"
   snps[snps == "0/1" | snps == "1/0"] <- "2"
@@ -106,7 +105,7 @@ get_snpdata = function(vcf_file = NULL, meta_file = NULL, output_dir = NULL,
   meta <- add_metadata(sample_ids, meta_file)
   meta$percentage.missing.sites      <- colSums(is.na(snps)) / nrow(snps)
   details$percentage.missing.samples <- rowSums(is.na(snps)) / ncol(snps)
-  
+
   # adding the annotation data to the details table
   genomic_coordinates <- details %>% dplyr::select(Chrom, Pos)
   details$gene        <- get_gene_annotation(genomic_coordinates, go, bed)
@@ -138,40 +137,39 @@ add_metadata <- function(sample_ids, metadata) {
   checkmate::assert_data_frame(sample_ids, min.rows = 1, min.cols = 1,
                                null.ok = FALSE)
   checkmate::assert_file_exists(metadata)
-  
-    meta    <- data.table::fread(metadata, key = "sample", nThread = 4)
-    samples <- meta$sample
-    
-    # check if there is any sample from the VCF file that is not present in the 
-    # provided sample metadata file
-    are_in_meta_file <- sample_ids$sample %in% samples
-    if (any(!are_in_meta_file)) {
-        warning(sprintf("Incomplete meta data - the following samples in the
-                        VCF file are not found in metadata file:%s %s",
-                        "\n",
-                        glue::glue_collapse(
-                          sample_ids$sample[!are_in_meta_file],
-                          sep = ", ")), 
-                call. = FALSE)
-    }
-    
-    # check if there is any sample from the metadata file that is not found in
-    # the input VCF file
-    are_in_vcf_file <- samples %in% sample_ids$sample
-    if (any(!are_in_vcf_file)) {
-      warning(sprintf("The following samples are removed from metadata file as
-                      as they are not found in the VCF file: %s",
-                      glue::glue_collapse(samples[!are_in_vcf_file], 
-                                          sep = ", ")),
+  meta    <- data.table::fread(metadata, key = "sample", nThread = 4)
+  samples <- meta$sample
+
+  # check if there is any sample from the VCF file that is not present in the
+  # provided sample metadata file
+  are_in_meta_file <- sample_ids$sample %in% samples
+  if (any(!are_in_meta_file)) {
+      warning(sprintf("Incomplete meta data - the following samples in the
+                      VCF file are not found in metadata file:%s %s",
+                      "\n",
+                      glue::glue_collapse(
+                        sample_ids$sample[!are_in_meta_file],
+                        sep = ", ")),
               call. = FALSE)
-      meta <- meta[-(!are_in_vcf_file), ]
-    }
-    
-    # joining the samples IDs from the VCF file with the sample metadata
-    meta <- data.frame(sample = samples) %>% 
-      dplyr::left_join(meta, by = "sample")
-    
-    meta
+  }
+
+  # check if there is any sample from the metadata file that is not found in
+  # the input VCF file
+  are_in_vcf_file <- samples %in% sample_ids$sample
+  if (!all(are_in_vcf_file)) {
+    warning(sprintf("The following samples are removed from metadata file as
+                    as they are not found in the VCF file: %s",
+                    glue::glue_collapse(samples[!are_in_vcf_file],
+                                        sep = ", ")),
+            call. = FALSE)
+    meta <- meta[-(!are_in_vcf_file), ]
+  }
+
+  # joining the samples IDs from the VCF file with the sample metadata
+  meta <- data.frame(sample = samples) %>%
+    dplyr::left_join(meta, by = "sample")
+
+  meta
 }
 
 #' Add gene ontology and names annotation details to every SNPs in the table
@@ -194,29 +192,29 @@ get_gene_annotation <- function(genomic_coordinates, go, bed, num_cores = 4) {
                                min.cols = 1, null.ok = FALSE)
   checkmate::assert_data_frame(bed, min.rows = 1,
                                min.cols = 1, null.ok = FALSE)
-  
-    genes <- as.character(parallel::mclapply(bed$V10, 
-                                             get_clean_name, 
-                                             mc.cores = num_cores))
-    genes <- as.character(parallel::mclapply(genes, rm.prf1, 
-                                             mc.cores = num_cores))
-    genes <- as.character(parallel::mclapply(genes, rm.prf2,
-                                             mc.cores = num_cores))
-    genes <- as.character(parallel::mclapply(genes, rm_suf,
-                                             mc.cores = num_cores))
-    genes <- data.table::data.table(genes)
-    genes <- cbind(bed$V1, bed$V2, bed$V3, genes)
-    names(genes) <- c("chrom", "start", "end", "gene_id")
-    go <- subset(go, select = c(2,10))
-    names(go) <- c("gene_id", "gene_name")
-    data.table::setkey(go, "gene_id")
-    data.table::setkey(genes, "gene_id")
 
-    test <- genes %>% dplyr::left_join(go)
-    test <- dplyr::distinct(test, chrom, start, end, gene_id, gene_name)
-    resultat <- gene_annotation(test, genomic_coordinates)
-    resultat <- gsub("NA:", "", resultat)
-    resultat
+  genes        <- as.character(parallel::mclapply(bed$V10,
+                                           get_clean_name,
+                                           mc.cores = num_cores))
+  genes        <- as.character(parallel::mclapply(genes, rm.prf1,
+                                           mc.cores = num_cores))
+  genes        <- as.character(parallel::mclapply(genes, rm.prf2,
+                                           mc.cores = num_cores))
+  genes        <- as.character(parallel::mclapply(genes, rm_suf,
+                                           mc.cores = num_cores))
+  genes        <- data.table::data.table(genes)
+  genes        <- cbind(bed$V1, bed$V2, bed$V3, genes)
+  names(genes) <- c("chrom", "start", "end", "gene_id")
+  go           <- subset(go, select = c(2, 10))
+  names(go)    <- c("gene_id", "gene_name")
+  data.table::setkey(go, "gene_id")
+  data.table::setkey(genes, "gene_id")
+
+  test         <- genes %>% dplyr::left_join(go)
+  test         <- dplyr::distinct(test, chrom, start, end, gene_id, gene_name)
+  resultat     <- gene_annotation(test, genomic_coordinates)
+  resultat     <- gsub("NA:", "", resultat, fixed = TRUE)
+  resultat
 }
 
 

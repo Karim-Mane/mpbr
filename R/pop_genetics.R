@@ -1,54 +1,83 @@
 #' Calculate Weir & Cockerham's Fst
-#' @param snpdata SNPdata object
-#' @param groups a vector of string. the differentiation will be estimated between these groups of samples
-#' @param from the metadata column from which these groups belong to
-#' @return SNPdata object with an extra field: Fst. This is a list of data frames that contain the result from a specific comparison. Every data frame contains N rows (where N is the number of loci) and the following 7 columns:
-#' \enumerate{
-#' \item the chromosome ID
-#' \item the SNPs positions
-#' \item the allele frequency in the first group
-#' \item the allele frequency in the second group
-#' \item the resulting Fst values
-#' \item the p-values associated with the Fst results
-#' \item the p-values corrected for multiple testing using the Benjamini-Hochberg method
-#' }
-#' @usage  snpdata = calculate_wcFst(snpdata, groups=c("Senegal","Gambia"), from="Country")
+#' 
+#' @param snpdata `SNPdata` object
+#' @param groups a vector of population names. Every sample in the metadata file
+#'    is associated to its population of origin. The differentiation index will
+#'    be estimated between these groups.
+#' @param from the metadata column that contains the sample's population
+#'    information.
+#'    
+#' @return a `SNPdata` object with an extra field named as **Fst**. This is a
+#'    `list` of data frames with the Fst values for each pair of comparison.
+#'    Every data frame contains N rows (where N is the number of loci) and the
+#'    following 7 columns:
+#'    \enumerate{
+#'      \item the chromosome ID
+#'      \item the SNPs positions
+#'      \item the allele frequency in the first group
+#'      \item the allele frequency in the second group
+#'      \item the resulting Fst values
+#'      \item the p-values associated with the Fst results
+#'      \item the p-values corrected for multiple testing using the 
+#'            Benjamini-Hochberg method
+#'    }
+#'    
+#' @examples
+#'   snpdata <- calculate_wcFst(
+#'     snpdata,
+#'     groups = c("Senegal", "Gambia"),
+#'     from   = "Country"
+#'   )
 #' @export
-calculate_wcFst = function(snpdata, from=NULL, groups=NULL){
-    if(is.null(groups) & is.null(from)){
-        stop("Please provide a vector of groups to be compared and the metadata column of interest")
-    }else if(is.null(groups) & !is.null(from)){
-        groups = as.character(unique(snpdata$meta[[from]]))
-    }else if(!is.null(groups) & !is.null(from) & (any(!(groups %in% unique(snpdata$meta[[from]]))))){
-        stop("not all specified groups belong to the ", from, "column of the metadata table")
-    }
-    system(sprintf("tabix %s", snpdata$vcf))
-    Fst=list()
-    for(i in 1:(length(groups)-1)){
-        idx1 = which(snpdata$meta[[from]]==groups[i])
-        idx1 = paste(idx1, collapse = ",")
-        for(j in (i+1):length(groups)){
-            idx2 = which(snpdata$meta[[from]]==groups[j])
-            idx2 = paste(idx2, collapse = ",")
-            out = paste0(dirname(snpdata$vcf),"/out.wc.fst")
-            pout = paste0(dirname(snpdata$vcf),"/out.wc.fst.pvalues")
-            system(sprintf("wcFst --target %s --background %s --file %s --deltaaf 0 --type GT > %s", idx1, idx2, snpdata$vcf, out))
-            system(sprintf("pFst --target %s --background %s --file %s --deltaaf 0 --type GT > %s", idx1, idx2, snpdata$vcf, pout))
-            out = fread(out)
-            pout = fread(pout)
-            setkeyv(out,c("V1","V2")); setkeyv(pout,c("V1","V2"))
-            tmp = out[pout, nomatch=0]
-            names(tmp) = c("Chrom","Pos","AF_in_target","AF_in_background","wcFst","wcFst_pvalue")
-            idx = which(tmp$wcFst<0)
-            if(length(idx)>0){
-                tmp$wcFst[idx]=0
-            }
-            tmp$wcFst_Adj_pvalue_BH = p.adjust(tmp$wcFst_pvalue, method="BH")
-            Fst[[paste0(groups[i],"_vs_",groups[j])]] = tmp
-        }
-    }
-    snpdata$Fst = Fst
-    snpdata
+#' 
+calculate_wcFst <- function(snpdata, from, groups) {
+  checkmate::assert_vector(groups, any.missing = FALSE, min.len = 0,
+                           null.ok = TRUE)
+  checkmate::assert_character(from, len = 1, any.missing = FALSE,
+                              null.ok = FALSE)
+  checkmate::assert_class(snpdata, "SNPdata", null.ok = FALSE)
+  
+  if (is.null(groups) & !is.null(from)) {
+    groups <- as.character(unique(snpdata$meta[[from]]))
+  } else if(all(!is.null(groups) &&
+                !is.null(from) &&
+                (any(!(groups %in% unique(snpdata$meta[[from]])))))) {
+        stop(sprintf("Not all specified groups belong to the %s column of 
+             the metadata table", from))
+  }
+  system(sprintf("tabix %s", snpdata$vcf))
+  Fst <- list()
+  for(i in 1:(length(groups)-1)) {
+      idx1 <- which(snpdata$meta[[from]] == groups[i])
+      idx1 <- paste(idx1, collapse = ",")
+      for(j in (i+1):length(groups)) {
+          idx2 <- which(snpdata$meta[[from]] == groups[j])
+          idx2 <- paste(idx2, collapse = ",")
+          out  <- file.path(dirname(snpdata$vcf), "out.wc.fst")
+          pout <- file.path(dirname(snpdata$vcf), "out.wc.fst.pvalues")
+          system(sprintf("wcFst --target %s --background %s --file %s \
+                         --deltaaf 0 --type GT > %s",
+                         idx1, idx2, snpdata$vcf, out))
+          system(sprintf("pFst --target %s --background %s --file %s \
+                         --deltaaf 0 --type GT > %s",
+                         idx1, idx2, snpdata$vcf, pout))
+          out        <- data.table::fread(out)
+          pout       <- data.table::fread(pout)
+          data.table::setkeyv(out,  c("V1","V2"))
+          data.table::setkeyv(pout, c("V1","V2"))
+          tmp        <- out[pout, nomatch = 0]
+          names(tmp) <- c("Chrom", "Pos", "AF_in_target", "AF_in_background",
+                          "wcFst", "wcFst_pvalue")
+          idx        <- which(tmp$wcFst < 0)
+          if (length(idx) > 0) {
+              tmp$wcFst[idx] <- 0
+          }
+          tmp$wcFst_Adj_pvalue_BH <- p.adjust(tmp$wcFst_pvalue, method = "BH")
+          Fst[[paste0(groups[i], "_vs_", groups[j])]] <- tmp
+      }
+  }
+  snpdata$Fst <- Fst
+  snpdata
 }
 
 #' Calculate LD R^2 between pairs of loci
