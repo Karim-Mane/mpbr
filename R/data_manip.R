@@ -313,7 +313,9 @@ gene_annotation <- function (target_gtf, genomic_coordinates) {
 #' @param snpdata the `SNPdata` object
 #'
 #' @examples
-#' print(snpdata)
+#' \dontrun{
+#'   print(snpdata)
+#' }
 #'   
 #' @export
 print.SNPdata <- function(snpdata) {
@@ -342,6 +344,7 @@ print.SNPdata <- function(snpdata) {
 #'    
 #' @return a SNPdata object
 #' @examples
+#' \dontrun{
 #'  snpdata <- filter_snps_samples(
 #'  snpdata, 
 #'  min_qual = 10, 
@@ -349,6 +352,7 @@ print.SNPdata <- function(snpdata) {
 #'  max_missing_samples = 0.2, 
 #'  maf_cutoff=0.01
 #'  )
+#'  }
 #' @export
 #' 
 filter_snps_samples <- function (snpdata, min_qual   = 10, 
@@ -455,11 +459,13 @@ filter_snps_samples <- function (snpdata, min_qual   = 10,
 #'    the MAF calculation
 #'    
 #' @examples
-#'  snpdata <- compute_MAF(
-#'  snpdata,
-#'  include_het = FALSE,
-#'  mat_name = "GT"
+#' \dontrun{
+#'   snpdata <- compute_MAF(
+#'    snpdata,
+#'    include_het = FALSE,
+#'    mat_name = "GT"
 #'  )
+#'  }
 #' @export
 #' 
 compute_MAF <- function(snpdata, include_het = FALSE, mat_name = "GT") {
@@ -554,7 +560,9 @@ get_maf <- function(mat) {
 #' }
 #' 
 #' @examples
-#'  snpdata <- calculate_Fws(snpdata)
+#' \dontrun{
+#'   snpdata <- calculate_Fws(snpdata)
+#'  }
 #'  
 #' @export
 #' 
@@ -613,7 +621,9 @@ calculate_Fws <- function(snpdata) {
 #'    the genotype is phased using a Bernoulli distribution.
 #'    
 #' @examples
+#' \dontrun{
 #'  snpdata <- phase_mixed_genotypes(snpdata)
+#'  }
 #'  
 #' @export
 phase_mixed_genotypes <- function(snpdata, nsim = 100) {
@@ -755,7 +765,9 @@ phase_data = function(genotype, depth) {
 #'    allele, the genotype is phased using a Bernoulli distribution.
 #'    
 #' @examples
-#'  snpdata <- impute_missing_genotypes(snpdata)
+#' \dontrun{
+#'   snpdata <- impute_missing_genotypes(snpdata)
+#'  }
 #'  
 #' @export
 #' 
@@ -819,7 +831,9 @@ impute <- function(genotype) {
 #' @return a `SNPdata` object with only the data from the specified chromosomes
 #' 
 #' @examples
+#' \dontrun{
 #'   chrom_snpdata <- select_chrom(snpdata, chrom = "Pf3D7_07_v3")
+#'  }
 #' @export
 #' 
 select_chrom <- function(snpdata, chrom = "all") {
@@ -871,12 +885,14 @@ select_chrom <- function(snpdata, chrom = "all") {
 #' @return a `SNPdata` object where the specified SNPs have been removed
 #' 
 #' @examples
+#' \dontrun{
 #'  snpdata <- drop_snps(snpdata,
 #'  snp_to_be_dropped = NULL,
 #'  chrom = "Pf3D7_05_v3", 
 #'  start = 100, 
 #'  end = 500
 #'  )
+#'  }
 #' @details when snp_to_be_dropped is not set to NA (i.e. the genomic coordinates of snps to be removed are in a data frame), then the rest of the arguments can be ignored or set to NA (chrom=NA, start=NA, end=NA)
 #' @export
 drop_snps <- function(snpdata, snp_to_be_dropped = NULL, 
@@ -992,7 +1008,9 @@ remove_snps_from_vcf <- function(vcf, loci_to_be_retained, path, index = 1) {
 #' 
 #' @return a `SNPdata` object where the specified samples have been removed
 #' @examples
+#' \dontrun{
 #'  snpdata <- drop_samples(snpdata, samples_to_be_dropped)
+#'  }
 #'  
 #' @export
 drop_samples <- function(snpdata, samples_to_be_dropped) {

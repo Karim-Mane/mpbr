@@ -38,7 +38,7 @@ an object of class \code{SNPdata} with 5 elements
 \item meta: a \code{data.frame} that contains the sample's metadata
 \item details: a \code{data.frame} with SNPs genomic coordinates, the fraction
 of missing data per SNP and the names and descriptions of the gene on
-which they are located
+which they are located.
 \item GT: an integer \code{matrix} with the genotype data. 0='reference allele',
 1='alternate allele', 2='mixed allele', NA='missing allele'
 \item vcf: the full path to the VCF file from which the data is generated

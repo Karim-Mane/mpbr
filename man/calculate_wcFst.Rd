@@ -4,17 +4,23 @@
 \alias{calculate_wcFst}
 \title{Calculate Weir & Cockerham's Fst}
 \usage{
-snpdata = calculate_wcFst(snpdata, groups=c("Senegal","Gambia"), from="Country")
+calculate_wcFst(snpdata, from, groups)
 }
 \arguments{
-\item{snpdata}{SNPdata object}
+\item{snpdata}{\code{SNPdata} object}
 
-\item{from}{the metadata column from which these groups belong to}
+\item{from}{the metadata column that contains the sample's population
+information.}
 
-\item{groups}{a vector of string. the differentiation will be estimated between these groups of samples}
+\item{groups}{a vector of population names. Every sample in the metadata file
+is associated to its population of origin. The differentiation index will
+be estimated between these groups.}
 }
 \value{
-SNPdata object with an extra field: Fst. This is a list of data frames that contain the result from a specific comparison. Every data frame contains N rows (where N is the number of loci) and the following 7 columns:
+a \code{SNPdata} object with an extra field named as \strong{Fst}. This is a
+\code{list} of data frames with the Fst values for each pair of comparison.
+Every data frame contains N rows (where N is the number of loci) and the
+following 7 columns:
 \enumerate{
 \item the chromosome ID
 \item the SNPs positions
@@ -22,9 +28,19 @@ SNPdata object with an extra field: Fst. This is a list of data frames that cont
 \item the allele frequency in the second group
 \item the resulting Fst values
 \item the p-values associated with the Fst results
-\item the p-values corrected for multiple testing using the Benjamini-Hochberg method
+\item the p-values corrected for multiple testing using the
+Benjamini-Hochberg method
 }
 }
 \description{
 Calculate Weir & Cockerham's Fst
+}
+\examples{
+\dontrun{
+  snpdata <- calculate_wcFst(
+    snpdata,
+    groups = c("Senegal", "Gambia"),
+    from   = "Country"
+  )
+}
 }

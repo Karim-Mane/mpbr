@@ -23,11 +23,13 @@
 #'    }
 #'    
 #' @examples
+#' \dontrun{
 #'   snpdata <- calculate_wcFst(
 #'     snpdata,
 #'     groups = c("Senegal", "Gambia"),
 #'     from   = "Country"
 #'   )
+#' }
 #' @export
 #' 
 calculate_wcFst <- function(snpdata, from, groups) {

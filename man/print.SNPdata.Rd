@@ -13,6 +13,8 @@
 Print the \code{SNPdata} object
 }
 \examples{
-print(snpdata)
+\dontrun{
+  print(snpdata)
+}
   
 }

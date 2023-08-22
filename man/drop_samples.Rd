@@ -18,6 +18,8 @@ a \code{SNPdata} object where the specified samples have been removed
 Drop a specific set of samples from the \code{SNPdata} object
 }
 \examples{
+\dontrun{
  snpdata <- drop_samples(snpdata, samples_to_be_dropped)
+ }
  
 }

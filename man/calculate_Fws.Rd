@@ -21,6 +21,8 @@ The COI is estimated here through the within host genetic diversity (Fws).
 using the {moimix} R package.
 }
 \examples{
- snpdata <- calculate_Fws(snpdata)
+\dontrun{
+  snpdata <- calculate_Fws(snpdata)
+ }
  
 }

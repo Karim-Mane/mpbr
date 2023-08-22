@@ -35,6 +35,8 @@ supporting one of the allele is not 2 times the number of the other
 allele, the genotype is phased using a Bernoulli distribution.
 }
 \examples{
- snpdata <- impute_missing_genotypes(snpdata)
+\dontrun{
+  snpdata <- impute_missing_genotypes(snpdata)
+ }
  
 }

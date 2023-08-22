@@ -31,9 +31,11 @@ if \code{include_het = FALSE}, the mixed allele will not be considered in
 the MAF calculation
 }
 \examples{
- snpdata <- compute_MAF(
- snpdata,
- include_het = FALSE,
- mat_name = "GT"
+\dontrun{
+  snpdata <- compute_MAF(
+   snpdata,
+   include_het = FALSE,
+   mat_name = "GT"
  )
+ }
 }

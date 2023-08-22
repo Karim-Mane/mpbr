@@ -34,6 +34,7 @@ a SNPdata object
 This function filters the SNPs and samples based on the specified conditions
 }
 \examples{
+\dontrun{
  snpdata <- filter_snps_samples(
  snpdata, 
  min_qual = 10, 
@@ -41,4 +42,5 @@ This function filters the SNPs and samples based on the specified conditions
  max_missing_samples = 0.2, 
  maf_cutoff=0.01
  )
+ }
 }

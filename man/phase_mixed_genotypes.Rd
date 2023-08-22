@@ -31,6 +31,8 @@ supporting one of the allele is not 2 times the number of the other,
 the genotype is phased using a Bernoulli distribution.
 }
 \examples{
+\dontrun{
  snpdata <- phase_mixed_genotypes(snpdata)
+ }
  
 }
