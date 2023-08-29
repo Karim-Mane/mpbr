@@ -4,7 +4,13 @@
 \alias{calculate_relatedness}
 \title{Estimate the relatedness between pairs of isolates}
 \usage{
-calculate_relatedness(snpdata, mat.name="GT", family="Location", sweepRegions=NULL, groups=c("Chogen","DongoroBa"))
+calculate_relatedness(
+  snpdata,
+  mat.name = "Imputed",
+  from = "Location",
+  sweepRegions = NULL,
+  groups = NULL
+)
 }
 \arguments{
 \item{snpdata}{SNPdata object}
@@ -30,4 +36,10 @@ Estimate the relatedness between pairs of isolates
 }
 \details{
 The relatedness calculation is based on the model developed by Aimee R. Taylor and co-authors. https://journals.plos.org/plosgenetics/article?id=10.1371/journal.pgen.1009101
+}
+\examples{
+\dontrun{
+  calculate_relatedness(snpdata, mat.name="GT", family="Location", 
+  sweepRegions=NULL, groups=c("Chogen","DongoroBa"))
+ }
 }

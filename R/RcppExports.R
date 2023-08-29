@@ -2,6 +2,7 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 loglikelihood_cpp <- function(k, r, Ys, f, gendist, epsilon, rho) {
-    .Call('_rSNPdata_loglikelihood_cpp', PACKAGE = 'rSNPdata', k, r, Ys, f, gendist, epsilon, rho)
+    .Call('_rSNPdata_loglikelihood_cpp', PACKAGE = 'mpbr', k, r, Ys, f, gendist,
+          epsilon, rho)
 }
 

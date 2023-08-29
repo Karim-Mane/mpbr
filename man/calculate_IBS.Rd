@@ -4,7 +4,7 @@
 \alias{calculate_IBS}
 \title{Generate dissimilarity matrix (1-IBS) between all pairs of isolates}
 \usage{
-snpdata = calculate_IBS(snpdata, mat.name="GT")
+calculate_IBS(snpdata, mat.name = "GT")
 }
 \arguments{
 \item{snpdata}{SNPdata object}
@@ -16,4 +16,10 @@ SNPdata object with an extra field: IBS
 }
 \description{
 Generate dissimilarity matrix (1-IBS) between all pairs of isolates
+}
+\examples{
+\dontrun{
+  snpdata = calculate_IBS(snpdata, mat.name="GT")
+ }
+ 
 }

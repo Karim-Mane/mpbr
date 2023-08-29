@@ -83,21 +83,37 @@ calculate_wcFst <- function(snpdata, from, groups) {
 }
 
 #' Calculate LD R^2 between pairs of loci
-#' @param snpdata SNPdata object
-#' @param min.r2 the minimum r2 value below which the LD value is not reported
-#' @param inter.chrom whether to calculate inter-chromosomal LD. FALSE by default
-#' @param chroms a vector of chromosome names for which LD should be calculated
-#' @return SNPdata object with an extra field: LD
-#' @usage  snpdata = calculate_LD(snpdata, min.r2=0.2, inter.chrom=FALSE, chroms=c("Pf3D7_04_v3","Pf3D7_05_v3"))
-#' @details the output file from LD calculation could be large. In order to reduce the size of that file, it's recommended to specify the list of chromosomes for which LD should be calculated using the `chroms` option
+#' 
+#' @param snpdata a `SNPdata` object
+#' @param min_r2 the minimum r2 value below which the LD value is not reported
+#' @param inter_chrom a `logical` that determines whether to calculate the
+#'    inter-chromosomal LD or not. Default is `FALSE`.
+#' @param chroms a character vector of chromosome names. If provided, LD will be
+#'    calculated only across these chromosomes.
+#' 
+#' @return a `SNPdata` object with an extra field named as **LD**
+#' @examples
+#' \dontrun{
+#'   snpdata <- calculate_LD(snpdata, min_r2=0.2, inter_chrom=FALSE,
+#'     chroms=c("Pf3D7_04_v3","Pf3D7_05_v3"))
+#'  }
+#' @details The output file from LD calculation could be large. In order to
+#'     reduce the size of that file, we recommend to specify the list of
+#'     chromosomes for which LD should be calculated using the `chroms` option.
 #' @export
-calculate_LD = function(snpdata, min.r2=0.2, inter.chrom=FALSE, chroms=NULL){
+calculate_LD <- function(snpdata, min_r2 = 0.2, inter_chrom = FALSE,
+                         chroms = NULL) {
+  checkmate::assert_class(snpdata, "SNPdata", null.ok = FALSE)
+  checkmate::assert_numeric(min_r2, lower = 0, upper = 1, finite = TRUE,
+                            any.missing = FALSE, null.ok = FALSE)
+  checkmate::assert_logical(inter_chrom, any.missing = FALSE, len = 1,
+                            null.ok = FALSE)
     out = paste0(dirname(snpdata$vcf),"/tmp_ld")
-    if(inter.chrom){
+    if(inter_chrom){
         cat("inter-chromosomal LD will be calculated between sites on",paste(chroms, collapse = ","))
-        system(sprintf("vcftools --gzvcf %s --out %s --min-r2 %s --interchrom-geno-r2", snpdata$vcf, out, min.r2))
+        system(sprintf("vcftools --gzvcf %s --out %s --min-r2 %s --interchrom-geno-r2", snpdata$vcf, out, min_r2))
     }else{
-        system(sprintf("vcftools --gzvcf %s --out %s --min-r2 %s --geno-r2", snpdata$vcf, out, min.r2))
+        system(sprintf("vcftools --gzvcf %s --out %s --min-r2 %s --geno-r2", snpdata$vcf, out, min_r2))
     }
     out = paste0(out,".geno.ld")
     system(sprintf("bgzip %s", out))
@@ -117,7 +133,11 @@ calculate_LD = function(snpdata, min.r2=0.2, inter.chrom=FALSE, chroms=NULL){
 #' @param snpdata SNPdata object
 #' @param mat.name the name of the genotype table to be used. default="GT"
 #' @return SNPdata object with an extra field: IBS
-#' @usage  snpdata = calculate_IBS(snpdata, mat.name="GT")
+#' @examples
+#' \dontrun{
+#'   snpdata = calculate_IBS(snpdata, mat.name="GT")
+#'  }
+#'  
 #' @export
 calculate_IBS = function(snpdata, mat.name="GT"){
     if(!(mat.name %in% names(snpdata))){
@@ -148,7 +168,11 @@ calculate_IBS = function(snpdata, mat.name="GT"){
 #' @param family the name of the column, in the metadata table, to be used to represent the sample's population
 #' @param number.cores the number of cores to be used. default=4
 #' @return SNPdata object with an extra field: iR
-#' @usage  snpdata = calculate_iR(snpdata, mat.name="Phased", family="Location", number.cores=4)
+#' @examples
+#' \dontrun{
+#'   snpdata = calculate_iR(snpdata, mat.name="Phased", family="Location", 
+#'   number.cores=4)
+#'  }
 #' @export
 calculate_iR = function(snpdata, mat.name="Phased", family="Location", number.cores=4){
     if(!(family %in% names(snpdata$meta))){
@@ -503,7 +527,11 @@ getGenotypes = function(ped.map, reference.ped.map=NULL, maf=0.01, isolate.max.m
 #' }
 #' @param groups a vector of character. If specified, relatedness will be generated between these groups
 #' @return SNPdata object with an extra field: relatedness. This will contain the relatedness data frame of 3 columns and its correspondent matrix
-#' @usage  calculate_relatedness(snpdata, mat.name="GT", family="Location", sweepRegions=NULL, groups=c("Chogen","DongoroBa"))
+#' @examples
+#' \dontrun{
+#'   calculate_relatedness(snpdata, mat.name="GT", family="Location", 
+#'   sweepRegions=NULL, groups=c("Chogen","DongoroBa"))
+#'  }
 #' @details The relatedness calculation is based on the model developed by Aimee R. Taylor and co-authors. https://journals.plos.org/plosgenetics/article?id=10.1371/journal.pgen.1009101
 #' @export
 calculate_relatedness = function(snpdata, mat.name="Imputed", from="Location", sweepRegions=NULL, groups=NULL){

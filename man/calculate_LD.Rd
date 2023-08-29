@@ -4,14 +4,14 @@
 \alias{calculate_LD}
 \title{Calculate LD R^2 between pairs of loci}
 \usage{
-snpdata = calculate_LD(snpdata, min.r2=0.2, inter.chrom=FALSE, chroms=c("Pf3D7_04_v3","Pf3D7_05_v3"))
+calculate_LD(snpdata, min_r2 = 0.2, inter_chrom = FALSE, chroms = NULL)
 }
 \arguments{
-\item{snpdata}{SNPdata object}
+\item{snpdata}{\code{SNPdata} object}
 
-\item{min.r2}{the minimum r2 value below which the LD value is not reported}
+\item{min_r2}{the minimum r2 value below which the LD value is not reported}
 
-\item{inter.chrom}{whether to calculate inter-chromosomal LD. FALSE by default}
+\item{inter_chrom}{whether to calculate inter-chromosomal LD. FALSE by default}
 
 \item{chroms}{a vector of chromosome names for which LD should be calculated}
 }
@@ -23,4 +23,10 @@ Calculate LD R^2 between pairs of loci
 }
 \details{
 the output file from LD calculation could be large. In order to reduce the size of that file, it's recommended to specify the list of chromosomes for which LD should be calculated using the \code{chroms} option
+}
+\examples{
+\dontrun{
+  snpdata <- calculate_LD(snpdata, min_r2=0.2, inter_chrom=FALSE,
+    chroms=c("Pf3D7_04_v3","Pf3D7_05_v3"))
+ }
 }

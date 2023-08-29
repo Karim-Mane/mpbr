@@ -4,7 +4,12 @@
 \alias{calculate_iR}
 \title{Calculate iR index to detect loci with excess of IBD sharing}
 \usage{
-snpdata = calculate_iR(snpdata, mat.name="Phased", family="Location", number.cores=4)
+calculate_iR(
+  snpdata,
+  mat.name = "Phased",
+  family = "Location",
+  number.cores = 4
+)
 }
 \arguments{
 \item{snpdata}{SNPdata object}
@@ -20,4 +25,10 @@ SNPdata object with an extra field: iR
 }
 \description{
 Calculate iR index to detect loci with excess of IBD sharing
+}
+\examples{
+\dontrun{
+  snpdata = calculate_iR(snpdata, mat.name="Phased", family="Location", 
+  number.cores=4)
+ }
 }
