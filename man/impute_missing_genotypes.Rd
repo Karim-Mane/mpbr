@@ -4,7 +4,7 @@
 \alias{impute_missing_genotypes}
 \title{Impute missing genotypes}
 \usage{
-impute_missing_genotypes(snpdata, genotype = "Phased", nsim = 100)
+impute_missing_genotypes(snpdata, genotype = "Phased", nsim = 100L)
 }
 \arguments{
 \item{snpdata}{a \code{SNPdata} object}
@@ -38,5 +38,5 @@ allele, the genotype is phased using a Bernoulli distribution.
 \dontrun{
   snpdata <- impute_missing_genotypes(snpdata)
  }
- 
+
 }

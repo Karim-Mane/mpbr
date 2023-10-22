@@ -10,7 +10,7 @@ get_snpdata(
   output_dir = NULL,
   gaf = NULL,
   gff = NULL,
-  num_threads = 4
+  num_threads = 4L
 )
 }
 \arguments{
@@ -22,11 +22,11 @@ get_snpdata(
 be stored (optional)}
 
 \item{gaf}{the gene ontology annotation file (optional). If not provided, the
-default file obtained from the \href{https://plasmodb.org/plasmo/app/downloads/Current_Release/Pfalciparum3D7/gaf/}{PlasmoDB}
+default file obtained from the \href{https://plasmodb.org/plasmo/app/downloads/Current_Release/Pfalciparum3D7/gaf/}{PlasmoDB} # nolint: line_length_linter
 will be used}
 
 \item{gff}{the gene annotation file (optional). If not provided, the default
-file obtained from the \href{https://plasmodb.org/plasmo/app/downloads/Current_Release/Pfalciparum3D7/gff/}{PlasmoDB}
+file obtained from the \href{https://plasmodb.org/plasmo/app/downloads/Current_Release/Pfalciparum3D7/gff/}{PlasmoDB} # nolint: line_length_linter
 will be used}
 
 \item{num_threads}{the number of threads to be used when reading in the data
@@ -52,10 +52,10 @@ genotyped from malaria parasite.
 }
 \examples{
 \dontrun{
- snpdata <- get_snpdata(
-  vcf_file = "file.vcf.gz",
-  meta_file = "file.txt",
-  output_dir = system.file("extdata", package = "mpbr")
+  snpdata <- get_snpdata(
+    vcf_file   = "file.vcf.gz",
+    meta_file  = "file.txt",
+    output_dir = system.file("extdata", package = "mpbr")
  )
 }
 }

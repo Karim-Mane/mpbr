@@ -6,7 +6,7 @@
 \usage{
 calculate_relatedness(
   snpdata,
-  mat.name = "Imputed",
+  mat_name = "Imputed",
   from = "Location",
   sweepRegions = NULL,
   groups = NULL
@@ -15,7 +15,7 @@ calculate_relatedness(
 \arguments{
 \item{snpdata}{SNPdata object}
 
-\item{mat.name}{the name of the genotype table to be used. default="GT"}
+\item{mat_name}{the name of the genotype table to be used. default="GT"}
 
 \item{from}{the name of the column, in the metadata table, to be used to represent the sample's population}
 
@@ -39,7 +39,7 @@ The relatedness calculation is based on the model developed by Aimee R. Taylor a
 }
 \examples{
 \dontrun{
-  calculate_relatedness(snpdata, mat.name="GT", family="Location", 
+  calculate_relatedness(snpdata, mat_name="GT", family="Location", 
   sweepRegions=NULL, groups=c("Chogen","DongoroBa"))
  }
 }

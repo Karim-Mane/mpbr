@@ -4,22 +4,22 @@
 \alias{calculate_IBS}
 \title{Generate dissimilarity matrix (1-IBS) between all pairs of isolates}
 \usage{
-calculate_IBS(snpdata, mat.name = "GT")
+calculate_IBS(snpdata, mat_name = "GT")
 }
 \arguments{
 \item{snpdata}{SNPdata object}
 
-\item{mat.name}{the name of the genotype table to be used. default="GT"}
+\item{mat_name}{the name of the genotype table to be used. default="GT"}
 }
 \value{
-SNPdata object with an extra field: IBS
+a \code{SNPdata} object with an extra field: \code{IBS}
 }
 \description{
 Generate dissimilarity matrix (1-IBS) between all pairs of isolates
 }
 \examples{
 \dontrun{
-  snpdata = calculate_IBS(snpdata, mat.name="GT")
+  snpdata <- calculate_IBS(snpdata, mat_name = "GT")
  }
- 
+
 }

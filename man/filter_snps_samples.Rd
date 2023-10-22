@@ -6,7 +6,7 @@
 \usage{
 filter_snps_samples(
   snpdata,
-  min_qual = 10,
+  min_qual = 10L,
   max_missing_sites = 0.2,
   max_missing_samples = 0.2,
   maf_cutoff = 0.01
@@ -28,7 +28,7 @@ which a loci should be discarded. default = 0.2}
 discarded}
 }
 \value{
-a SNPdata object
+a filtered SNPdata object
 }
 \description{
 This function filters the SNPs and samples based on the specified conditions
@@ -36,11 +36,11 @@ This function filters the SNPs and samples based on the specified conditions
 \examples{
 \dontrun{
  snpdata <- filter_snps_samples(
- snpdata, 
- min_qual = 10, 
- max_missing_sites = 0.2, 
- max_missing_samples = 0.2, 
- maf_cutoff=0.01
+  snpdata,
+  min_qual            = 10,
+  max_missing_sites   = 0.2,
+  max_missing_samples = 0.2,
+  maf_cutoff          = 0.01
  )
  }
 }

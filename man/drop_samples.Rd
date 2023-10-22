@@ -19,7 +19,7 @@ Drop a specific set of samples from the \code{SNPdata} object
 }
 \examples{
 \dontrun{
- snpdata <- drop_samples(snpdata, samples_to_be_dropped)
+  snpdata <- drop_samples(snpdata, samples_to_be_dropped)
  }
- 
+
 }

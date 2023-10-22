@@ -1,12 +1,12 @@
 #' Calculate Weir & Cockerham's Fst
-#' 
+#'
 #' @param snpdata `SNPdata` object
 #' @param groups a vector of population names. Every sample in the metadata file
 #'    is associated to its population of origin. The differentiation index will
 #'    be estimated between these groups.
 #' @param from the metadata column that contains the sample's population
 #'    information.
-#'    
+#'
 #' @return a `SNPdata` object with an extra field named as **Fst**. This is a
 #'    `list` of data frames with the Fst values for each pair of comparison.
 #'    Every data frame contains N rows (where N is the number of loci) and the
@@ -18,10 +18,10 @@
 #'      \item the allele frequency in the second group
 #'      \item the resulting Fst values
 #'      \item the p-values associated with the Fst results
-#'      \item the p-values corrected for multiple testing using the 
+#'      \item the p-values corrected for multiple testing using the
 #'            Benjamini-Hochberg method
 #'    }
-#'    
+#'
 #' @examples
 #' \dontrun{
 #'   snpdata <- calculate_wcFst(
@@ -31,444 +31,523 @@
 #'   )
 #' }
 #' @export
-#' 
-calculate_wcFst <- function(snpdata, from, groups) {
-  checkmate::assert_vector(groups, any.missing = FALSE, min.len = 0,
+#'
+calculate_wcFst <- function(snpdata, from, groups) { # nolint: object_name_linter
+  checkmate::assert_vector(groups, any.missing = FALSE, min.len = 0L,
                            null.ok = TRUE)
-  checkmate::assert_character(from, len = 1, any.missing = FALSE,
+  checkmate::assert_character(from, len = 1L, any.missing = FALSE,
                               null.ok = FALSE)
   checkmate::assert_class(snpdata, "SNPdata", null.ok = FALSE)
-  
-  if (is.null(groups) & !is.null(from)) {
-    groups <- as.character(unique(snpdata$meta[[from]]))
-  } else if(all(!is.null(groups) &&
-                !is.null(from) &&
-                (any(!(groups %in% unique(snpdata$meta[[from]])))))) {
-        stop(sprintf("Not all specified groups belong to the %s column of 
-             the metadata table", from))
+
+  if (is.null(groups) && !is.null(from)) {
+    groups <- as.character(unique(snpdata[["meta"]][[from]]))
+  } else if (all(!is.null(groups) &&
+                   !is.null(from) &&
+                   (!all(groups %in% unique(snpdata[["meta"]][[from]]))))) {
+    stop(sprintf("Not all specified groups belong to the %s column of
+                 the metadata table", from))
   }
-  system(sprintf("tabix %s", snpdata$vcf))
-  Fst <- list()
-  for(i in 1:(length(groups)-1)) {
-      idx1 <- which(snpdata$meta[[from]] == groups[i])
-      idx1 <- paste(idx1, collapse = ",")
-      for(j in (i+1):length(groups)) {
-          idx2 <- which(snpdata$meta[[from]] == groups[j])
-          idx2 <- paste(idx2, collapse = ",")
-          out  <- file.path(dirname(snpdata$vcf), "out.wc.fst")
-          pout <- file.path(dirname(snpdata$vcf), "out.wc.fst.pvalues")
-          system(sprintf("wcFst --target %s --background %s --file %s \
-                         --deltaaf 0 --type GT > %s",
-                         idx1, idx2, snpdata$vcf, out))
-          system(sprintf("pFst --target %s --background %s --file %s \
-                         --deltaaf 0 --type GT > %s",
-                         idx1, idx2, snpdata$vcf, pout))
-          out        <- data.table::fread(out)
-          pout       <- data.table::fread(pout)
-          data.table::setkeyv(out,  c("V1","V2"))
-          data.table::setkeyv(pout, c("V1","V2"))
-          tmp        <- out[pout, nomatch = 0]
-          names(tmp) <- c("Chrom", "Pos", "AF_in_target", "AF_in_background",
-                          "wcFst", "wcFst_pvalue")
-          idx        <- which(tmp$wcFst < 0)
-          if (length(idx) > 0) {
-              tmp$wcFst[idx] <- 0
-          }
-          tmp$wcFst_Adj_pvalue_BH <- p.adjust(tmp$wcFst_pvalue, method = "BH")
-          Fst[[paste0(groups[i], "_vs_", groups[j])]] <- tmp
+  system(sprintf("tabix %s", snpdata[["vcf"]]))
+  fst <- list()
+  for (i in ((seq_len(groups) - 1L))) {
+    idx1 <- which(snpdata[["meta"]][[from]] == groups[i])
+    idx1 <- paste(idx1, collapse = ",")
+    for (j in (i + 1L):length(groups)) {
+      idx2 <- which(snpdata[["meta"]][[from]] == groups[j])
+      idx2 <- paste(idx2, collapse = ",")
+      out  <- file.path(dirname(snpdata[["vcf"]]), "out.wc.fst")
+      pout <- file.path(dirname(snpdata[["vcf"]]), "out.wc.fst.pvalues")
+      system(sprintf("wcFst --target %s --background %s --file %s \
+                     --deltaaf 0 --type GT > %s",
+                     idx1, idx2, snpdata[["vcf"]], out))
+      system(sprintf("pFst --target %s --background %s --file %s \
+                     --deltaaf 0 --type GT > %s",
+                     idx1, idx2, snpdata[["vcf"]], pout))
+      out        <- data.table::fread(out)
+      pout       <- data.table::fread(pout)
+      data.table::setkeyv(out,  c("V1", "V2"))
+      data.table::setkeyv(pout, c("V1", "V2"))
+      tmp        <- out[pout, nomatch = 0L]
+      names(tmp) <- c("Chrom", "Pos", "AF_in_target", "AF_in_background",
+                      "wcFst", "wcFst_pvalue")
+      idx        <- which(tmp[["wcFst"]] < 0L)
+      if (length(idx) > 0L) {
+        tmp[["wcFst"]][idx] <- 0L
       }
+      tmp[["wcFst_Adj_pvalue_BH"]] <- p.adjust(tmp[["wcFst_pvalue"]],
+                                               method = "BH")
+      fst[[paste0(groups[i], "_vs_", groups[j])]] <- tmp
+    }
   }
-  snpdata$Fst <- Fst
+  snpdata[["Fst"]] <- fst
   snpdata
 }
 
 #' Calculate LD R^2 between pairs of loci
-#' 
+#'
 #' @param snpdata a `SNPdata` object
 #' @param min_r2 the minimum r2 value below which the LD value is not reported
 #' @param inter_chrom a `logical` that determines whether to calculate the
 #'    inter-chromosomal LD or not. Default is `FALSE`.
 #' @param chroms a character vector of chromosome names. If provided, LD will be
 #'    calculated only across these chromosomes.
-#' 
+#'
 #' @return a `SNPdata` object with an extra field named as **LD**
 #' @examples
 #' \dontrun{
-#'   snpdata <- calculate_LD(snpdata, min_r2=0.2, inter_chrom=FALSE,
+#'   snpdata <- calculate_ld(snpdata, min_r2=0.2, inter_chrom=FALSE,
 #'     chroms=c("Pf3D7_04_v3","Pf3D7_05_v3"))
 #'  }
 #' @details The output file from LD calculation could be large. In order to
 #'     reduce the size of that file, we recommend to specify the list of
 #'     chromosomes for which LD should be calculated using the `chroms` option.
 #' @export
-calculate_LD <- function(snpdata, min_r2 = 0.2, inter_chrom = FALSE,
-                         chroms = NULL) {
+#'
+calculate_ld <- function(snpdata,
+                         min_r2      = 0.2,
+                         inter_chrom = FALSE,
+                         chroms      = NULL) {
   checkmate::assert_class(snpdata, "SNPdata", null.ok = FALSE)
-  checkmate::assert_numeric(min_r2, lower = 0, upper = 1, finite = TRUE,
+  checkmate::assert_numeric(min_r2, lower = 0L, upper = 1L, finite = TRUE,
                             any.missing = FALSE, null.ok = FALSE)
-  checkmate::assert_logical(inter_chrom, any.missing = FALSE, len = 1,
+  checkmate::assert_logical(inter_chrom, any.missing = FALSE, len = 1L,
                             null.ok = FALSE)
-    out = paste0(dirname(snpdata$vcf),"/tmp_ld")
-    if(inter_chrom){
-        cat("inter-chromosomal LD will be calculated between sites on",paste(chroms, collapse = ","))
-        system(sprintf("vcftools --gzvcf %s --out %s --min-r2 %s --interchrom-geno-r2", snpdata$vcf, out, min_r2))
-    }else{
-        system(sprintf("vcftools --gzvcf %s --out %s --min-r2 %s --geno-r2", snpdata$vcf, out, min_r2))
-    }
-    out = paste0(out,".geno.ld")
-    system(sprintf("bgzip %s", out))
-    out = paste0(out,".gz")
-    ld = fread(out, nThread = 4)
-    if(!is.null(chroms)){
-        idx1 = which(ld$CHR1 %in% chroms)
-        idx2 = which(ld$CHR2 %in% chroms)
-        idx = unique(c(idx1, idx2))
-        ld = ld[idx,]
-    }
+  out <- file.path(dirname(snpdata[["vcf"]]), "tmp_ld")
+  if (inter_chrom) {
+    cat("inter-chromosomal LD will be calculated between sites on",
+        paste(chroms, collapse = ","))
+    system(sprintf("vcftools --gzvcf %s --out %s --min-r2 %s --interchrom-geno-r2", # nolint: line_length_linter
+                   snpdata[["vcf"]], out, min_r2))
+  } else {
+    system(sprintf("vcftools --gzvcf %s --out %s --min-r2 %s --geno-r2",
+                   snpdata[["vcf"]], out, min_r2))
+  }
+  out <- paste0(out, ".geno.ld")
+  system(sprintf("bgzip %s", out))
+  out <- paste0(out, ".gz")
+  ld  <- data.table::fread(out, nThread = 4L)
+  if (!is.null(chroms)) {
+    idx1 <- which(ld[["CHR1"]] %in% chroms)
+    idx2 <- which(ld[["CHR2"]] %in% chroms)
+    idx  <- unique(c(idx1, idx2))
+    ld   <- ld[idx, ]
+  }
 
-    snpdata$LD=ld
+  snpdata[["LD"]] <- ld
+  snpdata
 }
 
 #' Generate dissimilarity matrix (1-IBS) between all pairs of isolates
+#'
 #' @param snpdata SNPdata object
-#' @param mat.name the name of the genotype table to be used. default="GT"
-#' @return SNPdata object with an extra field: IBS
+#' @param mat_name the name of the genotype table to be used. default="GT"
+#'
+#' @return a `SNPdata` object with an extra field: `IBS`
 #' @examples
 #' \dontrun{
-#'   snpdata = calculate_IBS(snpdata, mat.name="GT")
+#'   snpdata <- calculate_IBS(snpdata, mat_name = "GT")
 #'  }
-#'  
+#'
 #' @export
-calculate_IBS = function(snpdata, mat.name="GT"){
-    if(!(mat.name %in% names(snpdata))){
-        stop("specified genotype matrix does not exist")
+#'
+calculate_IBS <- function(snpdata, mat_name = "GT") { # nolint: object_name_linter
+  if (!(mat_name %in% names(snpdata))) {
+    stop("specified genotype matrix does not exist.")
+  }
+  X  <- t(snpdata[[mat_name]]) # nolint: object_name_linter
+  y  <- matrix(NA, nrow = nrow(X), ncol = nrow(X))
+  pb <- txtProgressBar(min = 0L, max = nrow(X),
+                       initial = 0L, style = 3L, char = "*")
+  for (i in seq_along(X)) {
+    for (j in seq_along(X)) {
+      m       <- X[i, ] - X[j, ]
+      y[i, j] <- 1.0 - (length(which(m == 0L)) / ncol(X))
     }
-    X = t(snpdata[[mat.name]])
-    y = matrix(NA, nrow = nrow(X), ncol = nrow(X))
-    # colnames(y) = rownames(y) = rownames(X)
-    pb = txtProgressBar(min = 0, max = nrow(X), initial = 0,style = 3, char = "*")
-    for(i in 1:nrow(X)){
-        for(j in 1:nrow(X)){
-            m = X[i,]-X[j,]
-            y[i,j] = 1-(length(which(m==0))/ncol(X))
-        }
-        setTxtProgressBar(pb, i)
-    }
-    close(pb)
-    y[upper.tri(y)]=NA
-    colnames(y) = rownames(X); rownames(y) = rownames(X)
-    snpdata$IBS=y
-    snpdata
+    setTxtProgressBar(pb, i)
+  }
+  close(pb)
+  y[upper.tri(y)]  <- NA
+  colnames(y)      <- rownames(X)
+  rownames(y)      <- rownames(X)
+  snpdata[["IBS"]] <- y
+  snpdata
 }
 
 
 #' Calculate iR index to detect loci with excess of IBD sharing
+#'
 #' @param snpdata SNPdata object
-#' @param mat.name the name of the genotype table to be used. default="Phased"
-#' @param family the name of the column, in the metadata table, to be used to represent the sample's population
-#' @param number.cores the number of cores to be used. default=4
-#' @return SNPdata object with an extra field: iR
+#' @param mat_name the name of the genotype table to be used. default = "Phased"
+#' @param family the name of the column, in the metadata table, to be used to
+#'    represent the sample's population
+#' @param number_cores the number of cores to be used. default = 4
+#'
+#' @return a `SNPdata` object with an extra field: `iR`
 #' @examples
 #' \dontrun{
-#'   snpdata = calculate_iR(snpdata, mat.name="Phased", family="Location", 
-#'   number.cores=4)
+#'   snpdata <- calculate_iR(
+#'     snpdata,
+#'     mat_name     = "Phased",
+#'     family       = "Location",
+#'     number_cores = 4
+#'  )
 #'  }
 #' @export
-calculate_iR = function(snpdata, mat.name="Phased", family="Location", number.cores=4){
-    if(!(family %in% names(snpdata$meta))){
-        stop("No column name ",family," in the metadata table")
-    }
-    if(mat.name=="GT" | mat.name=="Phased"){
-        cat("phasing the mixed genotypes\n")
-        snpdata = phase_mixed_genotypes(snpdata, nsim=10)
-    }
-    ped = make_ped(snpdata[[mat.name]], snpdata$meta, family)
-    ped$sex=as.numeric(ped$sex)
-    map = make_map(snpdata$details)
-    ped.map = list(ped,map)
-    my.geno = getGenotypes(ped.map, reference.ped.map=NULL, maf=0.01, isolate.max.missing=0.2, snp.max.missing=0.2, chromosomes=NULL, input.map.distance="cM", reference.map.distance="cM")
-    my.param = getIBDparameters(ped.genotypes = my.geno, number.cores = number.cores)
-    my.ibd = getIBDsegments(ped.genotypes = my.geno,parameters = my.param, number.cores = number.cores, minimum.snps = 20, minimum.length.bp = 50000,error = 0.001)
-    my.matrix = getIBDmatrix(ped.genotypes = my.geno, ibd.segments = my.ibd)
-    my.iR = getIBDiR(ped.genotypes = my.geno,ibd.matrix = my.matrix,groups = NULL)
-    pvalues = as.numeric(as.character(lapply(my.iR$log10_pvalue, get.pvalue)))
-    my.iR$log10_pvalue = pvalues
-    names(my.iR)[8] = "pvalues"
-    my.iR$adj_pvalue_BH = p.adjust(my.iR$pvalues, method = "BH")
-    if(!("iR" %in% names(snpdata))){
-        snpdata$iR=list()
-    }
-    groups = unique(snpdata$meta[[family]])
-    snpdata$iR[[paste0(groups[1],"_vs_",groups[2])]] = my.iR
-    snpdata
+calculate_iR <- function(snpdata, # nolint: object_name_linter
+                         mat_name     = "Phased",
+                         family       = "Location",
+                         number_cores = 4L) {
+  if (!(family %in% names(snpdata[["meta"]]))) {
+    stop("No column name ", family, " in the metadata table")
+  }
+  if (mat_name == "GT" || mat_name == "Phased") {
+    cat("Phasing the mixed genotypes\n")
+    snpdata <- phase_mixed_genotypes(snpdata, nsim = 10L)
+  }
+  ped          <- make_ped(snpdata[[mat_name]], snpdata[["meta"]], family)
+  ped[["sex"]] <- as.numeric(ped[["sex"]])
+  map          <- make_map(snpdata[["details"]])
+  ped_map      <- list(ped, map)
+  my_geno      <- get_genotypes(ped_map                = ped_map,
+                                reference_ped_map      = NULL,
+                                maf                    = 0.01,
+                                isolate_max_missing    = 0.2,
+                                snp_max_missing        = 0.2,
+                                chromosomes            = NULL,
+                                input_map_distance     = "cM",
+                                reference_map_distance = "cM")
+  my_param <- isoRelate::getIBDparameters(ped.genotypes = my_geno,
+                                          number.cores  = number_cores)
+  my_ibd   <- isoRelate::getIBDsegments(ped.genotypes     = my_geno,
+                                        parameters        = my_param,
+                                        number.cores      = number_cores,
+                                        minimum.snps      = 20L,
+                                        minimum.length.bp = 50000L,
+                                        error             = 0.001)
+  my_matrix <- isoRelate::getIBDmatrix(ped.genotypes = my_geno,
+                                       ibd.segments  = my_ibd)
+  my_iR     <- isoRelate::getIBDiR(ped.genotypes = my_geno, # nolint: object_name_linter
+                                   ibd.matrix    = my_matrix,
+                                   groups        = NULL)
+  pvalues   <- as.numeric(as.character(lapply(my_iR[["log10_pvalue"]],
+                                              get_pvalue)))
+  my_iR[["log10_pvalue"]]  <- pvalues # nolint: object_name_linter
+  names(my_iR)[[8L]]       <- "pvalues" # nolint: object_name_linter
+  my_iR[["adj_pvalue_BH"]] <- p.adjust(my_iR[["pvalues"]], method = "BH") # nolint: object_name_linter
+  if (!("iR" %in% names(snpdata))) {
+    snpdata[["iR"]]        <- list()
+  }
+  groups    <- unique(snpdata[["meta"]][[family]])
+  snpdata[["iR"]][[paste0(groups[[1L]], "_vs_", groups[[2L]])]] <- my_iR
+  snpdata
 }
 
-get.pvalue = function(x){10^-x}
+get_pvalue <- function(x) {
+  10^-x # nolint: implicit_integer_linter
+}
 
-make_ped = function(mat, metadata, family){
-    mat[mat==1]=2
-    mat[mat==0]=1
-    mat[is.na(mat)]=0
-    mat=t(mat)
+make_ped <- function(mat, metadata, family) {
+  mat[mat == 1L]  <- 2L
+  mat[mat == 0L]  <- 1L
+  mat[is.na(mat)] <- 0L
+  mat             <- t(mat)
 
-    new.genotype = matrix(-9 , nrow = dim(mat)[1], ncol = ((dim(mat)[2])*2) )
-    j=1
-    k=1
-    while(j<=ncol(mat)){
-        # print(j)
-        new.genotype[,k] = mat[,j]
-        new.genotype[,(k+1)] = mat[,j]
-        j=j+1
-        k=k+2
+  new_genotype    <- matrix(-9L, nrow = dim(mat)[[1L]],
+                            ncol = ((dim(mat)[[2L]]) * 2L))
+  j <- 1L
+  k <- 1L
+  while (j <= ncol(mat)) {
+    new_genotype[, k]        <- mat[, j]
+    new_genotype[, (k + 1L)] <- mat[, j]
+    j                        <- j + 1L
+    k                        <- k + 2L
+  }
+
+  ped6 <- as.data.frame(cbind(metadata[[family]],
+                              metadata[["sample"]],
+                              fatherID  = 0L,
+                              motherID  = 0L,
+                              sex       = metadata[["COI"]],
+                              phenotype = -9L),
+                        stringsAsFactors = FALSE)
+  names(ped6)[1L:2L] <- c("pop", "sample")
+  ped                <- as.data.frame(cbind(ped6, data.frame(new_genotype)))
+  ped
+}
+
+make_map <- function(details) {
+  c1      <- details[["Chrom"]]
+  c4      <- details[["Pos"]]
+  get_xme <- function(x) {
+    as.character(unlist(strsplit(x, "_", fixed = TRUE))[[2L]])
+  }
+  xme     <- as.numeric(as.character(lapply(c1, get_xme)))
+  c2      <- paste0(LETTERS[xme], c4)
+  c3      <- c4 / 12000L
+  map     <- as.data.frame(chrom = c1, post = c2, gd = c3, pos = c4,
+                           stringsAsFactors = FALSE)
+  map
+}
+
+haplotype_to_genotype <- function(haplotypes, moi) {
+  genotypes <- matrix(-9L, dim(haplotypes)[[1L]], dim(haplotypes)[[2L]] / 2L)
+  for (i in seq_along(dim(haplotypes)[[1L]])) {
+    j <- k <- 1L
+    while (j <= dim(haplotypes)[[2L]]) {
+      if (haplotypes[i, j] == 1L && haplotypes[i, (j + 1L)] == 1L) {
+        genotypes[i, k] <- 0L
+      }
+      if (haplotypes[i, j] == 2L && haplotypes[i, (j + 1L)] == 2L) {
+        genotypes[i, k] <- 2L
+      }
+      if (haplotypes[i, j] == 0L && haplotypes[i, (j + 1L)] == 0L) {
+        genotypes[i, k] <- -1L
+      }
+      if ((moi[i] == 1L) && ((haplotypes[i, j] == 1L && haplotypes[i, (j + 1L)] == 2L) || (haplotypes[i, j] == 2L && haplotypes[i, (j + 1L)] == 1L))) { # nolint: line_length_linter
+        genotypes[i, k] <- -1L
+      }
+      if ((moi[i] == 2L) && ((haplotypes[i, j] == 1L && haplotypes[i, (j + 1L)] == 2L) || (haplotypes[i, j] == 2L && haplotypes[i, (j + 1L)] == 1L))) { # nolint: line_length_linter
+        genotypes[i, k] <- 1L
+      }
+      if (haplotypes[i, j] != 0L && haplotypes[i,j] != 1L && haplotypes[i, j] != 2L) { # nolint: line_length_linter
+        genotypes[i, k] <- -1L
+      }
+      if (haplotypes[i, (j + 1L)] != 0L && haplotypes[i, (j + 1L)] != 1L && haplotypes[i, (j + 1L)] != 2L) { # nolint: line_length_linter
+        genotypes[i, k] <- -1L
+      }
+      j <- j + 2L
+      k <- k + 1L
     }
-
-    PED6 = data.frame(cbind(metadata[[family]],metadata$sample, fatherID = 0, motherID = 0, sex = metadata$COI, phenotype = -9), stringsAsFactors = FALSE)
-    names(PED6)[1:2] = c("pop","sample")
-    ped = data.frame(cbind(PED6, data.frame(new.genotype)))
-    ped
+  }
+  t(genotypes)
 }
 
-make_map = function(details){
-    c1 = details$Chrom
-    c4 = details$Pos
-    get_xme = function(x){as.character(unlist(strsplit(x,"_"))[2])}
-    xme = as.numeric(as.character(lapply(c1, get_xme)))
-    c2 = paste0(LETTERS[xme], c4)
-    c3 = c4/12000
-    map = data.frame(chrom = c1, post = c2, gd = c3, pos = c4, stringsAsFactors = FALSE)
-    map
-}
+calculate_pop_allele_freq <- function(genotypes, moi) {
+  pop_allele_freqs <- vector("numeric", dim(genotypes)[[1L]])
+  number_isolates  <- dim(genotypes)[[2L]]
+  number_snps      <- dim(genotypes)[[1L]]
 
-haplotypeToGenotype = function(haplotypes, moi){
-    genotypes = matrix(-9, dim(haplotypes)[1], dim(haplotypes)[2]/2)
-    for(i in 1:dim(haplotypes)[1]){
-        #print(i)
-        j=1
-        k=1
-        while(j <= dim(haplotypes)[2]){
-            if(haplotypes[i,j] == 1 && haplotypes[i,(j+1)] == 1) genotypes[i,k] = 0
-            if(haplotypes[i,j] == 2 && haplotypes[i,(j+1)] == 2) genotypes[i,k] = 2
-            if(haplotypes[i,j] == 0 && haplotypes[i,(j+1)] == 0) genotypes[i,k] = -1
-            if((moi[i] == 1) && ((haplotypes[i,j] == 1 && haplotypes[i,(j+1)] == 2) || (haplotypes[i,j] == 2 && haplotypes[i,(j+1)] == 1))) genotypes[i,k] = -1
-            if((moi[i] == 2) && ((haplotypes[i,j] == 1 && haplotypes[i,(j+1)] == 2) || (haplotypes[i,j] == 2 && haplotypes[i,(j+1)] == 1))) genotypes[i,k] = 1
-            if(haplotypes[i,j] != 0 && haplotypes[i,j] != 1 && haplotypes[i,j] != 2) genotypes[i,k] = -1
-            if(haplotypes[i,(j+1)] != 0 && haplotypes[i,(j+1)] != 1 && haplotypes[i,(j+1)] != 2) genotypes[i,k] = -1
-            j=j+2
-            k=k+1
-        }
+  for (t in seq_len(number_snps)) {
+    A <- 0L # nolint: object_name_linter
+    B <- 0L # nolint: object_name_linter
+    for (i in seq_len(number_isolates)) {
+      if (genotypes[t, i] == 0L && moi[i] == 1L) A <- A + 1L # nolint: object_name_linter
+      if (genotypes[t, i] == 0L && moi[i] == 2L) A <- A + 2L # nolint: object_name_linter
+      if (genotypes[t, i] == 1L && moi[i] == 2L) { A <- A + 1L; B <- B + 1L } # nolint: object_name_linter
+      if (genotypes[t, i] == 2L && moi[i] == 1L) B <- B + 1L # nolint: object_name_linter
+      if (genotypes[t, i] == 2L && moi[i] == 2L) B <- B + 1L # nolint: object_name_linter
     }
-    return(t(genotypes))
+    if (A + B == 0L) pop_allele_freqs[t] <- -1L # nolint: object_name_linter
+    else pop_allele_freqs[t] <- A / (A + B) # nolint: object_name_linter
+  }
+  pop_allele_freqs
 }
 
-calculatePopAlleleFreq = function(genotypes, moi){
-    pop_allele_freqs = vector('numeric',dim(genotypes)[1])
-    number_isolates = dim(genotypes)[2]
-    number_snps = dim(genotypes)[1]
+calculate_missingness <- function(genotypes) {
+  proportion_missing <- vector("numeric", dim(genotypes)[[2L]])
+  number_snps        <- dim(genotypes)[[2L]]
+  number_isolates    <- dim(genotypes)[[1L]]
+  number_snps_1      <- dim(genotypes)[[1L]]
 
-    for (t in 1:number_snps){
-        #print(t)
-        A = 0
-        B = 0
-        for (i in 1:number_isolates)
-        {
-            if (genotypes[t,i] == 0 && moi[i] == 1)  A=A+1
-            if (genotypes[t,i] == 0 && moi[i] == 2)  A=A+2
-            if (genotypes[t,i] == 1 && moi[i] == 2){ A=A+1; B=B+1 }
-            if (genotypes[t,i] == 2 && moi[i] == 1)  B=B+1
-            if (genotypes[t,i] == 2 && moi[i] == 2)  B=B+1
-        }
-        if (A + B == 0) pop_allele_freqs[t] = -1
-        else pop_allele_freqs[t] = A/(A+B)
+  for (i in seq_len(number_snps)) {
+    number_missing <- 0L
+    for (j in seq_len(number_isolates)) {
+      if (genotypes[j, i] == -1L) number_missing <- number_missing + 1L
     }
-    return(pop_allele_freqs)
+    proportion_missing[i] <- number_missing / number_snps_1
+  }
+  proportion_missing
 }
 
-calculateMissingness = function(genotypes) {
-    proportion_missing=vector('numeric',dim(genotypes)[2])
-    number_snps = dim(genotypes)[2]
-    number_isolates = dim(genotypes)[1]
-    number_snps_1 = dim(genotypes)[1]
+get_genotypes <- function(ped_map,
+                          reference_ped_map      = NULL, 
+                          maf                    = 0.01,
+                          isolate_max_missing    = 0.1,
+                          snp_max_missing        = 0.1,
+                          chromosomes            = NULL,
+                          input_map_distance     = "cM",
+                          reference_map_distance = "cM") {
+  checkmate::assert_numeric(maf, lower = 0.0, upper = 1.0, finite = TRUE,
+                            null.ok = FALSE)
+  checkmate::assert_list(ped_map, len = 2L, null.ok = FALSE)
+  checkmate::assert_data_frame(ped_map[[1L]],
+                               ncols = (2L * nrow(ped_map[[2L]]) + 6L))
+  checkmate::assert_data_frame(ped_map[[2L]], ncols = 4L)
+                               
+  
+  input_ped <- as.data.frame(ped_map[[1L]])
+  input_map <- as.data.frame(ped_map[[2L]])
+  colnames(input_map) <- c("chr", "snp_id", "pos_M", "pos_bp")
+  if (!is.numeric(input_map[,"pos_M"])) {
+    stop("'ped_map' has incorrect format - genetic-map positions in MAP file are non-numeric")
+  }
+  if (!is.numeric(input_map[,"pos_bp"])) {
+    stop("'ped_map' has incorrect format - base-pair positions in MAP file are non-numeric")
+  }
+  if (is.factor(input_map[, "chr"])) {
+    input_map[, "chr"] <- as.character(input_map[, "chr"])
+  }
+  if (is.factor(input_map[, "snp_id"])) {
+    input_map[, "snp_id"] <- as.character(input_map[, "snp_id"])
+  }
 
-    for (i in 1:number_snps){
-        #print(i)
-        number_missing = 0.0
-        for (j in 1:number_isolates) {
-            if(genotypes[j,i] == -1 ) number_missing = number_missing+1;
-        }
-        proportion_missing[i] = number_missing/number_snps_1;
+  if (is.factor(input_ped[, 1L])) {
+    input_ped[, 1L] <- as.character(input_ped[, 1L])
+  }
+  if (is.factor(input_ped[, 2L])) {
+    input_ped[, 2L] <- as.character(input_ped[, 2L])
+  }
+
+  # check reference data
+  if (!is.null(reference_ped_map)) {
+    if (!is.list(reference_ped_map) || length(reference_ped_map) != 2L) {
+      stop("'reference_ped_map' must be a list containing 2 objects: 'PED' and 'MAP'")
     }
-    return(proportion_missing)
-}
-
-getGenotypes = function(ped.map, reference.ped.map=NULL, maf=0.01, isolate.max.missing=0.1, snp.max.missing=0.1, chromosomes=NULL, input.map.distance="cM", reference.map.distance="cM"){
-    # check input PED and MAP files
-    if (!is.list(ped.map) | length(ped.map) != 2) stop ("'ped.map' must be a list containing 2 objects: 'PED' and 'MAP'")
-    input.ped <- as.data.frame(ped.map[[1]])
-    input.map <- as.data.frame(ped.map[[2]])
-    if (!is.data.frame(input.ped)) stop ("'ped.map' has incorrect format - PED is not a data.frame")
-    if (!is.data.frame(input.map)) stop ("'ped.map' has incorrect format - MAP is not a data.frame")
+    reference_ped <- reference_ped_map[[1L]]
+    reference_map <- reference_ped_map[[2L]]
+    if (!is.data.frame(reference_ped)) {
+      stop("'reference_ped_map' has incorrect format - PED is not a data.frame")
+    }
+    if (!is.data.frame(reference_map)) {
+      stop("'reference_ped_map' has incorrect format - MAP is not a data.frame")
+    }
 
     # check the PED and MAP files have the same number of SNPs
-    if (ncol(input.ped) != (2*nrow(input.map)+6)) stop ("'ped.map' has incorrect format - PED and MAP must have the same number of SNPs")
-
-    # check the MAP file has 4 coloumns
-    if (ncol(input.map) != 4) stop ("'ped.map' has incorrect format - MAP must have four columns")
-    colnames(input.map) <- c("chr", "snp_id", "pos_M", "pos_bp")
-    if (!is.numeric(input.map[,"pos_M"])) stop ("'ped.map' has incorrect format - genetic-map positions in MAP file are non-numeric")
-    if (!is.numeric(input.map[,"pos_bp"])) stop ("'ped.map' has incorrect format - base-pair positions in MAP file are non-numeric")
-    if (is.factor(input.map[,"chr"]))
-        input.map[,"chr"] <- as.character(input.map[,"chr"])
-    if (is.factor(input.map[,"snp_id"]))
-        input.map[,"snp_id"] <- as.character(input.map[,"snp_id"])
-
-
-    # check PED for factors
-    # input.ped = as.matrix(input.ped)
-    # input.map = as.matrix(input.map)
-    if (is.factor(input.ped[,1]))
-        input.ped[,1] <- as.character(input.ped[,1])
-    if (is.factor(input.ped[,2]))
-        input.ped[,2] <- as.character(input.ped[,2])
-
-
-    # check reference data
-    if (!is.null(reference.ped.map)) {
-        if (!is.list(reference.ped.map) | length(reference.ped.map) != 2) stop ("'reference.ped.map' must be a list containing 2 objects: 'PED' and 'MAP'")
-        reference.ped <- reference.ped.map[[1]]
-        reference.map <- reference.ped.map[[2]]
-        if (!is.data.frame(reference.ped)) stop ("'reference.ped.map' has incorrect format - PED is not a data.frame")
-        if (!is.data.frame(reference.map)) stop ("'reference.ped.map' has incorrect format - MAP is not a data.frame")
-
-        # check the PED and MAP files have the same number of SNPs
-        if (ncol(reference.ped) != (2*nrow(reference.map)+6)) stop ("'reference.ped.map' has incorrect format - PED and MAP must have the same number of SNPs")
-
-        # check the MAP file has 4 coloumns
-        if (ncol(reference.map) != 4) stop ("'reference.ped.map' has incorrect format - MAP must have four columns")
-        colnames(reference.map) <- c("chr", "snp_id", "pos_M", "pos_bp")
-        if (!is.numeric(reference.map[,"pos_M"])) stop ("'reference.ped.map' has incorrect format - genetic-map positions in reference MAP file are non-numeric")
-        if (!is.numeric(reference.map[,"pos_bp"])) stop ("'reference.ped.map' has incorrect format - base-pair positions in reference MAP file are non-numeric")
-        if (is.factor(reference.map[,"chr"]))
-            reference.map[,"chr"] <- as.character(reference.map[,"chr"])
-        if (is.factor(reference.map[,"snp_id"]))
-            reference.map[,"snp_id"] <- as.character(reference.map[,"snp_id"])
-
-        # check PED for factors
-        if (is.factor(reference.ped[,1]))
-            reference.ped[,1] <- as.character(reference.ped[,1])
-        if (is.factor(reference.ped[,2]))
-            reference.ped[,2] <- as.character(reference.ped[,2])
+    if (ncol(reference_ped) != (2L * nrow(reference_map) + 6L)) {
+      stop("'reference_ped_map' has incorrect format - PED and MAP must have the same number of SNPs")
     }
 
-    # check maf
-    if (!is.vector(maf)) stop ("'maf' has incorrect format - must be a vector")
-    if (!is.numeric(maf)) stop ("'maf' has incorrect format - must be numeric")
-    if (length(maf) != 1) stop ("'maf' has incorrect format - must be a single numeric value")
-    if (maf > 1 | maf < 0) stop ("'maf' has incorrect format - must be between 0 and 1")
+    # check the MAP file has 4 coloumns
+    if (ncol(reference_map) != 4L) {
+      stop("'reference_ped_map' has incorrect format - MAP must have four columns")
+    }
+    colnames(reference_map) <- c("chr", "snp_id", "pos_M", "pos_bp")
+    if (!is.numeric(reference_map[, "pos_M"])) {
+      stop("'reference_ped_map' has incorrect format - genetic-map positions in reference MAP file are non-numeric")
+    }
+    if (!is.numeric(reference_map[, "pos_bp"])) {
+      stop("'reference_ped_map' has incorrect format - base-pair positions in reference MAP file are non-numeric")
+    }
+    if (is.factor(reference_map[, "chr"])) {
+      reference_map[, "chr"] <- as.character(reference_map[, "chr"])
+    }
+    if (is.factor(reference_map[, "snp_id"])) {
+      reference_map[, "snp_id"] <- as.character(reference_map[, "snp_id"])
+    }
 
-    # check isolate.max.missing
-    if (!is.vector(isolate.max.missing)) stop ("'isolate.max.missing' has incorrect format - must be a vector")
-    if (!is.numeric(isolate.max.missing)) stop ("'isolate.max.missing' has incorrect format - must be numeric")
-    if (length(isolate.max.missing) != 1) stop ("'isolate.max.missing' has incorrect format - must be a single numeric value")
-    if (isolate.max.missing > 1 | isolate.max.missing < 0) stop ("'isolate.max.missing' has incorrect format - must be between 0 and 1 (inclusive)")
+    # check PED for factors
+    if (is.factor(reference_ped[, 1L])) {
+      reference_ped[, 1L] <- as.character(reference_ped[, 1L])
+    }
+    if (is.factor(reference_ped[, 2L])) {
+      reference_ped[, 2L] <- as.character(reference_ped[, 2L])
+    }
+  }
 
-    # check snp.max.missing
-    if (!is.vector(snp.max.missing)) stop ("'snp.max.missing' has incorrect format - must be a vector")
-    if (!is.numeric(snp.max.missing)) stop ("'snp.max.missing' has incorrect format - must be numeric")
-    if (length(snp.max.missing) != 1) stop ("'snp.max.missing' has incorrect format - must be a single numeric value")
-    if (snp.max.missing > 1 | snp.max.missing < 0) stop ("'snp.max.missing' has incorrect format - must be between 0 and 1 (inclusive)")
+  # check isolate_max_missing
+  if (!is.vector(isolate_max_missing)) stop("'isolate_max_missing' has incorrect format - must be a vector")
+  if (!is.numeric(isolate_max_missing)) stop("'isolate_max_missing' has incorrect format - must be numeric")
+  if (length(isolate_max_missing) != 1) stop("'isolate_max_missing' has incorrect format - must be a single numeric value")
+  if (isolate_max_missing > 1 | isolate_max_missing < 0) stop("'isolate_max_missing' has incorrect format - must be between 0 and 1 (inclusive)")
+
+    # check snp_max_missing
+    if (!is.vector(snp_max_missing)) stop ("'snp_max_missing' has incorrect format - must be a vector")
+    if (!is.numeric(snp_max_missing)) stop ("'snp_max_missing' has incorrect format - must be numeric")
+    if (length(snp_max_missing) != 1) stop ("'snp_max_missing' has incorrect format - must be a single numeric value")
+    if (snp_max_missing > 1 | snp_max_missing < 0) stop ("'snp_max_missing' has incorrect format - must be between 0 and 1 (inclusive)")
 
     # check chromosomes
     if (!is.null(chromosomes)) {
         if (!is.vector(chromosomes)) stop ("'chromosomes' has incorrect format - must be a vector")
-        if(!all(chromosomes %in% input.map[,"chr"]))
-            stop(paste0("chromosome ",paste0(chromosomes[!(chromosomes %in% input.map[,"chr"])]," not in 'ped.map'\n")))
-        if (!is.null(reference.ped.map)) {
+        if(!all(chromosomes %in% input_map[,"chr"]))
+            stop(paste0("chromosome ",paste0(chromosomes[!(chromosomes %in% input_map[,"chr"])]," not in 'ped_map'\n")))
+        if (!is.null(reference_ped_map)) {
             if(!all(chromosomes %in% reference.map[,"chr"]))
-                stop(paste0("chromosome ",paste0(chromosomes[!(chromosomes %in% reference.map[,"chr"])]," not in 'reference.ped.map'\n")))
+                stop(paste0("chromosome ",paste0(chromosomes[!(chromosomes %in% reference.map[,"chr"])]," not in 'reference_ped_map'\n")))
         }
     } else
-        chromosomes <- unique(as.character(input.map[,"chr"]))
+        chromosomes <- unique(as.character(input_map[,"chr"]))
 
     # check input map distance
-    if (!is.vector(input.map.distance)) stop ("'input.map.distance' has incorrect format - must be a vector")
-    if (!is.character(input.map.distance)) stop ("'input.map.distance' has incorrect format - must be either character M or cM")
-    if (length(input.map.distance) != 1) stop ("'input.map.distance' has incorrect format - must be either character M or cM")
-    if (input.map.distance != "M" & input.map.distance != "cM")
-        stop ("'input.map.distance' has incorrect format - must be either M or cM")
-    if (input.map.distance == "cM") {
-        input.map[,"pos_M"] <- input.map[,"pos_M"]/100
+    if (!is.vector(input_map_distance)) stop ("'input_map_distance' has incorrect format - must be a vector")
+    if (!is.character(input_map_distance)) stop ("'input_map_distance' has incorrect format - must be either character M or cM")
+    if (length(input_map_distance) != 1) stop ("'input_map_distance' has incorrect format - must be either character M or cM")
+    if (input_map_distance != "M" & input_map_distance != "cM")
+        stop ("'input_map_distance' has incorrect format - must be either M or cM")
+    if (input_map_distance == "cM") {
+        input_map[,"pos_M"] <- input_map[,"pos_M"]/100
     }
 
     # check reference map distance
-    if (!is.vector(reference.map.distance)) stop ("'reference.map.distance' has incorrect format - must be a vector")
-    if (!is.character(reference.map.distance)) stop ("'reference.map.distance' has incorrect format - must be either character M or cM")
-    if (length(reference.map.distance) != 1) stop ("'reference.map.distance' has incorrect format - must be either character M or cM")
-    if (reference.map.distance != "M" & reference.map.distance != "cM")
-        stop ("'reference.map.distance' has incorrect format - must be either M or cM")
-    if (reference.map.distance == "cM" & !is.null(reference.ped.map)) {
+    if (!is.vector(reference_map_distance)) stop ("'reference_map_distance' has incorrect format - must be a vector")
+    if (!is.character(reference_map_distance)) stop ("'reference_map_distance' has incorrect format - must be either character M or cM")
+    if (length(reference_map_distance) != 1) stop ("'reference_map_distance' has incorrect format - must be either character M or cM")
+    if (reference_map_distance != "M" & reference_map_distance != "cM")
+        stop ("'reference_map_distance' has incorrect format - must be either M or cM")
+    if (reference_map_distance == "cM" & !is.null(reference_ped_map)) {
         reference.map[,"pos_M"] <- reference.map[,"pos_M"]/100
     }
 
     # begin data filtering
 
     # create new isolate IDs from PED FIDs and IIDs
-    isolate.names <- paste(input.ped[,1], input.ped[,2], sep="/")
+    isolate.names <- paste(input_ped[,1], input_ped[,2], sep="/")
     if (any(duplicated(isolate.names)))
         stop ("duplicate sample IDs found")
 
     # merge input data with reference data
-    if (!is.null(reference.ped.map)) {
-        input.map.v1      <- cbind(1:nrow(input.map), input.map)
+    if (!is.null(reference_ped_map)) {
+        input_map.v1      <- cbind(1:nrow(input_map), input_map)
         reference.map.v1  <- cbind(1:nrow(reference.map), reference.map)
-        input.map.v1      <- merge(input.map.v1, reference.map.v1, by.x="snp_id", by.y="snp_id")
-        if (nrow(input.map.v1) == 0)
-            stop ("no SNPs remaining after merging 'ped.map' and 'reference.ped.map'")
-        input.map.v1  <- input.map.v1[order(input.map.v1[,"1:nrow(input.map)"]),]
+        input_map.v1      <- merge(input_map.v1, reference.map.v1, by.x="snp_id", by.y="snp_id")
+        if (nrow(input_map.v1) == 0)
+            stop ("no SNPs remaining after merging 'ped_map' and 'reference_ped_map'")
+        input_map.v1  <- input_map.v1[order(input_map.v1[,"1:nrow(input_map)"]),]
         if (!is.null(chromosomes))
-            input.map.v1 <- input.map.v1[input.map.v1[,"chr.x"] %in% chromosomes,]
-        if (nrow(input.map.v1) == 0)
-            stop ("no SNPs remaining after merging 'ped.map' and 'reference.ped.map' for selected chromosomes")
-        input.ped.columns <- c(1:6, 2*input.map.v1[,"1:nrow(input.map)"] + 5, 2*input.map.v1[,"1:nrow(input.map)"] + 6)
-        input.ped.columns <- input.ped.columns[order(input.ped.columns)]
-        input.ped.v1      <- input.ped[,input.ped.columns]
-        reference.ped.columns  <- c(1:6, 2*input.map.v1[,"1:nrow(reference.map)"] + 5, 2*input.map.v1[,"1:nrow(reference.map)"] + 6)
+            input_map.v1 <- input_map.v1[input_map.v1[,"chr.x"] %in% chromosomes,]
+        if (nrow(input_map.v1) == 0)
+            stop ("no SNPs remaining after merging 'ped_map' and 'reference_ped_map' for selected chromosomes")
+        input_ped.columns <- c(1:6, 2*input_map.v1[,"1:nrow(input_map)"] + 5, 2*input_map.v1[,"1:nrow(input_map)"] + 6)
+        input_ped.columns <- input_ped.columns[order(input_ped.columns)]
+        input_ped.v1      <- input_ped[,input_ped.columns]
+        reference.ped.columns  <- c(1:6, 2*input_map.v1[,"1:nrow(reference.map)"] + 5, 2*input_map.v1[,"1:nrow(reference.map)"] + 6)
         reference.ped.columns  <- reference.ped.columns[order(reference.ped.columns)]
         reference.ped.v1       <- reference.ped[,reference.ped.columns]
-        input.map.v2           <- input.map.v1[,c("chr.x", "snp_id", "pos_M.x", "pos_bp.x")]
-        colnames(input.map.v2) <- c("chr", "snp_id", "pos_M","pos_bp")
+        input_map.v2           <- input_map.v1[,c("chr.x", "snp_id", "pos_M.x", "pos_bp.x")]
+        colnames(input_map.v2) <- c("chr", "snp_id", "pos_M","pos_bp")
     } else {
         if (!is.null(chromosomes)) {
-            input.map.v1 <- cbind(1:nrow(input.map), input.map)
-            input.map.v1 <- input.map.v1[input.map.v1[,"chr"] %in% chromosomes,]
-            if (nrow(input.map.v1) == 0)
-                stop ("no SNPs remaining after subsetting 'ped.map'by selected chromosomes")
-            input.ped.columns <- c(1:6, 2*input.map.v1[,"1:nrow(input.map)"] + 5, 2*input.map.v1[,"1:nrow(input.map)"] + 6)
-            input.ped.columns <- input.ped.columns[order(input.ped.columns)]
-            input.ped.v1      <- input.ped[,input.ped.columns]
-            input.map.v2      <- input.map.v1[,c("chr", "snp_id", "pos_M", "pos_bp")]
+            input_map.v1 <- cbind(1:nrow(input_map), input_map)
+            input_map.v1 <- input_map.v1[input_map.v1[,"chr"] %in% chromosomes,]
+            if (nrow(input_map.v1) == 0)
+                stop ("no SNPs remaining after subsetting 'ped_map'by selected chromosomes")
+            input_ped.columns <- c(1:6, 2*input_map.v1[,"1:nrow(input_map)"] + 5, 2*input_map.v1[,"1:nrow(input_map)"] + 6)
+            input_ped.columns <- input_ped.columns[order(input_ped.columns)]
+            input_ped.v1      <- input_ped[,input_ped.columns]
+            input_map.v2      <- input_map.v1[,c("chr", "snp_id", "pos_M", "pos_bp")]
         } else {
-            input.map.v2 <- input.map
-            input.ped.v1 <- input.ped
+            input_map.v2 <- input_map
+            input_ped.v1 <- input_ped
         }
     }
 
     # call genotypes
-    input.matrix        <- as.matrix(input.ped.v1[,7:ncol(input.ped.v1)])
-    input.genders       <- input.ped.v1[,5]
-    input.genotypes.v0  <- cbind(input.map.v2, haplotypeToGenotype(input.matrix, input.genders))
-    if (!is.null(reference.ped.map)) {
+    input.matrix        <- as.matrix(input_ped.v1[,7:ncol(input_ped.v1)])
+    input.genders       <- input_ped.v1[,5]
+    input.genotypes.v0  <- cbind(input_map.v2, haplotype_to_genotype(input.matrix, input.genders))
+    if (!is.null(reference_ped_map)) {
         reference.matrix       <- as.matrix(reference.ped.v1[,7:ncol(reference.ped.v1)])
         reference.genders      <- reference.ped.v1[,5]
-        reference.genotypes.v0 <- cbind(input.map.v2, haplotypeToGenotype(reference.matrix, reference.genders))
+        reference.genotypes.v0 <- cbind(input_map.v2, haplotype_to_genotype(reference.matrix, reference.genders))
     }
 
 
     # calculate allele frequencies form reference data
-    if (is.null(reference.ped.map)) {
-        pop.allele.freq    <- calculatePopAlleleFreq(as.matrix(input.genotypes.v0[,5:ncol(input.genotypes.v0)]), input.ped.v1[,5])
+    if (is.null(reference_ped_map)) {
+        pop.allele.freq    <- calculate_pop_allele_freq(as.matrix(input.genotypes.v0[,5:ncol(input.genotypes.v0)]), input_ped.v1[,5])
         input.genotypes.v1 <- cbind(input.genotypes.v0[,c(1:4)],pop.allele.freq,input.genotypes.v0[,5:ncol(input.genotypes.v0)])
     } else {
-        pop.allele.freq    <- calculatePopAlleleFreq(as.matrix(reference.genotypes.v0[,5:ncol(reference.genotypes.v0)]), reference.ped.v1[,5])
+        pop.allele.freq    <- calculate_pop_allele_freq(as.matrix(reference.genotypes.v0[,5:ncol(reference.genotypes.v0)]), reference.ped.v1[,5])
         input.genotypes.v1 <- cbind(input.genotypes.v0[,c(1:4)],pop.allele.freq,input.genotypes.v0[,c(5:ncol(input.genotypes.v0))])
     }
     colnames(input.genotypes.v1) <- c("chr", "snp_id", "pos_M","pos_bp", "freq", isolate.names)
@@ -483,23 +562,23 @@ getGenotypes = function(ped.map, reference.ped.map=NULL, maf=0.01, isolate.max.m
 
 
     # remove snps with high missingness
-    snp.missingness    <- calculateMissingness(as.matrix(t(input.genotypes.v2[,6:ncol(input.genotypes.v2)])))
-    input.genotypes.v3 <- input.genotypes.v2[snp.missingness <= snp.max.missing,]
+    snp.missingness    <- calculate_missingness(as.matrix(t(input.genotypes.v2[,6:ncol(input.genotypes.v2)])))
+    input.genotypes.v3 <- input.genotypes.v2[snp.missingness <= snp_max_missing,]
     if (nrow(input.genotypes.v3) == 0)
         stop("0 SNPs remain after missingness removal")
     cat(paste(nrow(input.genotypes.v3),"SNPs remain after missingness removal...\n",sep=""))
 
 
     # remove samples with high missingness
-    isolate.missingness <- round(calculateMissingness(as.matrix(input.genotypes.v3[,6:ncol(input.genotypes.v3)])),digits=3)
-    if (length(isolate.names[isolate.missingness > isolate.max.missing]) > 0) {
-        my.remove <- isolate.names[isolate.missingness > isolate.max.missing]
+    isolate.missingness <- round(calculate_missingness(as.matrix(input.genotypes.v3[,6:ncol(input.genotypes.v3)])),digits=3)
+    if (length(isolate.names[isolate.missingness > isolate_max_missing]) > 0) {
+        my.remove <- isolate.names[isolate.missingness > isolate_max_missing]
         warning("isolates removed due to genotype missingness: ",paste(my.remove, collapse=", "))
-        sample.keep        <- input.ped.v1[isolate.missingness <= isolate.max.missing,1:6]
-        input.genotypes.v4 <- input.genotypes.v3[,c(1:5, which(isolate.missingness <= isolate.max.missing) + 5)]
-        if(nrow(sample.keep) < 1) stop(paste("All isolates removed with missingness > ",isolate.max.missing*100,"%. No isolates remaining.",sep=""))
+        sample.keep        <- input_ped.v1[isolate.missingness <= isolate_max_missing,1:6]
+        input.genotypes.v4 <- input.genotypes.v3[,c(1:5, which(isolate.missingness <= isolate_max_missing) + 5)]
+        if(nrow(sample.keep) < 1) stop(paste("All isolates removed with missingness > ",isolate_max_missing*100,"%. No isolates remaining.",sep=""))
     } else {
-        sample.keep        <- input.ped.v1[,1:6]
+        sample.keep        <- input_ped.v1[,1:6]
         input.genotypes.v4 <- input.genotypes.v3
     }
     colnames(sample.keep) <- c("fid", "iid", "pid", "mid", "moi", "aff")
@@ -517,7 +596,7 @@ getGenotypes = function(ped.map, reference.ped.map=NULL, maf=0.01, isolate.max.m
 
 #' Estimate the relatedness between pairs of isolates
 #' @param snpdata SNPdata object
-#' @param mat.name the name of the genotype table to be used. default="GT"
+#' @param mat_name the name of the genotype table to be used. default="GT"
 #' @param from the name of the column, in the metadata table, to be used to represent the sample's population
 #' @param sweepRegions a data frame with the genomic coordinates of the regions of the genome to be discarded. This should contain the following 3 columns:
 #' \enumerate{
@@ -529,26 +608,26 @@ getGenotypes = function(ped.map, reference.ped.map=NULL, maf=0.01, isolate.max.m
 #' @return SNPdata object with an extra field: relatedness. This will contain the relatedness data frame of 3 columns and its correspondent matrix
 #' @examples
 #' \dontrun{
-#'   calculate_relatedness(snpdata, mat.name="GT", family="Location", 
+#'   calculate_relatedness(snpdata, mat_name="GT", family="Location", 
 #'   sweepRegions=NULL, groups=c("Chogen","DongoroBa"))
 #'  }
 #' @details The relatedness calculation is based on the model developed by Aimee R. Taylor and co-authors. https://journals.plos.org/plosgenetics/article?id=10.1371/journal.pgen.1009101
 #' @export
-calculate_relatedness = function(snpdata, mat.name="Imputed", from="Location", sweepRegions=NULL, groups=NULL){
+calculate_relatedness = function(snpdata, mat_name="Imputed", from="Location", sweepRegions=NULL, groups=NULL){
     # sourceCpp("src/hmmloglikelihood.cpp")
     details = snpdata$details
     metadata = snpdata$meta
-    if(mat.name=="GT" | mat.name=="Phased"){
+    if(mat_name=="GT" | mat_name=="Phased"){
         cat("Imputing the missing genotypes\n")
-        snpdata = impute_missing_genotypes(snpdata, genotype=mat.name, nsim=10)
+        snpdata = impute_missing_genotypes(snpdata, genotype=mat_name, nsim=10)
     }
-    if((mat.name=="Imputed") & (!("Imputed" %in% names(snpdata)))){
-        mat.name="GT"
+    if((mat_name=="Imputed") & (!("Imputed" %in% names(snpdata)))){
+        mat_name="GT"
         cat("Imputing the missing genotypes\n")
-        snpdata = impute_missing_genotypes(snpdata, genotype=mat.name, nsim=10)
+        snpdata = impute_missing_genotypes(snpdata, genotype=mat_name, nsim=10)
     }
 
-    # mat.name = "Imputed"
+    # mat_name = "Imputed"
     mat = snpdata[["Imputed"]]
     if(!is.null(groups) & all(groups %in% unique(metadata[[from]]))){
         pops = groups

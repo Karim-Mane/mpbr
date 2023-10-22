@@ -9,6 +9,9 @@
 \arguments{
 \item{snpdata}{the \code{SNPdata} object}
 }
+\value{
+prints the structure of the \code{SNPdata} object
+}
 \description{
 Print the \code{SNPdata} object
 }
@@ -16,5 +19,5 @@ Print the \code{SNPdata} object
 \dontrun{
   print(snpdata)
 }
-  
+
 }

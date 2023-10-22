@@ -4,7 +4,7 @@
 \alias{phase_mixed_genotypes}
 \title{Phase mixed genotypes}
 \usage{
-phase_mixed_genotypes(snpdata, nsim = 100)
+phase_mixed_genotypes(snpdata, nsim = 100L)
 }
 \arguments{
 \item{snpdata}{a \code{SNPdata} object}
@@ -32,7 +32,7 @@ the genotype is phased using a Bernoulli distribution.
 }
 \examples{
 \dontrun{
- snpdata <- phase_mixed_genotypes(snpdata)
+  snpdata <- phase_mixed_genotypes(snpdata)
  }
- 
+
 }

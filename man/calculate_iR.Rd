@@ -6,29 +6,34 @@
 \usage{
 calculate_iR(
   snpdata,
-  mat.name = "Phased",
+  mat_name = "Phased",
   family = "Location",
-  number.cores = 4
+  number_cores = 4
 )
 }
 \arguments{
 \item{snpdata}{SNPdata object}
 
-\item{mat.name}{the name of the genotype table to be used. default="Phased"}
+\item{mat_name}{the name of the genotype table to be used. default = "Phased"}
 
-\item{family}{the name of the column, in the metadata table, to be used to represent the sample's population}
+\item{family}{the name of the column, in the metadata table, to be used to
+represent the sample's population}
 
-\item{number.cores}{the number of cores to be used. default=4}
+\item{number_cores}{the number of cores to be used. default = 4}
 }
 \value{
-SNPdata object with an extra field: iR
+a \code{SNPdata} object with an extra field: \code{iR}
 }
 \description{
 Calculate iR index to detect loci with excess of IBD sharing
 }
 \examples{
 \dontrun{
-  snpdata = calculate_iR(snpdata, mat.name="Phased", family="Location", 
-  number.cores=4)
+  snpdata <- calculate_iR(
+    snpdata,
+    mat_name     = "Phased",
+    family       = "Location",
+    number_cores = 4
+ )
  }
 }
