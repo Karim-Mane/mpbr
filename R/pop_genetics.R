@@ -359,75 +359,66 @@ calculate_missingness <- function(genotypes) {
   proportion_missing
 }
 
-get_genotypes <- function(ped_map,
-                          reference_ped_map      = NULL, 
-                          maf                    = 0.01,
-                          isolate_max_missing    = 0.1,
-                          snp_max_missing        = 0.1,
-                          chromosomes            = NULL,
-                          input_map_distance     = "cM",
-                          reference_map_distance = "cM") {
-  checkmate::assert_numeric(maf, lower = 0.0, upper = 1.0, finite = TRUE,
-                            null.ok = FALSE)
-  checkmate::assert_list(ped_map, len = 2L, null.ok = FALSE)
-  checkmate::assert_data_frame(ped_map[[1L]],
-                               ncols = (2L * nrow(ped_map[[2L]]) + 6L))
-  checkmate::assert_data_frame(ped_map[[2L]], ncols = 4L)
-                               
-  
-  input_ped <- as.data.frame(ped_map[[1L]])
-  input_map <- as.data.frame(ped_map[[2L]])
-  colnames(input_map) <- c("chr", "snp_id", "pos_M", "pos_bp")
-  if (!is.numeric(input_map[,"pos_M"])) {
-    stop("'ped_map' has incorrect format - genetic-map positions in MAP file are non-numeric")
-  }
-  if (!is.numeric(input_map[,"pos_bp"])) {
-    stop("'ped_map' has incorrect format - base-pair positions in MAP file are non-numeric")
-  }
+check_input_ped_map_files <- function(input_map, input_ped,
+                                      input_map_distance) {
+  checkmate::assert_character(input_map_distance, len = 1L, null.ok = FALSE)
+  checkmate::assert_choice(input_map_distance, choices = c("M", "cM"))
+  stopifnot("'ped_map' has incorrect format - genetic-map positions in MAP file # nolint: consecutive_assertion_linter
+            are non-numeric" = is.numeric(input_map[, "pos_M"]))
+  stopifnot("'ped_map' has incorrect format - base-pair positions in MAP file
+            are non-numeric" = is.numeric(input_map[, "pos_bp"]))
+
   if (is.factor(input_map[, "chr"])) {
     input_map[, "chr"] <- as.character(input_map[, "chr"])
   }
   if (is.factor(input_map[, "snp_id"])) {
     input_map[, "snp_id"] <- as.character(input_map[, "snp_id"])
   }
-
   if (is.factor(input_ped[, 1L])) {
     input_ped[, 1L] <- as.character(input_ped[, 1L])
   }
   if (is.factor(input_ped[, 2L])) {
     input_ped[, 2L] <- as.character(input_ped[, 2L])
   }
+  if (input_map_distance == "cM") {
+    input_map[, "pos_M"] <- input_map[, "pos_M"] / 100L
+  }
+  list(
+    input_map = input_map,
+    input_ped = input_ped
+  )
+}
 
-  # check reference data
+check_ref_ped_map_files <- function(reference_ped_map, reference_map_distance) {
+  checkmate::assert_list(reference_ped_map, len = 2L, null.ok = TRUE)
+  checkmate::assert_character(reference_map_distance, len = 1L, null.ok = FALSE)
+  checkmate::assert_choice(reference_map_distance, choices = c("M", "cM"))
+
+  reference_ped <- reference_map <- NULL
   if (!is.null(reference_ped_map)) {
-    if (!is.list(reference_ped_map) || length(reference_ped_map) != 2L) {
-      stop("'reference_ped_map' must be a list containing 2 objects: 'PED' and 'MAP'")
-    }
     reference_ped <- reference_ped_map[[1L]]
     reference_map <- reference_ped_map[[2L]]
-    if (!is.data.frame(reference_ped)) {
-      stop("'reference_ped_map' has incorrect format - PED is not a data.frame")
-    }
-    if (!is.data.frame(reference_map)) {
-      stop("'reference_ped_map' has incorrect format - MAP is not a data.frame")
-    }
-
+    stopifnot("'reference_ped_map' has incorrect format - PED is not # nolint: consecutive_assertion_linter
+              a data.frame" = is.data.frame(reference_ped))
+    stopifnot("'reference_ped_map' has incorrect format - MAP is not # nolint: consecutive_assertion_linter
+              a data.frame" = is.data.frame(reference_map))
     # check the PED and MAP files have the same number of SNPs
-    if (ncol(reference_ped) != (2L * nrow(reference_map) + 6L)) {
-      stop("'reference_ped_map' has incorrect format - PED and MAP must have the same number of SNPs")
-    }
+    stopifnot("'reference_ped_map' has incorrect format - PED and MAP must have # nolint: consecutive_assertion_linter
+              the same number of SNPs" =
+                ncol(reference_ped) == (2L * nrow(reference_map) + 6L))
 
-    # check the MAP file has 4 coloumns
-    if (ncol(reference_map) != 4L) {
-      stop("'reference_ped_map' has incorrect format - MAP must have four columns")
-    }
+    # check the MAP file has 4 columns
+    stopifnot("'reference_ped_map' has incorrect format - MAP must have
+              four columns" = ncol(reference_map) == 4L)
     colnames(reference_map) <- c("chr", "snp_id", "pos_M", "pos_bp")
-    if (!is.numeric(reference_map[, "pos_M"])) {
-      stop("'reference_ped_map' has incorrect format - genetic-map positions in reference MAP file are non-numeric")
-    }
-    if (!is.numeric(reference_map[, "pos_bp"])) {
-      stop("'reference_ped_map' has incorrect format - base-pair positions in reference MAP file are non-numeric")
-    }
+    stopifnot("'reference_ped_map' has incorrect format - genetic-map positions # nolint: consecutive_assertion_linter
+              in reference MAP file are non-numeric" =
+                is.numeric(reference_map[, "pos_M"]))
+    stopifnot("'reference_ped_map' has incorrect format - base-pair positions
+              in reference MAP file are non-numeric" =
+                is.numeric(reference_map[, "pos_bp"]))
+
+    # check MAP for factors
     if (is.factor(reference_map[, "chr"])) {
       reference_map[, "chr"] <- as.character(reference_map[, "chr"])
     }
@@ -442,98 +433,152 @@ get_genotypes <- function(ped_map,
     if (is.factor(reference_ped[, 2L])) {
       reference_ped[, 2L] <- as.character(reference_ped[, 2L])
     }
+    if (reference_map_distance == "cM") {
+      reference_map[, "pos_M"] <- reference_map[, "pos_M"] / 100L
+    }
   }
 
-  # check isolate_max_missing
-  if (!is.vector(isolate_max_missing)) stop("'isolate_max_missing' has incorrect format - must be a vector")
-  if (!is.numeric(isolate_max_missing)) stop("'isolate_max_missing' has incorrect format - must be numeric")
-  if (length(isolate_max_missing) != 1) stop("'isolate_max_missing' has incorrect format - must be a single numeric value")
-  if (isolate_max_missing > 1 | isolate_max_missing < 0) stop("'isolate_max_missing' has incorrect format - must be between 0 and 1 (inclusive)")
+  list(
+    reference_ped = reference_ped,
+    reference_map = reference_map
+  )
+}
 
-    # check snp_max_missing
-    if (!is.vector(snp_max_missing)) stop ("'snp_max_missing' has incorrect format - must be a vector")
-    if (!is.numeric(snp_max_missing)) stop ("'snp_max_missing' has incorrect format - must be numeric")
-    if (length(snp_max_missing) != 1) stop ("'snp_max_missing' has incorrect format - must be a single numeric value")
-    if (snp_max_missing > 1 | snp_max_missing < 0) stop ("'snp_max_missing' has incorrect format - must be between 0 and 1 (inclusive)")
-
-    # check chromosomes
-    if (!is.null(chromosomes)) {
-        if (!is.vector(chromosomes)) stop ("'chromosomes' has incorrect format - must be a vector")
-        if(!all(chromosomes %in% input_map[,"chr"]))
-            stop(paste0("chromosome ",paste0(chromosomes[!(chromosomes %in% input_map[,"chr"])]," not in 'ped_map'\n")))
-        if (!is.null(reference_ped_map)) {
-            if(!all(chromosomes %in% reference.map[,"chr"]))
-                stop(paste0("chromosome ",paste0(chromosomes[!(chromosomes %in% reference.map[,"chr"])]," not in 'reference_ped_map'\n")))
-        }
-    } else
-        chromosomes <- unique(as.character(input_map[,"chr"]))
-
-    # check input map distance
-    if (!is.vector(input_map_distance)) stop ("'input_map_distance' has incorrect format - must be a vector")
-    if (!is.character(input_map_distance)) stop ("'input_map_distance' has incorrect format - must be either character M or cM")
-    if (length(input_map_distance) != 1) stop ("'input_map_distance' has incorrect format - must be either character M or cM")
-    if (input_map_distance != "M" & input_map_distance != "cM")
-        stop ("'input_map_distance' has incorrect format - must be either M or cM")
-    if (input_map_distance == "cM") {
-        input_map[,"pos_M"] <- input_map[,"pos_M"]/100
+check_chromosomes <- function(chromosomes, input_map,
+                              reference_ped_map, reference_map_distance) {
+  checkmate::assert_vector(chromosomes, null.ok = TRUE)
+  # check chromosomes
+  stopifnot("'chromosomes' has incorrect format - must be a vector" =
+              is.vector(chromosomes))
+  if (!is.null(chromosomes)) {
+    if (!all(chromosomes %in% input_map[, "chr"])) {
+      stop(sprintf("chromosome %s not in 'ped_map'\n",
+                   paste0(chromosomes[!(chromosomes %in% input_map[, "chr"])])))
     }
 
-    # check reference map distance
-    if (!is.vector(reference_map_distance)) stop ("'reference_map_distance' has incorrect format - must be a vector")
-    if (!is.character(reference_map_distance)) stop ("'reference_map_distance' has incorrect format - must be either character M or cM")
-    if (length(reference_map_distance) != 1) stop ("'reference_map_distance' has incorrect format - must be either character M or cM")
-    if (reference_map_distance != "M" & reference_map_distance != "cM")
-        stop ("'reference_map_distance' has incorrect format - must be either M or cM")
-    if (reference_map_distance == "cM" & !is.null(reference_ped_map)) {
-        reference.map[,"pos_M"] <- reference.map[,"pos_M"]/100
-    }
-
-    # begin data filtering
-
-    # create new isolate IDs from PED FIDs and IIDs
-    isolate.names <- paste(input_ped[,1], input_ped[,2], sep="/")
-    if (any(duplicated(isolate.names)))
-        stop ("duplicate sample IDs found")
-
-    # merge input data with reference data
     if (!is.null(reference_ped_map)) {
-        input_map.v1      <- cbind(1:nrow(input_map), input_map)
-        reference.map.v1  <- cbind(1:nrow(reference.map), reference.map)
-        input_map.v1      <- merge(input_map.v1, reference.map.v1, by.x="snp_id", by.y="snp_id")
-        if (nrow(input_map.v1) == 0)
-            stop ("no SNPs remaining after merging 'ped_map' and 'reference_ped_map'")
-        input_map.v1  <- input_map.v1[order(input_map.v1[,"1:nrow(input_map)"]),]
-        if (!is.null(chromosomes))
-            input_map.v1 <- input_map.v1[input_map.v1[,"chr.x"] %in% chromosomes,]
-        if (nrow(input_map.v1) == 0)
-            stop ("no SNPs remaining after merging 'ped_map' and 'reference_ped_map' for selected chromosomes")
-        input_ped.columns <- c(1:6, 2*input_map.v1[,"1:nrow(input_map)"] + 5, 2*input_map.v1[,"1:nrow(input_map)"] + 6)
-        input_ped.columns <- input_ped.columns[order(input_ped.columns)]
-        input_ped.v1      <- input_ped[,input_ped.columns]
-        reference.ped.columns  <- c(1:6, 2*input_map.v1[,"1:nrow(reference.map)"] + 5, 2*input_map.v1[,"1:nrow(reference.map)"] + 6)
-        reference.ped.columns  <- reference.ped.columns[order(reference.ped.columns)]
-        reference.ped.v1       <- reference.ped[,reference.ped.columns]
-        input_map.v2           <- input_map.v1[,c("chr.x", "snp_id", "pos_M.x", "pos_bp.x")]
-        colnames(input_map.v2) <- c("chr", "snp_id", "pos_M","pos_bp")
-    } else {
-        if (!is.null(chromosomes)) {
-            input_map.v1 <- cbind(1:nrow(input_map), input_map)
-            input_map.v1 <- input_map.v1[input_map.v1[,"chr"] %in% chromosomes,]
-            if (nrow(input_map.v1) == 0)
-                stop ("no SNPs remaining after subsetting 'ped_map'by selected chromosomes")
-            input_ped.columns <- c(1:6, 2*input_map.v1[,"1:nrow(input_map)"] + 5, 2*input_map.v1[,"1:nrow(input_map)"] + 6)
-            input_ped.columns <- input_ped.columns[order(input_ped.columns)]
-            input_ped.v1      <- input_ped[,input_ped.columns]
-            input_map.v2      <- input_map.v1[,c("chr", "snp_id", "pos_M", "pos_bp")]
-        } else {
-            input_map.v2 <- input_map
-            input_ped.v1 <- input_ped
-        }
+      res           <- check_ref_ped_map_files(reference_ped_map,
+                                               reference_map_distance)
+      reference_map <- res[["reference_map"]]
+      if (!all(chromosomes %in% reference_map[, "chr"])) {
+        stop(sprintf("chromosome %s not in 'reference_ped_map'\n",
+                     paste0(chromosomes[!(chromosomes %in% reference_map[, "chr"])]))) # nolint: line_length_linter 
+      }
     }
+  } else {
+    chromosomes <- unique(as.character(input_map[, "chr"]))
+  }
+  chromosomes
+}
+
+get_genotypes <- function(ped_map,
+                          reference_ped_map      = NULL,
+                          maf                    = 0.01,
+                          isolate_max_missing    = 0.1,
+                          snp_max_missing        = 0.1,
+                          chromosomes            = NULL,
+                          input_map_distance     = "cM",
+                          reference_map_distance = "cM") {
+  checkmate::assert_numeric(maf, lower = 0.0, upper = 1.0, finite = TRUE,
+                            null.ok = FALSE)
+  checkmate::assert_list(ped_map, len = 2L, null.ok = FALSE)
+  checkmate::assert_data_frame(ped_map[[1L]],
+                               ncols = (2L * nrow(ped_map[[2L]]) + 6L))
+  checkmate::assert_data_frame(ped_map[[2L]], ncols = 4L)
+  checkmate::assert_numeric(isolate_max_missing, lower = 0.0, upper = 1.0,
+                            finite = TRUE, null.ok = FALSE)
+  checkmate::assert_numeric(snp_max_missing, lower = 0.0, upper = 1.0,
+                            finite = TRUE, null.ok = FALSE)
+  checkmate::assert_character(input_map_distance, len = 1L, null.ok = FALSE)
+  checkmate::assert_character(reference_map_distance, len = 1L, null.ok = FALSE)
+  checkmate::assert_choice(input_map_distance, choices = c("M", "cM"),
+                           null.ok = FALSE)
+  checkmate::assert_choice(reference_map_distance, choices = c("M", "cM"),
+                           null.ok = FALSE)
+  checkmate::assert_list(reference_ped_map, null.ok = TRUE, len = 2L,
+                         names = c("PED", "MAP"))
+  ## ---
+  ## create small functions for input checking to reduce complexity
+  ## ---
+
+  # check the input ped and map files
+  input_ped <- as.data.frame(ped_map[[1L]])
+  input_map <- as.data.frame(ped_map[[2L]])
+  colnames(input_map) <- c("chr", "snp_id", "pos_M", "pos_bp")
+  check_res <- check_input_ped_map_files(input_map, input_ped,
+                                         input_map_distance)
+  input_ped <- check_res[["input_ped"]]
+  input_map <- check_res[["input_map"]]
+
+  # check chromosomes
+  chromosomes <- check_chromosomes(chromosomes, input_map,
+                                   reference_ped_map, reference_map_distance)
+
+  # create new isolate IDs from PED FIDs and IIDs
+  isolate_names <- paste(input_ped[, 1L], input_ped[, 2L], sep = "/")
+  if (anyDuplicated(isolate_names) > 0L) {
+    stop("\nDuplicate sample IDs found.")
+  }
+
+  ## ---
+  ## begin data filtering
+  ## ---
+
+  # merge input data with reference data
+  if (!is.null(reference_ped_map)) {
+    # check the reference ped and map files
+    check_res <- check_ref_ped_map_files(reference_ped_map,
+                                         reference_map_distance)
+    reference_ped <- check_res[["reference_ped"]]
+    reference_map <- check_res[["reference_map"]]
+
+    input_map_v1      <- cbind(seq_along(input_map), input_map)
+    reference_map_v1  <- cbind(seq_along(reference_map), reference_map)
+    input_map_v1      <- merge(input_map_v1, reference_map_v1,
+                               by.x = "snp_id", by.y = "snp_id")
+    if (nrow(input_map_v1) == 0L) {
+      stop("\nNo SNPs remaining after merging 'ped_map' and 'reference_ped_map'") # nolint: line_length_linter
+    }
+    
+    ## ---
+    ## need an example to correct the following
+    input_map_v1      <- input_map_v1[order(input_map_v1[, "1:nrow(input_map)"]), ] # nolint: line_length_linter
+    ## ---
+
+    if (!is.null(chromosomes)) {
+      input_map_v1 <- input_map_v1[input_map_v1[, "chr.x"] %in% chromosomes, ]
+    }
+    stopifnot("No SNPs remaining after merging 'ped_map' and 'reference_ped_map'
+              for selected chromosomes" = nrow(input_map_v1) != 0L)
+
+    input_ped_columns <- c(1L:6L, 2L * input_map_v1[,"1:nrow(input_map)"] + 5L,
+                           2L * input_map_v1[, "1:nrow(input_map)"] + 6L)
+    input_ped_columns <- input_ped_columns[order(input_ped_columns)]
+    input_ped_v1      <- input_ped[, input_ped_columns]
+    reference.ped.columns  <- c(1:6, 2*input_map_v1[,"1:nrow(reference.map)"] + 5, 2*input_map_v1[,"1:nrow(reference.map)"] + 6)
+    reference.ped.columns  <- reference.ped.columns[order(reference.ped.columns)]
+    reference.ped.v1       <- reference_ped[,reference.ped.columns]
+    input_map.v2           <- input_map_v1[,c("chr.x", "snp_id", "pos_M.x", "pos_bp.x")]
+    colnames(input_map.v2) <- c("chr", "snp_id", "pos_M","pos_bp")
+  } else {
+      if (!is.null(chromosomes)) {
+          input_map_v1 <- cbind(1:nrow(input_map), input_map)
+          input_map_v1 <- input_map_v1[input_map_v1[,"chr"] %in% chromosomes,]
+          if (nrow(input_map_v1) == 0)
+              stop ("no SNPs remaining after subsetting 'ped_map'by selected chromosomes")
+          input_ped_columns <- c(1:6, 2*input_map_v1[,"1:nrow(input_map)"] + 5, 2*input_map_v1[,"1:nrow(input_map)"] + 6)
+          input_ped_columns <- input_ped_columns[order(input_ped_columns)]
+          input_ped_v1      <- input_ped[,input_ped_columns]
+          input_map.v2      <- input_map_v1[,c("chr", "snp_id", "pos_M", "pos_bp")]
+      } else {
+          input_map.v2 <- input_map
+          input_ped_v1 <- input_ped
+      }
+  }
 
     # call genotypes
-    input.matrix        <- as.matrix(input_ped.v1[,7:ncol(input_ped.v1)])
-    input.genders       <- input_ped.v1[,5]
+    input.matrix        <- as.matrix(input_ped_v1[,7:ncol(input_ped_v1)])
+    input.genders       <- input_ped_v1[,5]
     input.genotypes.v0  <- cbind(input_map.v2, haplotype_to_genotype(input.matrix, input.genders))
     if (!is.null(reference_ped_map)) {
         reference.matrix       <- as.matrix(reference.ped.v1[,7:ncol(reference.ped.v1)])
@@ -544,14 +589,14 @@ get_genotypes <- function(ped_map,
 
     # calculate allele frequencies form reference data
     if (is.null(reference_ped_map)) {
-        pop.allele.freq    <- calculate_pop_allele_freq(as.matrix(input.genotypes.v0[,5:ncol(input.genotypes.v0)]), input_ped.v1[,5])
+        pop.allele.freq    <- calculate_pop_allele_freq(as.matrix(input.genotypes.v0[,5:ncol(input.genotypes.v0)]), input_ped_v1[,5])
         input.genotypes.v1 <- cbind(input.genotypes.v0[,c(1:4)],pop.allele.freq,input.genotypes.v0[,5:ncol(input.genotypes.v0)])
     } else {
         pop.allele.freq    <- calculate_pop_allele_freq(as.matrix(reference.genotypes.v0[,5:ncol(reference.genotypes.v0)]), reference.ped.v1[,5])
         input.genotypes.v1 <- cbind(input.genotypes.v0[,c(1:4)],pop.allele.freq,input.genotypes.v0[,c(5:ncol(input.genotypes.v0))])
     }
-    colnames(input.genotypes.v1) <- c("chr", "snp_id", "pos_M","pos_bp", "freq", isolate.names)
-    cat(paste("Begin filtering of",length(isolate.names),"isolates and ",nrow(input.genotypes.v1),"SNPs...\n",sep=""))
+    colnames(input.genotypes.v1) <- c("chr", "snp_id", "pos_M","pos_bp", "freq", isolate_names)
+    cat(paste("Begin filtering of",length(isolate_names),"isolates and ",nrow(input.genotypes.v1),"SNPs...\n",sep=""))
 
 
     # remove SNPs with low population MAF
@@ -571,14 +616,14 @@ get_genotypes <- function(ped_map,
 
     # remove samples with high missingness
     isolate.missingness <- round(calculate_missingness(as.matrix(input.genotypes.v3[,6:ncol(input.genotypes.v3)])),digits=3)
-    if (length(isolate.names[isolate.missingness > isolate_max_missing]) > 0) {
-        my.remove <- isolate.names[isolate.missingness > isolate_max_missing]
+    if (length(isolate_names[isolate.missingness > isolate_max_missing]) > 0) {
+        my.remove <- isolate_names[isolate.missingness > isolate_max_missing]
         warning("isolates removed due to genotype missingness: ",paste(my.remove, collapse=", "))
-        sample.keep        <- input_ped.v1[isolate.missingness <= isolate_max_missing,1:6]
+        sample.keep        <- input_ped_v1[isolate.missingness <= isolate_max_missing,1:6]
         input.genotypes.v4 <- input.genotypes.v3[,c(1:5, which(isolate.missingness <= isolate_max_missing) + 5)]
         if(nrow(sample.keep) < 1) stop(paste("All isolates removed with missingness > ",isolate_max_missing*100,"%. No isolates remaining.",sep=""))
     } else {
-        sample.keep        <- input_ped.v1[,1:6]
+        sample.keep        <- input_ped_v1[,1:6]
         input.genotypes.v4 <- input.genotypes.v3
     }
     colnames(sample.keep) <- c("fid", "iid", "pid", "mid", "moi", "aff")
