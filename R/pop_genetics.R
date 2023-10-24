@@ -471,6 +471,21 @@ check_chromosomes <- function(chromosomes, input_map,
   chromosomes
 }
 
+#' Title
+#'
+#' @param ped_map 
+#' @param reference_ped_map 
+#' @param maf 
+#' @param isolate_max_missing 
+#' @param snp_max_missing 
+#' @param chromosomes 
+#' @param input_map_distance 
+#' @param reference_map_distance 
+#'
+#' @return
+#' @export
+#'
+#' @examples
 get_genotypes <- function(ped_map,
                           reference_ped_map      = NULL,
                           maf                    = 0.01,
@@ -497,9 +512,6 @@ get_genotypes <- function(ped_map,
                            null.ok = FALSE)
   checkmate::assert_list(reference_ped_map, null.ok = TRUE, len = 2L,
                          names = c("PED", "MAP"))
-  ## ---
-  ## create small functions for input checking to reduce complexity
-  ## ---
 
   # check the input ped and map files
   input_ped <- as.data.frame(ped_map[[1L]])
@@ -539,7 +551,7 @@ get_genotypes <- function(ped_map,
     if (nrow(input_map_v1) == 0L) {
       stop("\nNo SNPs remaining after merging 'ped_map' and 'reference_ped_map'") # nolint: line_length_linter
     }
-    
+
     ## ---
     ## need an example to correct the following
     input_map_v1      <- input_map_v1[order(input_map_v1[, "1:nrow(input_map)"]), ] # nolint: line_length_linter
@@ -551,92 +563,127 @@ get_genotypes <- function(ped_map,
     stopifnot("No SNPs remaining after merging 'ped_map' and 'reference_ped_map'
               for selected chromosomes" = nrow(input_map_v1) != 0L)
 
-    input_ped_columns <- c(1L:6L, 2L * input_map_v1[,"1:nrow(input_map)"] + 5L,
+    input_ped_columns <- c(1L:6L, 2L * input_map_v1[, "1:nrow(input_map)"] + 5L,
                            2L * input_map_v1[, "1:nrow(input_map)"] + 6L)
-    input_ped_columns <- input_ped_columns[order(input_ped_columns)]
+    input_ped_columns <- input_ped_columns[sort(input_ped_columns,
+                                                na.last = TRUE)]
     input_ped_v1      <- input_ped[, input_ped_columns]
-    reference.ped.columns  <- c(1:6, 2*input_map_v1[,"1:nrow(reference.map)"] + 5, 2*input_map_v1[,"1:nrow(reference.map)"] + 6)
-    reference.ped.columns  <- reference.ped.columns[order(reference.ped.columns)]
-    reference.ped.v1       <- reference_ped[,reference.ped.columns]
-    input_map.v2           <- input_map_v1[,c("chr.x", "snp_id", "pos_M.x", "pos_bp.x")]
-    colnames(input_map.v2) <- c("chr", "snp_id", "pos_M","pos_bp")
+    reference_ped_columns  <- c(1L:6L, 2L * input_map_v1[, "1:nrow(reference.map)"] + 5L, # nolint: line_length_linter
+                                2L * input_map_v1[, "1:nrow(reference.map)"] + 6L) # nolint: line_length_linter
+    reference_ped_columns  <- reference_ped_columns[sort(reference_ped_columns,
+                                                         na.last = TRUE)]
+    reference_ped_v1       <- reference_ped[, reference_ped_columns]
+    input_map_v2           <- input_map_v1[, c("chr.x", "snp_id", "pos_M.x",
+                                               "pos_bp.x")]
+    colnames(input_map_v2) <- c("chr", "snp_id", "pos_M", "pos_bp")
   } else {
-      if (!is.null(chromosomes)) {
-          input_map_v1 <- cbind(1:nrow(input_map), input_map)
-          input_map_v1 <- input_map_v1[input_map_v1[,"chr"] %in% chromosomes,]
-          if (nrow(input_map_v1) == 0)
-              stop ("no SNPs remaining after subsetting 'ped_map'by selected chromosomes")
-          input_ped_columns <- c(1:6, 2*input_map_v1[,"1:nrow(input_map)"] + 5, 2*input_map_v1[,"1:nrow(input_map)"] + 6)
-          input_ped_columns <- input_ped_columns[order(input_ped_columns)]
-          input_ped_v1      <- input_ped[,input_ped_columns]
-          input_map.v2      <- input_map_v1[,c("chr", "snp_id", "pos_M", "pos_bp")]
-      } else {
-          input_map.v2 <- input_map
-          input_ped_v1 <- input_ped
+    if (!is.null(chromosomes)) {
+      input_map_v1 <- cbind(seq_along(input_map), input_map)
+      input_map_v1 <- input_map_v1[input_map_v1[, "chr"] %in% chromosomes, ]
+      if (nrow(input_map_v1) == 0L) {
+        stop("No SNPs remaining after subsetting 'ped_map' by selected
+              chromosomes")
       }
+      input_ped_columns <- c(1L:6L, 2L * input_map_v1[, "1:nrow(input_map)"] + 5L, # nolint: line_length_linter
+                             2L * input_map_v1[, "1:nrow(input_map)"] + 6L)
+      input_ped_columns <- input_ped_columns[sort(input_ped_columns,
+                                                  na.last = TRUE)]
+      input_ped_v1      <- input_ped[, input_ped_columns]
+      input_map_v2      <- input_map_v1[, c("chr", "snp_id", "pos_M", "pos_bp")]
+    } else {
+      input_map_v2 <- input_map
+      input_ped_v1 <- input_ped
+    }
   }
 
-    # call genotypes
-    input.matrix        <- as.matrix(input_ped_v1[,7:ncol(input_ped_v1)])
-    input.genders       <- input_ped_v1[,5]
-    input.genotypes.v0  <- cbind(input_map.v2, haplotype_to_genotype(input.matrix, input.genders))
-    if (!is.null(reference_ped_map)) {
-        reference.matrix       <- as.matrix(reference.ped.v1[,7:ncol(reference.ped.v1)])
-        reference.genders      <- reference.ped.v1[,5]
-        reference.genotypes.v0 <- cbind(input_map.v2, haplotype_to_genotype(reference.matrix, reference.genders))
+  # call genotypes
+  input_matrix        <- as.matrix(input_ped_v1[, 7L:ncol(input_ped_v1)])
+  input_genders       <- input_ped_v1[, 5L]
+  input_genotypes_v0  <- cbind(input_map_v2,
+                               haplotype_to_genotype(input_matrix,
+                                                     input_genders))
+  if (!is.null(reference_ped_map)) {
+      reference_matrix       <- as.matrix(reference_ped_v1[, 7L:ncol(reference_ped_v1)]) # nolint: line_length_linter
+      reference_genders      <- reference_ped_v1[, 5L]
+      reference_genotypes_v0 <- cbind(input_map_v2,
+                                      haplotype_to_genotype(reference_matrix,
+                                                            reference_genders))
+  }
+
+  # calculate allele frequencies form reference data
+  if (is.null(reference_ped_map)) {
+    pop_allele_freq    <- calculate_pop_allele_freq(
+      as.matrix(input_genotypes_v0[, 5L:ncol(input_genotypes_v0)]),
+      input_ped_v1[, 5L]
+    )
+    input_genotypes_v1 <- cbind(input_genotypes_v0[, 1L:4L],
+                                pop_allele_freq,
+                                input_genotypes_v0[, 5L:ncol(input_genotypes_v0)]) # nolint: line_length_linter
+  } else {
+    pop_allele_freq    <- calculate_pop_allele_freq(
+      as.matrix(reference_genotypes_v0[, 5L:ncol(reference_genotypes_v0)]),
+      reference_ped_v1[, 5L]
+    )
+    input_genotypes_v1 <- cbind(input_genotypes_v0[, 1L:4L],
+                                pop_allele_freq,
+                                input_genotypes_v0[, c(5L:ncol(input_genotypes_v0))]) # nolint: line_length_linter
+  }
+  colnames(input_genotypes_v1) <- c("chr", "snp_id", "pos_M", "pos_bp", "freq",
+                                    isolate_names)
+  cat(paste0("\nBegin filtering of", length(isolate_names), "isolates and ",
+             nrow(input_genotypes_v1), "SNPs...\n"))
+
+  # remove SNPs with low population MAF
+  # removing SNPs with AF>0.99 and AF<0.01
+  input_genotypes_v2 <- subset(input_genotypes_v1,
+                               pop_allele_freq <= (1.0 - maf) & pop_allele_freq >= maf) # nolint: line_length_linter
+  stopifnot("0 SNPs remain after MAF removal" = nrow(input_genotypes_v2) > 0L)
+  cat(paste0(nrow(input_genotypes_v2),
+             "SNPs remain after MAF removal...\n"))
+
+  # remove snps with high missingness
+  snp_missingness    <- calculate_missingness(
+    as.matrix(t(input_genotypes_v2[, 6L:ncol(input_genotypes_v2)]))
+  )
+  input_genotypes_v3 <- input_genotypes_v2[snp_missingness <= snp_max_missing, ]
+  stopifnot("0 SNPs remain after missingness removal" =
+              nrow(input_genotypes_v3) > 0L)
+  cat(paste0(nrow(input_genotypes_v3),
+             "SNPs remain after missingness removal...\n"))
+
+  # remove samples with high missingness
+  isolate_missingness <- round(
+    calculate_missingness(
+      as.matrix(input_genotypes_v3[, 6L:ncol(input_genotypes_v3)])
+    ), digits = 3L
+  )
+  if (length(isolate_names[isolate_missingness > isolate_max_missing]) > 0L) {
+    my_remove <- isolate_names[isolate_missingness > isolate_max_missing]
+    warning("isolates removed due to genotype missingness: ",
+            glue::glue_collapse(my_remove, sep = ", "), call. = FALSE)
+    sample_keep        <- input_ped_v1[isolate_missingness <= isolate_max_missing, 1L:6L] # nolint: line_length_linter
+    input_genotypes_v4 <- input_genotypes_v3[, c(1L:5L, which(isolate_missingness <= isolate_max_missing) + 5L)] # nolint: line_length_linter
+    if (nrow(sample_keep) < 1L) {
+      stop(
+           sprintf("All isolates removed with missingness > %s%s. No isolates remaining.", # nolint: line_length_linter
+                   isolate_max_missing * 100.0, "%"))
     }
+  } else {
+    sample_keep        <- input_ped_v1[, 1L:6L]
+    input_genotypes_v4 <- input_genotypes_v3
+  }
+  colnames(sample_keep) <- c("fid", "iid", "pid", "mid", "moi", "aff")
+  if ((ncol(input_genotypes_v4) - 5L) == 0L) {
+    stop("0 samples remain after missingness removal")
+  }
+  cat(paste0(ncol(input_genotypes_v4) - 5L,
+             "isolates remain after missingness removal...\n"))
 
-
-    # calculate allele frequencies form reference data
-    if (is.null(reference_ped_map)) {
-        pop.allele.freq    <- calculate_pop_allele_freq(as.matrix(input.genotypes.v0[,5:ncol(input.genotypes.v0)]), input_ped_v1[,5])
-        input.genotypes.v1 <- cbind(input.genotypes.v0[,c(1:4)],pop.allele.freq,input.genotypes.v0[,5:ncol(input.genotypes.v0)])
-    } else {
-        pop.allele.freq    <- calculate_pop_allele_freq(as.matrix(reference.genotypes.v0[,5:ncol(reference.genotypes.v0)]), reference.ped.v1[,5])
-        input.genotypes.v1 <- cbind(input.genotypes.v0[,c(1:4)],pop.allele.freq,input.genotypes.v0[,c(5:ncol(input.genotypes.v0))])
-    }
-    colnames(input.genotypes.v1) <- c("chr", "snp_id", "pos_M","pos_bp", "freq", isolate_names)
-    cat(paste("Begin filtering of",length(isolate_names),"isolates and ",nrow(input.genotypes.v1),"SNPs...\n",sep=""))
-
-
-    # remove SNPs with low population MAF
-    input.genotypes.v2 <- subset(input.genotypes.v1, pop.allele.freq <= (1-maf) & pop.allele.freq >= maf) #removing SNPs with AF>0.99 and AF<0.01
-    if (nrow(input.genotypes.v2) == 0)
-        stop("0 SNPs remain after MAF removal")
-    cat(paste(nrow(input.genotypes.v2),"SNPs remain after MAF removal...\n",sep=""))
-
-
-    # remove snps with high missingness
-    snp.missingness    <- calculate_missingness(as.matrix(t(input.genotypes.v2[,6:ncol(input.genotypes.v2)])))
-    input.genotypes.v3 <- input.genotypes.v2[snp.missingness <= snp_max_missing,]
-    if (nrow(input.genotypes.v3) == 0)
-        stop("0 SNPs remain after missingness removal")
-    cat(paste(nrow(input.genotypes.v3),"SNPs remain after missingness removal...\n",sep=""))
-
-
-    # remove samples with high missingness
-    isolate.missingness <- round(calculate_missingness(as.matrix(input.genotypes.v3[,6:ncol(input.genotypes.v3)])),digits=3)
-    if (length(isolate_names[isolate.missingness > isolate_max_missing]) > 0) {
-        my.remove <- isolate_names[isolate.missingness > isolate_max_missing]
-        warning("isolates removed due to genotype missingness: ",paste(my.remove, collapse=", "))
-        sample.keep        <- input_ped_v1[isolate.missingness <= isolate_max_missing,1:6]
-        input.genotypes.v4 <- input.genotypes.v3[,c(1:5, which(isolate.missingness <= isolate_max_missing) + 5)]
-        if(nrow(sample.keep) < 1) stop(paste("All isolates removed with missingness > ",isolate_max_missing*100,"%. No isolates remaining.",sep=""))
-    } else {
-        sample.keep        <- input_ped_v1[,1:6]
-        input.genotypes.v4 <- input.genotypes.v3
-    }
-    colnames(sample.keep) <- c("fid", "iid", "pid", "mid", "moi", "aff")
-    if ((ncol(input.genotypes.v4)-5) == 0) {
-        stop("0 samples remain after missingness removal")
-    }
-    cat(paste(ncol(input.genotypes.v4)-5,"isolates remain after missingness removal...\n",sep=""))
-
-
-    return.genotypes <- list(sample.keep, input.genotypes.v4)
-    names(return.genotypes) <- c("pedigree", "genotypes")
-    return(return.genotypes)
-
+  return_genotypes        <- list(
+    pedigree  = sample_keep,
+    genotypes = input_genotypes_v4
+  )
+  return_genotypes
 }
 
 #' Estimate the relatedness between pairs of isolates
