@@ -473,7 +473,7 @@ check_chromosomes <- function(chromosomes, input_map,
 
 #' Title
 #'
-#' @param ped_map 
+#' @param ped_map
 #' @param reference_ped_map 
 #' @param maf 
 #' @param isolate_max_missing 
@@ -687,129 +687,216 @@ get_genotypes <- function(ped_map,
 }
 
 #' Estimate the relatedness between pairs of isolates
+#'
 #' @param snpdata SNPdata object
 #' @param mat_name the name of the genotype table to be used. default="GT"
-#' @param from the name of the column, in the metadata table, to be used to represent the sample's population
-#' @param sweepRegions a data frame with the genomic coordinates of the regions of the genome to be discarded. This should contain the following 3 columns:
+#' @param from the name of the column, in the metadata table, to be used
+#'    to represent the sample's population
+#' @param sweep_regions a data frame with the genomic coordinates of the regions
+#'    of the genome to be discarded. The entire genome will be used if it is not
+#'    specified. This should contain the following 3 columns:
 #' \enumerate{
 #' \item Chrom: the chromosome ID
 #' \item Start: the start position of the region on the chromosome
-#' \item End: the end position of the region on the chromosome
+#' \item End:   the end position of the region on the chromosome
 #' }
-#' @param groups a vector of character. If specified, relatedness will be generated between these groups
-#' @return SNPdata object with an extra field: relatedness. This will contain the relatedness data frame of 3 columns and its correspondent matrix
+#' @param groups a vector of character. If specified, relatedness will be
+#'    estimated between those groups only
+#'
+#' @return `SNPdata` object with an extra field: `relatedness`. This will
+#'    contain the relatedness data frame of 3 columns and its correspondent
+#'    matrix
+#'
 #' @examples
 #' \dontrun{
-#'   calculate_relatedness(snpdata, mat_name="GT", family="Location", 
-#'   sweepRegions=NULL, groups=c("Chogen","DongoroBa"))
+#'   calculate_relatedness(
+#'     snpdata,
+#'     mat_name      = "GT",
+#'     from          = "Location",
+#'     sweep_regions = NULL,
+#'     groups        = c("Chogen", "DongoroBa")
+#'   )
 #'  }
-#' @details The relatedness calculation is based on the model developed by Aimee R. Taylor and co-authors. https://journals.plos.org/plosgenetics/article?id=10.1371/journal.pgen.1009101
+#'
+#' @details The relatedness calculation is based on the model developed by
+#'     Aimee R. Taylor and co-authors.
+#'     https://journals.plos.org/plosgenetics/article?id=10.1371/journal.pgen.1009101 # nolint: line_length_linter
+#'
+#'     If the value for the `mat_name` argument is GT` or `Phased`, the missing
+#'     genotypes will be imputed prior to relatedness estimation. Similarly, if
+#'     `mat_name` is `Imputed`, the missing genotypes will be imputed first, if
+#'     the `Imputed` matrix does not exist in the SNPdata object.
 #' @export
-calculate_relatedness = function(snpdata, mat_name="Imputed", from="Location", sweepRegions=NULL, groups=NULL){
-    # sourceCpp("src/hmmloglikelihood.cpp")
-    details = snpdata$details
-    metadata = snpdata$meta
-    if(mat_name=="GT" | mat_name=="Phased"){
-        cat("Imputing the missing genotypes\n")
-        snpdata = impute_missing_genotypes(snpdata, genotype=mat_name, nsim=10)
-    }
-    if((mat_name=="Imputed") & (!("Imputed" %in% names(snpdata)))){
-        mat_name="GT"
-        cat("Imputing the missing genotypes\n")
-        snpdata = impute_missing_genotypes(snpdata, genotype=mat_name, nsim=10)
-    }
+#'
+calculate_relatedness <- function(snpdata,
+                                  mat_name      = "Imputed",
+                                  from          = "Location",
+                                  sweep_regions = NULL,
+                                  groups        = NULL) {
+  # Impute missing genotypes if necessary
+  details  <- snpdata[["details"]]
+  metadata <- snpdata[["meta"]]
+  if (mat_name == "GT" || mat_name == "Phased") {
+    message("Imputing the missing genotypes...\n")
+    snpdata <- impute_missing_genotypes(snpdata,
+                                        genotype = mat_name,
+                                        nsim     = 10L)
+  }
+  if (mat_name == "Imputed" && !("Imputed" %in% names(snpdata))) {
+    mat_name <- "GT"
+    message("Imputing the missing genotypes...\n")
+    snpdata  <- impute_missing_genotypes(snpdata,
+                                         genotype = mat_name,
+                                         nsim     = 10L)
+  }
 
-    # mat_name = "Imputed"
-    mat = snpdata[["Imputed"]]
-    if(!is.null(groups) & all(groups %in% unique(metadata[[from]]))){
-        pops = groups
-    }else{
-        pops = unique(metadata[[from]])
+  # check whether the provided groups are found in the metadata
+  if (!is.null(groups)) {
+    stopifnot("Some groups are not found in the metadata" =
+                all(groups %in% unique(metadata[[from]])))
+    pops   <- groups
+  } else {
+    pops   <- unique(metadata[[from]])
+  }
+
+  # create the genotype data
+  message("Creating the genotype data...\n")
+  mat       <- snpdata[["Imputed"]]
+  genotypes <- construct_genotype_file(pops,
+                                       details,
+                                       mat,
+                                       metadata,
+                                       from,
+                                       sweep_regions)
+  sites     <- names(genotypes)
+  dir       <- dirname(snpdata[["vcf"]])
+  ibd       <- NULL
+  for (ii in seq_len(sites)) {
+    site1 <- sites[ii]
+    for (jj in ii:length(sites)) {
+      site2 <- sites[jj]
+      message("calculating the relatedness between ", site1, " and ", site2,
+              "\n")
+      ibd <- rbind(ibd, gen_mles(genotypes, site1, site2, f = 0.3, dir))
     }
-    cat("creating the genotype data\n")
-    genotypes = constructGenotypeFile(pops, details, mat, metadata, from, sweepRegions)
-    sites = names(genotypes)
-    dir = dirname(snpdata$vcf)
-    ibd = NULL
-    for(ii in 1:length(sites)){
-        site1 = sites[ii]
-        for(jj in ii:length(sites)){
-            site2 = sites[jj]
-            cat("calculating the relatedness between",site1,"and",site2,"\n")
-            ibd = rbind(ibd, gen_mles(genotypes, site1, site2, f=0.3, dir))
-        }
-    }
-    ibd = as.data.table(ibd)
-    names(ibd) = c('iid1','iid2','k','relatedness')
-    ibd = subset(ibd, select = -3)
-    ibd$relatedness = as.numeric(ibd$relatedness)
-    cat("creating the relatedness matrix\n")
-    rmatrix = createRelatednessMatrix(ibd, metadata, pops, from)
-    snpdata$relatedness = list()
-    snpdata$relatedness[["df"]] = ibd
-    snpdata$relatedness[["matrix"]] = rmatrix
-    system(sprintf("rm -rf %s", paste(dir,"/ibd")))
-    snpdata
+  }
+  ibd                  <- data.table::as.data.table(ibd)
+  names(ibd)           <- c("iid1", "iid2", "k", "relatedness")
+  ibd                  <- subset(ibd, select = -3L)
+  ibd[["relatedness"]] <- as.numeric(ibd[["relatedness"]])
+  message("creating the relatedness matrix\n")
+  rmatrix              <- create_relatedness_matrix(ibd, metadata, pops, from)
+  snpdata[["relatedness"]]             <- list()
+  snpdata[["relatedness"]][["df"]]     <- ibd
+  snpdata[["relatedness"]][["matrix"]] <- rmatrix
+  system(sprintf("rm -rf %s", file.path(dir, "ibd")))
+  snpdata
 }
 
-createRelatednessMatrix = function(ibd, metadata, pops, from){
-    idx = NULL
-    for(pop in pops){
-        idx = c(idx, which(metadata[[from]]==pop))
+#' Title
+#'
+#' @param ibd 
+#' @param metadata 
+#' @param pops 
+#' @param from 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+create_relatedness_matrix <- function(ibd,
+                                      metadata,
+                                      pops,
+                                      from) {
+  idx      <- NULL
+  for (pop in pops) {
+    idx    <- c(idx, which(metadata[[from]] == pop))
+  }
+  idx      <- unique(idx)
+  metadata <- metadata[idx, ]
+  modifier <- function(x) {
+    gsub('-', '.', x)
+  }
+  metadata[["sample"]] <- as.character(lapply(metadata[["sample"]], modifier))
+  relatedness_matrix   <- matrix(NA, nrow = length(metadata[["sample"]]),
+                                 ncol = length(metadata[["sample"]]))
+  rownames(relatedness_matrix) <- metadata[["sample"]]
+  colnames(relatedness_matrix) <- metadata[["sample"]]
+  sur_ligne <- unique(ibd[["iid1"]])
+  for (i in seq_len(sur_ligne)) {
+    ligne   <- sur_ligne[i]
+    l       <- match(ligne, rownames(relatedness_matrix))
+    target  <- ibd[which(ibd[["iid1"]] == ligne), ]
+    t       <- unique(target[["iid2"]])
+    for (j in seq_len(t)) {
+      tt    <- target[which(target[["iid2"]] == t[j]), ]
+      k     <- match(t[j], colnames(relatedness_matrix))
+      if (nrow(tt) == 0L) {
+        relatedness_matrix[l, k] <- 0.0
+      } else if (nrow(tt) == 1L) {
+        relatedness_matrix[l, k] <- round(as.numeric(tt[["relatedness"]]),
+                                          digits = 5L)
+      } else if (nrow(tt) > 1L && length(unique(tt[["iid1"]])) == 1L &&
+                   length(unique(tt[["iid2"]])) == 1L) {
+        relatedness_matrix[l, k] <- round(as.numeric(tt[["relatedness"]][[1L]]),
+                                          digits = 5L)
+      } else if (nrow(tt) > 1L &&
+                   length(unique(tt[["iid1"]])) > 1L ||
+                   length(unique(tt[["iid2"]])) > 1L) {
+        relatedness_matrix[l, k] <- mean(round(as.numeric(tt[["relatedness"]]),
+                                               digits = 5L), na.rm = TRUE)
+      }
     }
-    idx = unique(idx)
-    metadata = metadata[idx,]
-    modifier = function(x){gsub('-','.',x)}
-    metadata$sample = as.character(lapply(metadata$sample,modifier))
-    relatednessMatrix = matrix(NA,nrow = length(metadata$sample), ncol = length(metadata$sample))
-    rownames(relatednessMatrix) = metadata$sample
-    colnames(relatednessMatrix) = metadata$sample
-    surLigne = unique(ibd$iid1)
-    for(i in 1:length(surLigne)){
-        # print(paste0('i=',i))
-        ligne = surLigne[i]
-        l = match(ligne,rownames(relatednessMatrix))
-        target = ibd[which(ibd$iid1==ligne),]
-        t = unique(target$iid2)
-        for(j in 1:length(t)){
-            tt = target[which(target$iid2==t[j]),]
-            k = match(t[j],colnames(relatednessMatrix))
-            if(nrow(tt) == 0)
-                relatednessMatrix[l,k] = 0
-            else if(nrow(tt)==1)
-                relatednessMatrix[l,k] = round(as.numeric(tt$relatedness), digits = 5)
-            else if(nrow(tt)>1 & length(unique(tt$iid1))==1 & length(unique(tt$iid2))==1)
-                relatednessMatrix[l,k] = round(as.numeric(tt$relatedness[1]), digits = 5)
-            else if(nrow(tt)>1 & length(unique(tt$iid1))>1 | length(unique(tt$iid2))>1)
-                relatednessMatrix[l,k] = mean(round(as.numeric(tt$relatedness), digits = 5), na.rm = TRUE)
-        }
-    }
-    relatednessMatrix
+  }
+  relatedness_matrix
 }
 
-constructGenotypeFile = function(pops, details, mat, metadata, from, sweepRegions){
-    if(!is.null(sweepRegions)){
-        selectiveRegions = fread(sweepRegions)
-        rtd = NULL
-        for(j in 1:nrow(selectiveRegions))
-            rtd = c(rtd, which(details$Chrom==selectiveRegions$Chrom[j] & (details$Pos>=selectiveRegions$Start[j] & details$Pos<=selectiveRegions$End[j])))
-        rtd = unique(rtd)
-        details = details[-rtd,]
-        mat = mat[-rtd,]
+#' Title
+#'
+#' @param pops 
+#' @param details 
+#' @param mat 
+#' @param metadata 
+#' @param from 
+#' @param sweep_regions 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+construct_genotype_file <- function(pops,
+                                   details,
+                                   mat,
+                                   metadata,
+                                   from,
+                                   sweep_regions) {
+  if (!is.null(sweep_regions)) {
+    selectiveRegions <- data.table::fread(sweep_regions, nThread = 4L)
+    rtd              <- NULL
+    for (j in seq_along(selectiveRegions)) {
+      rtd <- c(rtd,
+               which(details[["Chrom"]] == selectiveRegions[["Chrom"]][j] &
+                       (details[["Pos"]] >= selectiveRegions[["Start"]][j] &
+                          details[["Pos"]] <= selectiveRegions[["End"]][j])))
     }
-    res = list()
-    # pops = unique(metadata[[from]])
-    for(pop in pops){
-        idx = which(metadata[[from]]==pop)
-        s = metadata$sample[idx]
-        m = match(s, colnames(mat))
-        X=mat[,m]
-        chroms=details$Chrom; pos=details$Pos; samps=metadata$sample[idx]
-        L = list(X, chroms, pos, samps)
-        names(L)=c('X','chroms','pos','samps')
-        res[[pop]] = L
-    }
-    res
+    rtd     <- unique(rtd)
+    details <- details[-rtd, ]
+    mat     <- mat[-rtd, ]
+  }
+  res       <- list()
+  for (pop in pops) {
+    idx        <- which(metadata[[from]] == pop)
+    s          <- metadata[["sample"]][idx]
+    m          <- match(s, colnames(mat))
+    x          <- mat[, m]
+    chroms     <- details[["Chrom"]]
+    pos        <- details[["Pos"]]
+    samps      <- metadata[["sample"]][idx]
+    l          <- list(x, chroms, pos, samps)
+    names(l)   <- c("X", "chroms", "pos", "samps")
+    res[[pop]] <- l
+  }
+  res
 }
 
 gen_mles = function(res, site1, site2, f=0.3, dir){
