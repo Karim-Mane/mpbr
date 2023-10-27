@@ -8,7 +8,7 @@ calculate_iR(
   snpdata,
   mat_name = "Phased",
   family = "Location",
-  number_cores = 4
+  number_cores = 4L
 )
 }
 \arguments{
