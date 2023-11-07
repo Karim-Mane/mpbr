@@ -7,13 +7,187 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
+---
+date: `r format(Sys.Date(), "%d/%m/%Y")`
+---
+
 ```{r, include = FALSE}
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>"
-)
+knitr::opts_chunk[["set"]](collapse = TRUE, comment = "#>")
+# ideally, 'Input_Data.vcf.gz' should be part of the package and loade
+# using the command below. Need to figure out how to include big files
+# into the package documents
+vcf        <- system.file("extdata", "Input_Data.vcf.gz", package = "mpbr")
+meta_file  <- system.file("extdata", "SampleMetadata.RDS", package = "mpbr")
+output_dir <- tempdir()
+gff        <- system.file("extdata", "PlasmoDB-56_Pfalciparum3D7.gff",
+                        package = "mpbr")
+gof        <- system.file("extdata", "pf_gene_ontology.RDS", package = "mpbr")
 ```
 
 ```{r setup}
 library(mpbr)
 ```
+
+
+## Construct the `SNPdata` object 
+
+The functions in this package require a `SNPdata` object. Objects of this class are generated using the `get_snpdata()` function with the following arguments:
+
+1. **vcf_file**: the input [VCF](https://samtools.github.io/hts-specs/VCFv4.2.pdf) file (required).   
+2. **meta_file**: a tab-delimited file with the samples metadata (required).
+3. **output_dir**: the path to the folder where the output files will be stored (optional). 
+4. **gaf**: a tab-delimited file with the gene ontology annotation (optional). If not provided, the default file that was downloaded from https://plasmodb.org/plasmo/app/downloads/Current_Release/Pfalciparum3D7/gaf/ will be used.   
+5. **gff**: a tab-delimited file with the gene annotation file (optional). If not provided, the default file that was downloaded from https://plasmodb.org/plasmo/app/downloads/Current_Release/Pfalciparum3D7/gff/ will be used.
+6. **num_threads**: the number of threads to use when importing the input data.
+
+Type `?get_snpdata` for more details.
+
+```{r eval=TRUE}
+snpdata <- get_snpdata(vcf_file   = vcf,
+                       meta_file  = meta_file,
+                       output_dir = output_dir,
+                       gof        = gof,
+                       gff        = gff)
+```
+
+## print the `SNPdata` object 
+
+Use the `print()` function to visualize the structure of the `SNPdata` object created from the `get_snpdata()`.
+
+```{r, eval=TRUE}
+print(snpdata)
+```
+
+## calculate the SNPs minor allele frequency     
+the `compute_MAF` requires a SNPdata object, the name of the genotype table from which the MAF should be calculated (either "GT" for the raw genotypes, "Phased" for phased genotypes, "Phased_Imputed" for phased and imputed genotypes).    
+include.het determines whether to account for heterozygous sites in MAF calculation.   
+type `?compute_MAF` for more details     
+```{r, eval=FALSE}
+snpdata = compute_MAF(snpdata, include.het=FALSE, mat.name="GT")
+head(snpdata$details)
+```
+
+## filter the SNPdata object     
+use the `filter_snps_samples` function to remove the SNPs and samples that do not satisfy the user criteria.    
+```{r eval=FALSE}
+snpdata = filter_snps_samples(snpdata, min.qual=10, max.missing.sites=0.2, max.missing.samples=0.2, maf.cutoff=0.01)
+print(snpdata)
+hist(snpdata$details$MAF, 100)
+grid()
+```
+
+## calculate the within-host genetics diversity index (Fws)   
+the `calculate_Fws` function requires a SNPdata object   
+type `?calculate_Fws` for more details     
+```{r, eval=FALSE}
+snpdata =  calculate_Fws(snpdata)
+head(snpdata$meta)
+```
+
+## mixed genotypes phasing     
+use the `phase_mixed_genotypes` function to phase the mixed genotypes.    
+```{r eval=FALSE}
+snpdata = phase_mixed_genotypes(snpdata, nsim=100)
+head(snpdata$Phased[,1:5])
+```
+
+## impute the missing data   
+use the `impute_missing_genotypes` function to impute the missing genotypes. the `genotype` argument determines which genotype table should be used to impute the missing data ("GT" to impute from raw data, "Phased" to impute from the phased data).    
+```{r eval=FALSE}
+snpdata = impute_missing_genotypes(snpdata, genotype="GT", nsim=100)
+head(snpdata$Imputed[,1:5])
+```
+
+## select data for a given chromosome     
+to get the data from chromosome 7 ("Pf3D7_07_v3"), use the `select_chrom`    
+```{r eval=FALSE}
+chrom7_snpdata = select_chrom(snpdata, chrom="Pf3D7_07_v3")
+print(chrom7_snpdata)
+```
+
+## drop a set of SNPs from the data       
+if you want to remove some loci from the data, use the `drop_snps` function and provide it with a data frame with 2 columns, "Chrom" and "Pos", representing the genomic coordinates of the loci to be dropped or the chrom, start and end position of the loci to be dropped    
+```{r eval=FALSE}
+snp.to.be.dropped = chrom7_snpdata$details %>% select(Chrom,Pos)
+idx = sample(1:nrow(snp.to.be.dropped),100, replace = FALSE)
+snp.to.be.dropped = snp.to.be.dropped[idx,]
+reduced_snpdata = drop_snps(chrom7_snpdata, snp.to.be.dropped)
+print(reduced_snpdata)
+reduced_snpdata = drop_snps(chrom7_snpdata, chrom="Pf3D7_10_v3", start=100, end=500)
+print(reduced_snpdata)
+```
+
+## drop a set of samples from the data       
+if you want to remove some samples from the data, use the `drop_samples` function and provide it with a vector of samples to be dropped.     
+```{r eval=FALSE}
+idx = sample(1:nrow(reduced_snpdata$meta),10, replace = FALSE)
+samples.to.be.dropped = reduced_snpdata$meta$sample[idx]
+reduced_snpdata = drop_samples(reduced_snpdata, samples.to.be.dropped)
+print(reduced_snpdata)
+```
+
+
+## Fst
+In this package, Weir & Cockerham's Fst is calculated using the `vcflib` tools.   
+The from option specifies the name of the column in the metadata table with the groups between which Fst should be calculated. 
+the `calculate_wcFst` returns a `SNPdata` object with an additionnal field named `Fst`. This is a list that contains data frames representing each the Fst results between a given pair-wise population.   
+```{r eval=FALSE}
+snpdata=get_snpdata(vcf.file = vcf, meta.file = metadata, output.dir = outDir)
+snpdata = compute_MAF(snpdata, include.het=FALSE, mat.name="GT")
+snpdata = filter_snps_samples(snpdata, min.qual=10, max.missing.sites=0.2, max.missing.samples=0.2, maf.cutoff=0.01)
+snpdata =  calculate_Fws(snpdata)
+snpdata = calculate_wcFst(snpdata, from="Country", groups=c("Senegal","Gambia"))
+names(snpdata$Fst)
+head(snpdata$Fst$Senegal_vs_Gambia)
+```
+
+## IBS   
+The identity by state (IBS) represents the proportion of similar loci between 2 pairs of isolates. The `calculate_IBS` function returns the dissimilarity matrix i.e. (1-IBS). It returns a `SNPdata` object with an additionnal field named `IBS`.    
+```{r eval=FALSE}
+snpdata = calculate_IBS(snpdata, mat.name="GT")
+```
+
+## LD   
+The linkage between pairs of SNPs is calculated using the `vcftools` program.   
+```{r eval=FALSE}
+## calculate LD between pairs of SNPs across chromosome 4 and 5
+snpdata = calculate_LD(snpdata, min.r2=0.2, inter.chrom=FALSE, chroms=c("Pf3D7_04_v3","Pf3D7_05_v3"))
+
+## calculate LD between pairs of SNPs across all chromosomes
+snpdata = calculate_LD(snpdata, min.r2=0.2, inter.chrom=FALSE, chroms=NULL)
+```
+
+## iR
+```{r eval=FALSE}
+groups = c("DongoroBa","Chogen")
+idx = which(snpdata$meta$Location %in% groups)
+samples.to.be.dropped = snpdata$meta$sample[-idx]
+reduced_snpdata = drop_samples(snpdata, samples.to.be.dropped)
+print(reduced_snpdata)
+res.iR = calculate_iR(reduced_snpdata, mat.name="Phased", family="Location", number.cores=4)
+dim(res.iR$iR$Chogen_vs_DongoroBa)
+```
+
+## relatedness
+relatedness between pairs of isolates from a given pairs of population. The relatedness is calculated using the `GT` table. The value of the `from` option is the name of the column in the metadata data frame that represents the sample's population of origin. To remove regions of the genome under selection, use the `sweepRegions` option. You can specify a vector of populations to compute the relatedness for as a value for the groups option.  
+```{r eval=FALSE}
+## calculate relatedness between pairs of isolates from Chogen and DongoroBa
+
+snpdata = impute_missing_genotypes(snpdata, genotype="GT", nsim=10)
+snpdata = calculate_relatedness(snpdata, mat.name="Imputed", from="Location", sweepRegions=NULL, groups=c("Chogen","DongoroBa"))
+relatedness = snpdata$relatedness$df
+relatedness.matrix = snpdata$relatedness$matrix
+
+## calculate relatedness between pairs of isolates from all locations
+snpdata = calculate_relatedness(snpdata, mat.name="GT", family="Location", sweepRegions=NULL, groups=NULL)
+
+## calculate relatedness between pairs of isolates from all locations after excluding the selective sweep regions
+Chrom = c("Pf3D7_04_v3","Pf3D7_05_v3","Pf3D7_07_v3")
+Start = c(723088, 932890, 378222)
+End = c(774914, 987149, 431317)
+selection.region = data.frame(cbind(Chrom, Start, End), stringsAsFactors = FALSE)
+snpdata = calculate_relatedness(snpdata, mat.name="GT", family="Location", sweepRegions=selection.region, groups=NULL)
+
+
+```
+

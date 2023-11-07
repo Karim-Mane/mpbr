@@ -7,7 +7,7 @@
 #' @param meta_file the metadata file (required)
 #' @param output_dir the path to the folder where the output files will
 #'    be stored (optional)
-#' @param gaf the gene ontology annotation file (optional). If not provided, the
+#' @param gof the gene ontology annotation file (optional). If not provided, the
 #'    default file obtained from the [PlasmoDB](
 #' https://plasmodb.org/plasmo/app/downloads/Current_Release/Pfalciparum3D7/gaf/) # nolint: line_length_linter
 #'    will be used
@@ -34,9 +34,11 @@
 #' @examples
 #' \dontrun{
 #'   snpdata <- get_snpdata(
-#'     vcf_file   = "file.vcf.gz",
-#'     meta_file  = "file.txt",
-#'     output_dir = system.file("extdata", package = "mpbr")
+#'     vcf_file   = system.file("extdata", "Input_Data.vcf.gz",
+#'                              package = "mpbr"),
+#'     meta_file  = system.file("extdata", "SampleMetadata.RDS",
+#'                              package = "mpbr"),
+#'     output_dir = tempdir()
 #'  )
 #' }
 #' @export
@@ -44,43 +46,41 @@
 get_snpdata <- function(vcf_file    = NULL,
                         meta_file   = NULL,
                         output_dir  = NULL,
-                        gaf         = NULL,
+                        gof         = NULL,
                         gff         = NULL,
                         num_threads = 4L) {
   checkmate::assert_file_exists(vcf_file)
   checkmate::assert_file_exists(meta_file)
   checkmate::assert_directory_exists(output_dir)
-  checkmate::assert_character(gaf, any.missing = FALSE, len = 1L,
+  checkmate::assert_character(gof, any.missing = FALSE, len = 1L,
                               null.ok = TRUE)
-  checkmate::assert_integer(num_threads, lower = 1L,
+  checkmate::assert_numeric(num_threads, lower = 1L,
                             upper = (parallel::detectCores() - 1L),
                             any.missing = FALSE, null.ok = FALSE, len = 1L)
-  # the user need to provide the GAF file from which the gene ontology
+  # the user need to provide the GOF file from which the gene ontology
   # annotation will be extracted.
-  # otherwise, the pre-existing GAF file will be used
-  if (all(!is.null(gaf) && file.exists(gaf))) {
-    go <- data.table::fread(gaf, nThread = num_threads, sep = "\t")
+  # otherwise, the pre-existing GOF file will be used
+  if (!is.null(gof) && file.exists(gof)) {
+    if (grepl(".RDS", basename(gof))) {
+      go <- readRDS(gof)
+    } else {
+      data.table::fread(gof, nThread = num_threads, sep = "\t")
+    }
   } else {
-    go <- data.table::fread(
-      system.file("extdata", "Pf_gene_ontology.txt", package = "mpbr"),
-      nThread = num_threads,
-      sep     = "\t"
-    )
+    go <- readRDS(system.file("extdata", "pf_gene_ontology.RDS",
+                              package = "mpbr"))
   }
 
   # The user needs to provide the GFF file from which the gene names will be
-  # extracted. This is converted into BED format because the GenomicRange
-  # package works on such file types.
-  if (all(!is.null(gff) && file.exists(gff))) {
-    bed <- file.path(dirname(vcf_file), "file.bed")
+  # extracted. This is converted into BED format because the `GenomicRange`
+  # package requires that file type.
+  if (!is.null(gff) && file.exists(gff)) {
+    bed <- file.path(output_dir, "file.bed")
     system(sprintf("gff2bed < %s > %s", gff, bed))
     bed <- data.table::fread(bed, nThread = num_threads, sep = "\t")
   } else {
-    bed <- data.table::fread(
-      system.file("extdata", "file.bed", package = "mpbr"),
-      nThread = num_threads,
-      sep = "\t"
-    )
+    bed <- readRDS(system.file("extdata", "PlasmoDB-56_Pfalciparum3D7.RDS",
+                               package = "mpbr"))
   }
 
   # the sample IDs will be used to create the sample metadata file.
@@ -103,16 +103,16 @@ get_snpdata <- function(vcf_file    = NULL,
                          sample_ids[["V1"]])
 
   # the details is needed to store the genomic coordinates of the variants
-  Chrom <- Pos <- Ref <- Qual <- Alt <- NULL # nolint
+  Chrom <- Pos <- Ref <- Qual <- Alt <- NULL
   details           <- genotype_f %>% dplyr::select(Chrom, Pos, Ref, Alt, Qual)
   names(sample_ids) <- "sample"
-  snps              <- as.matrix(subset(genotype_f, select = -(1:5))) # nolint
+  snps              <- as.matrix(subset(genotype_f, select = -(1L:5L)))
   snps[snps == "0/0"]                 <- "0"
   snps[snps == "1/1"]                 <- "1"
   snps[snps == "0/1" | snps == "1/0"] <- "2"
   snps[snps == "./." | snps == ".|."] <- NA
-  snps <- apply(snps, 2, function(x) as.integer(x)) # nolint
-  meta <- add_metadata(sample_ids, meta_file)
+  snps <- apply(snps, 2, function(x) as.integer(x))
+  meta <- add_metadata(sample_ids, meta_file, output_dir)
   meta[["percentage_missing_sites"]]      <- colSums(is.na(snps)) / nrow(snps)
   details[["percentage_missing_samples"]] <- rowSums(is.na(snps)) / ncol(snps)
 
@@ -140,28 +140,42 @@ get_snpdata <- function(vcf_file    = NULL,
 #' @param sample_ids a `vector` of sample IDs. This should be in the same order
 #'    as they appear in the input VCF file.
 #' @param metadata the path to the sample metadata file
+#' @param output_dir the path to the output directory
 #'
 #' @return an object of class `data.frame` that contains the sample metadata
 #' @keywords internal
 #' @noRd
-#'
-add_metadata <- function(sample_ids, metadata) {
+#' 
+#' @details
+#' In addition to generating the sample metadata file, the function will also
+#' create a file, named as `samples_in_metadata_not_in_vcf.txt`, if there are
+#' samples in the metadata file that were not found in the VCF file.
+#' 
+add_metadata <- function(sample_ids, metadata, output_dir) {
   checkmate::assert_data_frame(sample_ids, min.rows = 1L, min.cols = 1L,
                                null.ok = FALSE)
   checkmate::assert_file_exists(metadata)
-  meta    <- data.table::fread(metadata, key = "sample", nThread = 4L)
+  checkmate::assert_directory_exists(output_dir)
+  if (grepl(".RDS", basename(metadata))) {
+    meta <- readRDS(metadata)
+  } else {
+    data.table::fread(metadata, key = "sample", nThread = 4L)
+  }
+
   samples <- meta[["sample"]]
 
   # sample from the VCF file must match with those in the metadata file
   are_in_meta_file <- sample_ids[["sample"]] %in% samples
   if (!all(are_in_meta_file)) {
-    warning(sprintf("Incomplete meta data - the following samples in the VCF
-                    file are not found in metadata file:%s %s",
-                    "\n",
+    warning(sprintf("Incomplete meta data - the following samples in the VCF",
+                    "file are not found in metadata file:%s %s \n",
                     glue::glue_collapse(
                                         sample_ids[["sample"]][!are_in_meta_file], # nolint: line_length_linter
                                         sep = ", ")),
     call. = FALSE)
+    write.table(sample_ids[["sample"]][!are_in_meta_file],
+                file.path(output_dir, "samples_in_metadata_not_in_vcf.txt"),
+                row.names = FALSE, col.names = FALSE, quote = FALSE)
   }
 
   # samples from the metadata file should also match with the ones from
@@ -221,11 +235,11 @@ get_gene_annotation <- function(genomic_coordinates, go, bed, num_cores = 4L) {
   names(genes) <- c("chrom", "start", "end", "gene_id")
   go           <- subset(go, select = c(2, 10)) # nolint
   names(go)    <- c("gene_id", "gene_name")
-  data.table::setkey(go, "gene_id")
-  data.table::setkey(genes, "gene_id")
 
   chrom <- gene_id <- gene_name <- NULL
-  test         <- genes %>% dplyr::left_join(go)
+  test         <- genes %>% dplyr::left_join(go, by = "gene_id",
+                                             relationship = "many-to-many")
+                                               
   test         <- dplyr::distinct(test, chrom, start, end, gene_id, gene_name)
   resultat     <- gene_annotation(test, genomic_coordinates)
   resultat     <- gsub("NA:", "", resultat, fixed = TRUE)
@@ -301,10 +315,6 @@ rm_suf <- function(x) {
 gene_annotation <- function(target_gtf, genomic_coordinates) {
   checkmate::assert_data_frame(target_gtf, min.rows = 1L, min.cols = 1L,
                                null.ok = FALSE)
-  checkmate::assert_data_frame(genomic_coordinates,
-                               min.rows = 1L,
-                               min.cols = 1L,
-                               null.ok  = FALSE)
 
   names(genomic_coordinates)   <- c("chrom", "start")
   genomic_coordinates[["end"]] <- genomic_coordinates[["start"]]
@@ -319,9 +329,17 @@ gene_annotation <- function(target_gtf, genomic_coordinates) {
                                                                  type = "within"))) #nolint: line_length_linter
   my_overlaps[["gene"]] <- target_gtf[["gene_name"]][my_overlaps[["subjectHits"]]] #nolint: line_length_linter
   gene <- queryHits <- NULL # nolint
-  the_genes <- my_overlaps[, paste(unique(gene), collapse = ":"),
-                           by = queryHits]
-  names(the_genes)[[2L]]           <- "gene"
+  the_genes <- my_overlaps %>%
+    dplyr::group_by(queryHits) %>%
+    dplyr::distinct(queryHits, gene) %>%
+    dplyr::filter(!is.na(gene)) %>%
+    dplyr::ungroup() %>%
+    dplyr::group_by(queryHits) %>%
+    dplyr::summarize(gene = glue::glue_collapse(gene, sep = ":"))
+    
+  # the_genes <- my_overlaps[, paste(unique(gene), collapse = ":"),
+  #                          by = queryHits]
+  
   genomic_coordinates[["gene"]]    <- NA
   genomic_coordinates[["gene"]][the_genes[["queryHits"]]] <- the_genes[["gene"]]
 
@@ -340,14 +358,15 @@ gene_annotation <- function(target_gtf, genomic_coordinates) {
 #' }
 #'
 #' @export
+#'
 print.SNPdata <- function(snpdata) {
   checkmate::assert_class(snpdata, "SNPdata", null.ok = FALSE)
   print(head(snpdata[["meta"]]))
   print(head(snpdata[["details"]]))
-  message(sprintf("\nData contains: %d samples for %d snp loci\n",
+  message(sprintf("\nData contains: %d samples for %d snp loci",
                   dim(snpdata[["GT"]])[[2L]],
                   dim(snpdata[["GT"]])[[1L]]))
-  message(sprintf("\nData is generated from: %s\n", snpdata[["vcf"]]))
+  message(sprintf("\nData is generated from: %s", snpdata[["vcf"]]))
 }
 
 #' Filter loci and samples (requires **bcftools** and **tabix** to be installed)

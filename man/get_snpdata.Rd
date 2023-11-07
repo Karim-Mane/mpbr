@@ -8,7 +8,7 @@ get_snpdata(
   vcf_file = NULL,
   meta_file = NULL,
   output_dir = NULL,
-  gaf = NULL,
+  gof = NULL,
   gff = NULL,
   num_threads = 4L
 )
@@ -21,7 +21,7 @@ get_snpdata(
 \item{output_dir}{the path to the folder where the output files will
 be stored (optional)}
 
-\item{gaf}{the gene ontology annotation file (optional). If not provided, the
+\item{gof}{the gene ontology annotation file (optional). If not provided, the
 default file obtained from the \href{https://plasmodb.org/plasmo/app/downloads/Current_Release/Pfalciparum3D7/gaf/}{PlasmoDB} # nolint: line_length_linter
 will be used}
 
@@ -53,9 +53,11 @@ genotyped from malaria parasite.
 \examples{
 \dontrun{
   snpdata <- get_snpdata(
-    vcf_file   = "file.vcf.gz",
-    meta_file  = "file.txt",
-    output_dir = system.file("extdata", package = "mpbr")
+    vcf_file   = system.file("extdata", "Input_Data.vcf.gz",
+                             package = "mpbr"),
+    meta_file  = system.file("extdata", "SampleMetadata.RDS",
+                             package = "mpbr"),
+    output_dir = tempdir()
  )
 }
 }
