@@ -42,7 +42,8 @@
 #'  )
 #' }
 #' @export
-#'
+#' @importFrom magrittr %>%
+#' 
 get_snpdata <- function(vcf_file    = NULL,
                         meta_file   = NULL,
                         output_dir  = NULL,
@@ -514,8 +515,12 @@ compute_maf <- function(snpdata, include_het = FALSE, mat_name = "GT") {
   ref <- rowSums(x == 0L, na.rm = TRUE)
   alt <- rowSums(x == 1L, na.rm = TRUE)
   het <- rowSums(x == 2L, na.rm = TRUE)
-  tmp_mat <- ifelse(!include_het, cbind(ref, alt), cbind(ref, alt, het))
-  res <- apply(tmp_mat, 1L, get_maf)
+  if (!include_het) {
+    tmp_mat <- cbind(ref, alt)
+  } else {
+    tmp_mat <- cbind(ref, alt, het)
+  }
+  res       <- apply(tmp_mat, 1L, get_maf)
   if (!("MAF" %in% names(snpdata[["details"]]))) {
     snpdata[["details"]][["MAF"]]           <- as.numeric(res[1L, ])
     snpdata[["details"]][["MAF_allele"]] <-
@@ -542,8 +547,9 @@ compute_maf <- function(snpdata, include_het = FALSE, mat_name = "GT") {
 #' @noRd
 #'
 get_maf <- function(mat) {
-  checkmate::assert_matrix(mat, mode = "numeric", min.rows = 1L, min.cols = 2L,
-                           null.ok = FALSE)
+  # stopifnot("Input must be of type matrix" = inherits(mat, "matrix"))
+  # checkmate::assert_matrix(mat, min.rows = 1L, min.cols = 2L,
+  #                          null.ok = FALSE)
   if (length(mat) == 2L) {
     if (mat[[1L]] < mat[[2L]]) {
       maf    <- mat[[1L]] / sum(mat[[1L]], mat[[2L]])

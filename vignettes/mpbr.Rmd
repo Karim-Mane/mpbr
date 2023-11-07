@@ -1,6 +1,8 @@
 ---
 title: "mpbr"
-output: rmarkdown::html_vignette
+output:
+  rmarkdown::html_vignette:
+    df_print: "kable"
 vignette: >
   %\VignetteIndexEntry{mpbr}
   %\VignetteEngine{knitr::rmarkdown}
@@ -58,24 +60,48 @@ Use the `print()` function to visualize the structure of the `SNPdata` object cr
 print(snpdata)
 ```
 
-## calculate the SNPs minor allele frequency     
-the `compute_MAF` requires a SNPdata object, the name of the genotype table from which the MAF should be calculated (either "GT" for the raw genotypes, "Phased" for phased genotypes, "Phased_Imputed" for phased and imputed genotypes).    
-include.het determines whether to account for heterozygous sites in MAF calculation.   
-type `?compute_MAF` for more details     
-```{r, eval=FALSE}
-snpdata = compute_MAF(snpdata, include.het=FALSE, mat.name="GT")
+## Calculate the SNPs minor allele frequency  
+
+the `compute_maf()` requires a `SNPdata` object, the name of the genotype table from which the MAF should be calculated (either **"GT"** for the raw genotypes, **"Phased"** for phased genotypes, **"Phased_Imputed"** for phased and imputed genotypes).    
+`include_het` argument determines whether to account for heterozygous sites during MAF calculation.
+The function returns a `SNPdata` object with the following 2 extra columns in the **details** table:
+
+* **MAF**: the column with the SNPs minor allele frequencies
+* **MAF_allele**: the column that determines which of the reference (0) or alternate (1) alleles is the minor allele on that site.
+
+type `?compute_MAF` for more details. 
+
+```{r, eval=TRUE}
+snpdata <- compute_maf(snpdata,
+                       include_het = FALSE,
+                       mat_name = "GT")
 head(snpdata$details)
 ```
 
-## filter the SNPdata object     
-use the `filter_snps_samples` function to remove the SNPs and samples that do not satisfy the user criteria.    
-```{r eval=FALSE}
-snpdata = filter_snps_samples(snpdata, min.qual=10, max.missing.sites=0.2, max.missing.samples=0.2, maf.cutoff=0.01)
+## Filter the SNPdata object  
+
+Use the `filter_snps_samples()` function to remove the SNPs and samples that do not satisfy the user criteria.    
+
+```{r eval=TRUE}
+snpdata <- filter_snps_samples(snpdata,
+                               min_qual            = 10,
+                               max_missing_sites   = 0.2,
+                               max_missing_samples = 0.2,
+                               maf_cutoff          = 0.01)
+```
+
+All loci and samples that do not satisfy the defined conditions will be dropped from the input `SNPdata` object. Details about the filtered object can be viewed using:
+
+```{r eval=TRUE}
 print(snpdata)
+```
+
+The distribution of the MAF in the filtered `SNPdata` object looks like below:
+
+```{r eval=TRUE}
 hist(snpdata$details$MAF, 100)
 grid()
 ```
-
 ## calculate the within-host genetics diversity index (Fws)   
 the `calculate_Fws` function requires a SNPdata object   
 type `?calculate_Fws` for more details     
