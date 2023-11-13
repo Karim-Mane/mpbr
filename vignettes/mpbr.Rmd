@@ -15,7 +15,7 @@ date: `r format(Sys.Date(), "%d/%m/%Y")`
 
 ```{r, include = FALSE}
 knitr::opts_chunk[["set"]](collapse = TRUE, comment = "#>")
-# ideally, 'Input_Data.vcf.gz' should be part of the package and loade
+# ideally, 'Input_Data.vcf.gz' should be part of the package and loaded
 # using the command below. Need to figure out how to include big files
 # into the package documents
 vcf        <- system.file("extdata", "Input_Data.vcf.gz", package = "mpbr")
@@ -74,13 +74,14 @@ type `?compute_MAF` for more details.
 ```{r, eval=TRUE}
 snpdata <- compute_maf(snpdata,
                        include_het = FALSE,
-                       mat_name = "GT")
+                       mat_name    = "GT")
 head(snpdata$details)
 ```
 
 ## Filter the SNPdata object  
 
-Use the `filter_snps_samples()` function to remove the SNPs and samples that do not satisfy the user criteria.    
+Use the `filter_snps_samples()` function to remove the SNPs and samples that do not satisfy the user criteria.
+In the example below, we intend to discard SNPs and samples where the number of missing genotypes represent 20% or more the total number of observations. SNPs with MAF < 1% or a quality score < 10 will also be removed.
 
 ```{r eval=TRUE}
 snpdata <- filter_snps_samples(snpdata,
@@ -102,9 +103,12 @@ The distribution of the MAF in the filtered `SNPdata` object looks like below:
 hist(snpdata$details$MAF, 100)
 grid()
 ```
-## calculate the within-host genetics diversity index (Fws)   
+
+## calculate the within-host genetics diversity index (Fws)  
+
 the `calculate_Fws` function requires a SNPdata object   
-type `?calculate_Fws` for more details     
+type `?calculate_Fws` for more details   
+
 ```{r, eval=FALSE}
 snpdata =  calculate_Fws(snpdata)
 head(snpdata$meta)
