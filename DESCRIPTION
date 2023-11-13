@@ -1,5 +1,5 @@
 Package: mpbr
-Title: Population Genomics analysis for Plasmodium falciparum
+Title: Population Genomics Analysis for Plasmodium falciparum
 Version: 0.0.1
 Authors@R: c(
     person("Karim", "Mané", , "karimanee@outlook.com", role = c("aut", "cre"),
@@ -11,6 +11,9 @@ Description: provides functions to perform population genomics analyses
     using genome-wide Single Nucleotide Polymorphisms (SNPs) from the
     malaria parasite Plasmodium falciparum.
 License: MIT + file LICENSE
+URL: https://Karim-Mane.github.io/mpbr/,
+    https://github.com/Karim-Mane/mpbr/
+BugReports: https://github.com/Karim-Mane/mpbr/issues
 Suggests: 
     checkmate,
     knitr,
@@ -24,7 +27,7 @@ Config/Needs/website: epiverse-trace/epiversetheme
 Config/testthat/edition: 3
 Encoding: UTF-8
 import: data.table, dplyr, SeqArray, moimix, statip, parallel, isoRelate,
-    Rfast, utils, GenomicRanges, IRanges
+    Rfast, utils, GenomicRanges, IRanges, magrittr
 Language: en-US
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.3
