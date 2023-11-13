@@ -7,7 +7,7 @@ cff-version: 1.2.0
 message: 'To cite package "mpbr" in publications use:'
 type: software
 license: MIT
-title: 'mpbr: Population Genomics analysis for Plasmodium falciparum'
+title: 'mpbr: Population Genomics Analysis for Plasmodium falciparum'
 version: 0.0.1
 abstract: provides functions to perform population genomics analyses using genome-wide
   Single Nucleotide Polymorphisms (SNPs) from the malaria parasite Plasmodium falciparum.
@@ -22,6 +22,8 @@ authors:
 - family-names: Jeffries
   given-names: David
   email: djeffries@mrc.gm
+repository-code: https://github.com/Karim-Mane/mpbr
+url: https://Karim-Mane.github.io/mpbr/
 contact:
 - family-names: Mané
   given-names: Karim
@@ -122,3 +124,6 @@ references:
     email: hadley@posit.co
   year: '2023'
   version: '>= 3.0.0'
+identifiers:
+- type: url
+  value: https://github.com/Karim-Mane/mpbr/
