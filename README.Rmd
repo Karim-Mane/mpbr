@@ -38,8 +38,8 @@ You can install the development version of {{ packagename }} from
 [GitHub](https://github.com/) with:
 
 ``` r
-# install.packages("pak")
 pak::pak("{{ gh_repo }}")
+library(mpbr)
 ```
 
 ## Create the `SNPdata` object
