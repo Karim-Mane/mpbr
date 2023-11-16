@@ -590,6 +590,9 @@ get_maf <- function(mat) {
 #' using the {moimix} R package.
 #'
 #' @param snpdata a `SNPdata` object
+#' @param threshold a `numeric` value between 0 and 1. This will be used to
+#'    categorize the infections into monoclonal (Fws > threshold) or polyclonal
+#'    (Fws <= threshold)
 #'
 #' @return a `SNPdata` object with 2 additional columns in the meta table
 #' \enumerate{
@@ -599,20 +602,22 @@ get_maf <- function(mat) {
 #'
 #' @examples
 #' \dontrun{
-#'   snpdata <- calculate_fws(snpdata)
+#'   snpdata <- calculate_fws(snpdata, threshold = 0.95)
 #'  }
 #'
 #' @export
 #'
-calculate_fws <- function(snpdata) {
+calculate_fws <- function(snpdata, threshold = 0.95) {
   checkmate::assert_class(snpdata, "SNPdata", null.ok = FALSE)
+  checkmate::assert_numeric(threshold, lower = 0, upper = 1, finite = TRUE,
+                            len = 1, null.ok = FALSE)
   vcf        <- snpdata[["vcf"]]
   gds_file   <- file.path(dirname(vcf), "data.gds")
   SeqArray::seqVCF2GDS(vcf, gds_file)
   my_vcf    <- SeqArray::seqOpen(gds_file)
 
   # filter out the SNPs from the apicoplast and the mitochondrial chromosomes
-  sample_id <- SeqArray::seqGetData(my_vcf, "sample_id")
+  sample_id <- SeqArray::seqGetData(my_vcf, "sample.id")
   coords    <- moimix::getCoordinates(my_vcf)
   SeqArray::seqSetFilter(my_vcf,
                          variant.id = coords[["variant.id"]][coords[["chromosome"]] != "Pf3D7_API_v3"]) # nolint: line_length_linter
@@ -627,7 +632,7 @@ calculate_fws <- function(snpdata) {
   meta <- data.frame(snpdata[["meta"]]) %>%
     dplyr::left_join(fws_overall, by = "sample")
   meta[["COI"]]      <- 1L
-  meta[which(meta[["Fws"]] <= 0.95), ][["COI"]] <- 2L
+  meta[which(meta[["Fws"]] <= threshold), ][["COI"]] <- 2L
   snpdata[["meta"]]  <- meta
   snpdata
 }
@@ -661,16 +666,16 @@ calculate_fws <- function(snpdata) {
 #' @export
 phase_mixed_genotypes <- function(snpdata, nsim = 100L) {
   checkmate::assert_class(snpdata, "SNPdata", null.ok = FALSE)
-  checkmate::assert_integer(nsim, lower = 1L, any.missing = FALSE,
+  checkmate::assert_numeric(nsim, lower = 1L, any.missing = FALSE,
                             null.ok = FALSE, len = 1L)
   vcf          <- snpdata[["vcf"]]
-  expression   <- '%CHROM\t%POS[\t%AD]\n' # nolint
+  expression   <- '%CHROM\t%POS[\t%AD]\n'
   tmp          <- file.path(dirname(vcf), "tmp")
   system(sprintf("mkdir -p %s", tmp))
   ad           <- file.path(tmp, "AllelicDepth.txt")
   system(sprintf("bcftools query -f'%s' %s > %s", expression, vcf, ad))
   depth        <- data.table::fread(ad, nThread = 4L)
-  depth        <- as.matrix(subset(depth, select = -c(1L:2L))) # nolint
+  depth        <- as.matrix(subset(depth, select = -c(1L:2L)))
   path         <- file.path(dirname(vcf), "phasing")
   system(sprintf("mkdir -p %s", path))
   correlations <- numeric(length = nsim)
@@ -711,8 +716,8 @@ phase_data <- function(genotype, depth) {
   idx <- as.numeric(which(genotype == 2L))
 
   for (j in idx) {
-    ref <- as.numeric(unlist(strsplit(depth[j], ',', fixed = TRUE))[[1L]]) # nolint: quotes_linters
-    alt <- as.numeric(unlist(strsplit(depth[j], ',', fixed = TRUE))[[2L]]) # nolint: quotes_linters
+    ref <- as.numeric(unlist(strsplit(depth[j], ",", fixed = TRUE))[[1L]])
+    alt <- as.numeric(unlist(strsplit(depth[j], ",", fixed = TRUE))[[2L]])
     if (all(ref == 0L && alt == 0L)) {
       ref_count <- sum(genotype == 0L, na.rm = TRUE)
       alt_count <- sum(genotype == 1L, na.rm = TRUE)

@@ -44,7 +44,7 @@ The functions in this package require a `SNPdata` object. Objects of this class 
 
 Type `?get_snpdata` for more details.
 
-```{r eval=TRUE}
+```{r eval=FALSE}
 snpdata <- get_snpdata(vcf_file   = vcf,
                        meta_file  = meta_file,
                        output_dir = output_dir,
@@ -56,7 +56,7 @@ snpdata <- get_snpdata(vcf_file   = vcf,
 
 Use the `print()` function to visualize the structure of the `SNPdata` object created from the `get_snpdata()`.
 
-```{r, eval=TRUE}
+```{r, eval=FALSE}
 print(snpdata)
 ```
 
@@ -71,7 +71,7 @@ The function returns a `SNPdata` object with the following 2 extra columns in th
 
 type `?compute_MAF` for more details. 
 
-```{r, eval=TRUE}
+```{r, eval=FALSE}
 snpdata <- compute_maf(snpdata,
                        include_het = FALSE,
                        mat_name    = "GT")
@@ -83,7 +83,7 @@ head(snpdata$details)
 Use the `filter_snps_samples()` function to remove the SNPs and samples that do not satisfy the user criteria.
 In the example below, we intend to discard SNPs and samples where the number of missing genotypes represent 20% or more the total number of observations. SNPs with MAF < 1% or a quality score < 10 will also be removed.
 
-```{r eval=TRUE}
+```{r eval=FALSE}
 snpdata <- filter_snps_samples(snpdata,
                                min_qual            = 10,
                                max_missing_sites   = 0.2,
@@ -93,35 +93,45 @@ snpdata <- filter_snps_samples(snpdata,
 
 All loci and samples that do not satisfy the defined conditions will be dropped from the input `SNPdata` object. Details about the filtered object can be viewed using:
 
-```{r eval=TRUE}
+```{r eval=FALSE}
 print(snpdata)
 ```
 
 The distribution of the MAF in the filtered `SNPdata` object looks like below:
 
-```{r eval=TRUE}
+```{r eval=FALSE}
 hist(snpdata$details$MAF, 100)
 grid()
 ```
 
-## calculate the within-host genetics diversity index (Fws)  
+## Calculate the within-host genetics diversity index (Fws)  
 
-the `calculate_Fws` function requires a SNPdata object   
-type `?calculate_Fws` for more details   
+The within-hosts fixation index (Fws) metric measures the genetic diversity of an individual infection relative to the population level genetic diversity using the [moimix](https://github.com/bahlolab/moimix) R package.
+The function creates 2 extra columns in the **meta** table. The **Fws** column contains the Fws values. They vary between 0 (for polyclonal infection) and 1 (for monoclonal infections). The **COI** column is created from the Fws column such that infections with Fws greater than the specified threshold are considered as monoclonal (1). Otherwise, the infection is considered as polyclonal (2).
 
 ```{r, eval=FALSE}
-snpdata =  calculate_Fws(snpdata)
+snpdata <- calculate_fws(snpdata, threshold = 0.95)
 head(snpdata$meta)
 ```
 
-## mixed genotypes phasing     
-use the `phase_mixed_genotypes` function to phase the mixed genotypes.    
+## Mixed genotypes phasing  
+
+Mixed genotypes are not accounted for in many population genetics methods as they introduce a extra layer of complexity. Genotype phasing is the most common way of dealing with mixed genotype. In this package, we use the `phase_mixed_genotypes()` to phase the mixed genotypes based on their allelic depth (AD) and the total allele count on the specific locus through the following procedure:
+
+* When there is no read supporting both alleles, the mixed genotype is replaced by the less common allele in the locus. If both alleles are equally represented in the population, it is replaced based on a Bernoulli simulation with a probability defined as $\frac{reference_allele_count}{reference_allele_count + alternate_allele_count}$
+* When both allele of the mixed genotype are supported by more than 5 reads and the number of reads supporting either the reference or or alternate allele is 2 times the other allele, it will be replace by the allele with the less number of reads. Otherwise the mixed allele is replaced based on a Bernoulli simulation as describe above.
+* When there is no read supporting one of the allele and the read count of the other allele is > 5, the mixed allele is replaced with the one that is not supported. Other it is replaced based on a Bernoulli simulation as describe above.
+
+The process above is repeated `nsim` times and a new genotype file is generated and stored in the output directory. After all the iterations, the correlation between the MAF before phasing and the MAF from each phased genotype data is calculated. The phased genotype with the highest correlation will be retained and stored in the output `SNPdata` object.
+We recommend `nsim = 50` at least to maximize the change of getting the highest MAF correlation.
+    
 ```{r eval=FALSE}
-snpdata = phase_mixed_genotypes(snpdata, nsim=100)
-head(snpdata$Phased[,1:5])
+snpdata = phase_mixed_genotypes(snpdata, nsim = 10)
+head(snpdata$Phased[, 1:5])
 ```
 
-## impute the missing data   
+## Impute the missing data  
+
 use the `impute_missing_genotypes` function to impute the missing genotypes. the `genotype` argument determines which genotype table should be used to impute the missing data ("GT" to impute from raw data, "Phased" to impute from the phased data).    
 ```{r eval=FALSE}
 snpdata = impute_missing_genotypes(snpdata, genotype="GT", nsim=100)

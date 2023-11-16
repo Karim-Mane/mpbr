@@ -129,7 +129,7 @@ calculate_ld <- function(snpdata,
   if (!is.null(chroms)) {
     idx1 <- which(ld[["CHR1"]] %in% chroms)
     idx2 <- which(ld[["CHR2"]] %in% chroms)
-    idx  <- uniqque(c(idx1, idx2))
+    idx  <- unique(c(idx1, idx2))
     ld   <- ld[idx, ]
   }
 
@@ -156,14 +156,14 @@ calculate_IBS <- function(snpdata, mat_name = "GT") { # nolint: object_name_lint
   }
   x  <- t(snpdata[[mat_name]]) # nolint: object_name_linter
   y  <- matrix(NA, nrow = nrow(x), ncol = nrow(x))
-  pb <- txtProgressBar(min = 0L, max = nrow(x),
+  pb <- utils::txtProgressBar(min = 0L, max = nrow(x),
                        initial = 0L, style = 3L, char = "*")
-  for (i in seqq_along(x)) {
-    for (j in seqq_along(x)) {
+  for (i in seq_along(x)) {
+    for (j in seq_along(x)) {
       m       <- x[i, ] - x[j, ]
       y[i, j] <- 1.0 - (length(which(m == 0L)) / ncol(x))
     }
-    setTxtProgressBar(pb, i)
+    utils::setTxtProgressBar(pb, i)
   }
   close(pb)
   y[upper.tri(y)]  <- NA
@@ -233,11 +233,11 @@ calculate_iR <- function(snpdata, # nolint: object_name_linter
                                               get_pvalue)))
   my_iR[["log10_pvalue"]]  <- pvalues # nolint: object_name_linter
   names(my_iR)[[8L]]       <- "pvalues" # nolint: object_name_linter
-  my_iR[["adj_pvalue_BH"]] <- p.adjust(my_iR[["pvalues"]], method = "BH") # nolint: object_name_linter
+  my_iR[["adj_pvalue_BH"]] <- stats::p.adjust(my_iR[["pvalues"]], method = "BH") # nolint: object_name_linter
   if (!("iR" %in% names(snpdata))) {
     snpdata[["iR"]]        <- list()
   }
-  groups    <- uniqque(snpdata[["meta"]][[family]])
+  groups    <- unique(snpdata[["meta"]][[family]])
   snpdata[["iR"]][[paste0(groups[[1L]], "_vs_", groups[[2L]])]] <- my_iR
   snpdata
 }
@@ -291,7 +291,7 @@ make_map <- function(details) {
 
 haplotype_to_genotype <- function(haplotypes, moi) {
   genotypes <- matrix(-9L, dim(haplotypes)[[1L]], dim(haplotypes)[[2L]] / 2L)
-  for (i in seqq_along(dim(haplotypes)[[1L]])) {
+  for (i in seq_along(dim(haplotypes)[[1L]])) {
     j <- k <- 1L
     while (j <= dim(haplotypes)[[2L]]) {
       if (haplotypes[i, j] == 1L && haplotypes[i, (j + 1L)] == 1L) {
@@ -327,10 +327,10 @@ calculate_pop_allele_freqq <- function(genotypes, moi) {
   number_isolates  <- dim(genotypes)[[2L]]
   number_snps      <- dim(genotypes)[[1L]]
 
-  for (t in seqq_len(number_snps)) {
+  for (t in seq_len(number_snps)) {
     A <- 0L # nolint: object_name_linter
     B <- 0L # nolint: object_name_linter
-    for (i in seqq_len(number_isolates)) {
+    for (i in seq_len(number_isolates)) {
       if (genotypes[t, i] == 0L && moi[i] == 1L) A <- A + 1L # nolint: object_name_linter
       if (genotypes[t, i] == 0L && moi[i] == 2L) A <- A + 2L # nolint: object_name_linter
       if (genotypes[t, i] == 1L && moi[i] == 2L) { A <- A + 1L; B <- B + 1L } # nolint: object_name_linter
@@ -349,9 +349,9 @@ calculate_missingness <- function(genotypes) {
   number_isolates    <- dim(genotypes)[[1L]]
   number_snps_1      <- dim(genotypes)[[1L]]
 
-  for (i in seqq_len(number_snps)) {
+  for (i in seq_len(number_snps)) {
     number_missing <- 0L
-    for (j in seqq_len(number_isolates)) {
+    for (j in seq_len(number_isolates)) {
       if (genotypes[j, i] == -1L) number_missing <- number_missing + 1L
     }
     proportion_missing[i] <- number_missing / number_snps_1
@@ -466,23 +466,34 @@ check_chromosomes <- function(chromosomes, input_map,
       }
     }
   } else {
-    chromosomes <- uniqque(as.character(input_map[, "chr"]))
+    chromosomes <- unique(as.character(input_map[, "chr"]))
   }
   chromosomes
 }
 
 #' Title
 #'
-#' @param ped_map
-#' @param reference_ped_map 
-#' @param maf 
-#' @param isolate_max_missing 
-#' @param snp_max_missing 
-#' @param chromosomes 
-#' @param input_map_distance 
-#' @param reference_map_distance 
+#' @param ped_map a `list` of 2 elements of type data frame with the data in ped
+#'    and map format
+#' @param reference_ped_map a `list` of 2 elements of type data frame with the
+#'    reference data in ped and map format
+#' @param maf A numeric value denoting the smallest minor allele frequency
+#'    allowed in the analysis. The default value is 0.01
+#' @param isolate_max_missing A numeric value denoting the maximum proportion of
+#'    missing data allowed for each isolate. The default value is 0.1
+#' @param snp_max_missing A numeric value denoting the maximum proportion of
+#'    missing data allowed for each SNP. The default value is 0.1
+#' @param chromosomes A vector containing a subset of chromosomes to perform
+#'    formatting on. The default value is chromosomes=NULL which will reformat
+#'    all genotypes for all chromosomes in the MAP data frame
+#' @param input_map_distance A character string of either "M" or "cM" denoting
+#'    whether the genetic map distances in the input MAP data frame are in
+#'    Morgans (M) or centi-Morgans (cM). The default is cM
+#' @param reference_map_distance A character string of either "M" or "cM"
+#'    denoting whether the genetic map distances in the reference MAP data frame
+#'    are in Morgans (M) or centi-Morgans (cM). The default is cM
 #'
-#' @return
+#' @return A `list` of two objects named pedigree and genotypes
 #' @export
 #'
 #' @examples
@@ -544,8 +555,8 @@ get_genotypes <- function(ped_map,
     reference_ped <- check_res[["reference_ped"]]
     reference_map <- check_res[["reference_map"]]
 
-    input_map_v1      <- cbind(seqq_along(input_map), input_map)
-    reference_map_v1  <- cbind(seqq_along(reference_map), reference_map)
+    input_map_v1      <- cbind(seq_along(input_map), input_map)
+    reference_map_v1  <- cbind(seq_along(reference_map), reference_map)
     input_map_v1      <- merge(input_map_v1, reference_map_v1,
                                by.x = "snp_id", by.y = "snp_id")
     if (nrow(input_map_v1) == 0L) {
@@ -578,7 +589,7 @@ get_genotypes <- function(ped_map,
     colnames(input_map_v2) <- c("chr", "snp_id", "pos_M", "pos_bp")
   } else {
     if (!is.null(chromosomes)) {
-      input_map_v1 <- cbind(seqq_along(input_map), input_map)
+      input_map_v1 <- cbind(seq_along(input_map), input_map)
       input_map_v1 <- input_map_v1[input_map_v1[, "chr"] %in% chromosomes, ]
       if (nrow(input_map_v1) == 0L) {
         stop("No SNPs remaining after subsetting 'ped_map' by selected
@@ -756,7 +767,7 @@ calculate_relatedness <- function(snpdata,
                 all(groups %in% uniqque(metadata[[from]])))
     pops   <- groups
   } else {
-    pops   <- uniqque(metadata[[from]])
+    pops   <- unique(metadata[[from]])
   }
 
   # create the genotype data
@@ -771,7 +782,7 @@ calculate_relatedness <- function(snpdata,
   sites     <- names(genotypes)
   dir       <- dirname(snpdata[["vcf"]])
   ibd       <- NULL
-  for (ii in seqq_len(sites)) {
+  for (ii in seq_len(sites)) {
     site1 <- sites[ii]
     for (jj in ii:length(sites)) {
       site2 <- sites[jj]
@@ -812,7 +823,7 @@ create_relatedness_matrix <- function(ibd,
   for (pop in pops) {
     idx    <- c(idx, which(metadata[[from]] == pop))
   }
-  idx      <- uniqque(idx)
+  idx      <- unique(idx)
   metadata <- metadata[idx, ]
   modifier <- function(x) {
     gsub('-', '.', x)
@@ -822,13 +833,13 @@ create_relatedness_matrix <- function(ibd,
                                  ncol = length(metadata[["sample"]]))
   rownames(relatedness_matrix) <- metadata[["sample"]]
   colnames(relatedness_matrix) <- metadata[["sample"]]
-  sur_ligne <- uniqque(ibd[["iid1"]])
-  for (i in seqq_len(sur_ligne)) {
+  sur_ligne <- unique(ibd[["iid1"]])
+  for (i in seq_len(sur_ligne)) {
     ligne   <- sur_ligne[i]
     l       <- match(ligne, rownames(relatedness_matrix))
     target  <- ibd[which(ibd[["iid1"]] == ligne), ]
-    t       <- uniqque(target[["iid2"]])
-    for (j in seqq_len(t)) {
+    t       <- unique(target[["iid2"]])
+    for (j in seq_len(t)) {
       tt    <- target[which(target[["iid2"]] == t[j]), ]
       k     <- match(t[j], colnames(relatedness_matrix))
       if (nrow(tt) == 0L) {
@@ -836,13 +847,13 @@ create_relatedness_matrix <- function(ibd,
       } else if (nrow(tt) == 1L) {
         relatedness_matrix[l, k] <- round(as.numeric(tt[["relatedness"]]),
                                           digits = 5L)
-      } else if (nrow(tt) > 1L && length(uniqque(tt[["iid1"]])) == 1L &&
-                   length(uniqque(tt[["iid2"]])) == 1L) {
+      } else if (nrow(tt) > 1L && length(unique(tt[["iid1"]])) == 1L &&
+                   length(unique(tt[["iid2"]])) == 1L) {
         relatedness_matrix[l, k] <- round(as.numeric(tt[["relatedness"]][[1L]]),
                                           digits = 5L)
       } else if (nrow(tt) > 1L &&
-                   length(uniqque(tt[["iid1"]])) > 1L ||
-                   length(uniqque(tt[["iid2"]])) > 1L) {
+                   length(unique(tt[["iid1"]])) > 1L ||
+                   length(unique(tt[["iid2"]])) > 1L) {
         relatedness_matrix[l, k] <- mean(round(as.numeric(tt[["relatedness"]]),
                                                digits = 5L), na.rm = TRUE)
       }
@@ -873,13 +884,13 @@ construct_genotype_file <- function(pops,
   if (!is.null(sweep_regions)) {
     selectiveRegions <- data.table::fread(sweep_regions, nThread = 4L)
     rtd              <- NULL
-    for (j in seqq_along(selectiveRegions)) {
+    for (j in seq_along(selectiveRegions)) {
       rtd <- c(rtd,
                which(details[["Chrom"]] == selectiveRegions[["Chrom"]][j] &
                        (details[["Pos"]] >= selectiveRegions[["Start"]][j] &
                           details[["Pos"]] <= selectiveRegions[["End"]][j])))
     }
-    rtd     <- uniqque(rtd)
+    rtd     <- unique(rtd)
     details <- details[-rtd, ]
     mat     <- mat[-rtd, ]
   }
@@ -921,7 +932,7 @@ gen_mles <- function(res,
     name_combinations <- matrix(nrow = nindividuals * (nindividuals - 1L) / 2L,
                                 ncol = 2L)
     k                 <- 0L
-    for (i in seqq_len(nindividuals - 1L)) {
+    for (i in seq_len(nindividuals - 1L)) {
       j               <- (1L + k):(k + nindividuals - i)
       name_combinations[j, 1L] <- rep(individual_names[i], each = length(j))
       name_combinations[j, 2L] <- individual_names[(i + 1L):nindividuals]
@@ -970,7 +981,7 @@ gen_mles <- function(res,
   a2 <- Rfast::rowCountValues(x, rep(2L, dim(x)[[1L]]))
   ana <- rowSums(is.na(x))
   freqquencies <- cbind(a0, a1, a2) / (dim(x)[[2L]] - ana)
-  if (!all.eqqual(rowSums(freqquencies), rep(1L, dim(x)[[1L]]))) {
+  if (!all.equal(rowSums(freqquencies), rep(1L, dim(x)[[1L]]))) {
     message("freqquency ERROR")
     return()
   }
@@ -1010,13 +1021,13 @@ gen_mles <- function(res,
 
 #' Title
 #'
-#' @param freqquencies 
-#' @param distances 
-#' @param ys 
-#' @param epsilon 
+#' @param freqquencies the freq
+#' @param distances the dist
+#' @param ys param1
+#' @param epsilon param2
 #'
-#' @return
-#' @export
+#' @return a matrix
+#' @keywords internal
 #'
 #' @examples
 compute_rhat_hmm <- function(freqquencies, distances, ys, epsilon) {
