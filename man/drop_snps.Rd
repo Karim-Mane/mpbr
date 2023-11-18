@@ -30,9 +30,10 @@ a \code{SNPdata} object where the specified SNPs have been removed
 Drop a of set SNPs from a \code{SNPdata} object
 }
 \details{
-when snp_to_be_dropped is not set to NA (i.e. the genomic
+when snp_to_be_dropped is not NULL (i.e. the genomic
 coordinates of snps to be removed are in a data frame), then the rest of
-the arguments can be ignored or set to NA (chrom=NA, start=NA, end=NA)
+the arguments can be ignored or set to NULL (chrom = NULL,
+start = NULL, end = NULL)
 }
 \examples{
 \dontrun{

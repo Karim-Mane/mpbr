@@ -7,14 +7,18 @@
 compute_rhat_hmm(freqquencies, distances, ys, epsilon)
 }
 \arguments{
-\item{freqquencies}{}
+\item{freqquencies}{the freq}
 
-\item{distances}{}
+\item{distances}{the dist}
 
-\item{ys}{}
+\item{ys}{param1}
 
-\item{epsilon}{}
+\item{epsilon}{param2}
+}
+\value{
+a matrix
 }
 \description{
 Title
 }
+\keyword{internal}

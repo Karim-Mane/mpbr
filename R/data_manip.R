@@ -43,7 +43,7 @@
 #' }
 #' @export
 #' @importFrom magrittr %>%
-#' 
+#'
 get_snpdata <- function(vcf_file    = NULL,
                         meta_file   = NULL,
                         output_dir  = NULL,
@@ -104,7 +104,7 @@ get_snpdata <- function(vcf_file    = NULL,
                          sample_ids[["V1"]])
 
   # the details is needed to store the genomic coordinates of the variants
-  Chrom <- Pos <- Ref <- Qual <- Alt <- NULL
+  Chrom <- Pos <- Ref <- Qual <- Alt <- NULL # nolint: object_name_linter
   details           <- genotype_f %>% dplyr::select(Chrom, Pos, Ref, Alt, Qual)
   names(sample_ids) <- "sample"
   snps              <- as.matrix(subset(genotype_f, select = -(1L:5L)))
@@ -112,7 +112,7 @@ get_snpdata <- function(vcf_file    = NULL,
   snps[snps == "1/1"]                 <- "1"
   snps[snps == "0/1" | snps == "1/0"] <- "2"
   snps[snps == "./." | snps == ".|."] <- NA
-  snps <- apply(snps, 2, function(x) as.integer(x))
+  snps <- apply(snps, 2L, as.integer)
   meta <- add_metadata(sample_ids, meta_file, output_dir)
   meta[["percentage_missing_sites"]]      <- colSums(is.na(snps)) / nrow(snps)
   details[["percentage_missing_samples"]] <- rowSums(is.na(snps)) / ncol(snps)
@@ -146,12 +146,12 @@ get_snpdata <- function(vcf_file    = NULL,
 #' @return an object of class `data.frame` that contains the sample metadata
 #' @keywords internal
 #' @noRd
-#' 
+#'
 #' @details
 #' In addition to generating the sample metadata file, the function will also
 #' create a file, named as `samples_in_metadata_not_in_vcf.txt`, if there are
 #' samples in the metadata file that were not found in the VCF file.
-#' 
+#'
 add_metadata <- function(sample_ids, metadata, output_dir) {
   checkmate::assert_data_frame(sample_ids, min.rows = 1L, min.cols = 1L,
                                null.ok = FALSE)
@@ -168,12 +168,11 @@ add_metadata <- function(sample_ids, metadata, output_dir) {
   # sample from the VCF file must match with those in the metadata file
   are_in_meta_file <- sample_ids[["sample"]] %in% samples
   if (!all(are_in_meta_file)) {
-    warning(sprintf("Incomplete meta data - the following samples in the VCF",
-                    "file are not found in metadata file:%s %s \n",
-                    glue::glue_collapse(
-                                        sample_ids[["sample"]][!are_in_meta_file], # nolint: line_length_linter
-                                        sep = ", ")),
-    call. = FALSE)
+    warning("Incomplete metadata - the following samples in the VCF",
+            "file are not found in metadata file:\n",
+            glue::glue_collapse(sample_ids[["sample"]][!are_in_meta_file],
+                                sep = ", "),
+            call. = FALSE)
     write.table(sample_ids[["sample"]][!are_in_meta_file],
                 file.path(output_dir, "samples_in_metadata_not_in_vcf.txt"),
                 row.names = FALSE, col.names = FALSE, quote = FALSE)
@@ -240,7 +239,6 @@ get_gene_annotation <- function(genomic_coordinates, go, bed, num_cores = 4L) {
   chrom <- gene_id <- gene_name <- NULL
   test         <- genes %>% dplyr::left_join(go, by = "gene_id",
                                              relationship = "many-to-many")
-                                               
   test         <- dplyr::distinct(test, chrom, start, end, gene_id, gene_name)
   resultat     <- gene_annotation(test, genomic_coordinates)
   resultat     <- gsub("NA:", "", resultat, fixed = TRUE)
@@ -329,7 +327,7 @@ gene_annotation <- function(target_gtf, genomic_coordinates) {
                                                                  subject,
                                                                  type = "within"))) #nolint: line_length_linter
   my_overlaps[["gene"]] <- target_gtf[["gene_name"]][my_overlaps[["subjectHits"]]] #nolint: line_length_linter
-  gene <- queryHits <- NULL # nolint
+  gene <- queryHits <- NULL # nolint: object_name_linter
   the_genes <- my_overlaps %>%
     dplyr::group_by(queryHits) %>%
     dplyr::distinct(queryHits, gene) %>%
@@ -337,10 +335,6 @@ gene_annotation <- function(target_gtf, genomic_coordinates) {
     dplyr::ungroup() %>%
     dplyr::group_by(queryHits) %>%
     dplyr::summarize(gene = glue::glue_collapse(gene, sep = ":"))
-    
-  # the_genes <- my_overlaps[, paste(unique(gene), collapse = ":"),
-  #                          by = queryHits]
-  
   genomic_coordinates[["gene"]]    <- NA
   genomic_coordinates[["gene"]][the_genes[["queryHits"]]] <- the_genes[["gene"]]
 
@@ -429,7 +423,7 @@ filter_snps_samples <- function(snpdata,
         snpdata[[field]] <- snpdata[[field]][idx, ]
       }
     }
-    Chrom <- Pos <- NULL
+    Chrom <- Pos <- NULL # nolint: object_name_linter
     f2c          <- x %>% dplyr::select(Chrom, Pos)
     output_dir   <- dirname(snpdata[["vcf"]])
     data.table::fwrite(f2c, file.path(output_dir, "loci_to_be_retained.txt"),
@@ -542,9 +536,6 @@ compute_maf <- function(snpdata, include_het = FALSE, mat_name = "GT") {
 #' @noRd
 #'
 get_maf <- function(mat) {
-  # stopifnot("Input must be of type matrix" = inherits(mat, "matrix"))
-  # checkmate::assert_matrix(mat, min.rows = 1L, min.cols = 2L,
-  #                          null.ok = FALSE)
   if (length(mat) == 2L) {
     if (mat[[1L]] < mat[[2L]]) {
       maf    <- mat[[1L]] / sum(mat[[1L]], mat[[2L]])
@@ -609,8 +600,8 @@ get_maf <- function(mat) {
 #'
 calculate_fws <- function(snpdata, threshold = 0.95) {
   checkmate::assert_class(snpdata, "SNPdata", null.ok = FALSE)
-  checkmate::assert_numeric(threshold, lower = 0, upper = 1, finite = TRUE,
-                            len = 1, null.ok = FALSE)
+  checkmate::assert_numeric(threshold, lower = 0L, upper = 1L, finite = TRUE,
+                            len = 1L, null.ok = FALSE)
   vcf        <- snpdata[["vcf"]]
   gds_file   <- file.path(dirname(vcf), "data.gds")
   SeqArray::seqVCF2GDS(vcf, gds_file)
@@ -669,13 +660,13 @@ phase_mixed_genotypes <- function(snpdata, nsim = 100L) {
   checkmate::assert_numeric(nsim, lower = 1L, any.missing = FALSE,
                             null.ok = FALSE, len = 1L)
   vcf          <- snpdata[["vcf"]]
-  expression   <- '%CHROM\t%POS[\t%AD]\n'
+  expression   <- "%CHROM\t%POS[\t%AD]\n"
   tmp          <- file.path(dirname(vcf), "tmp")
   system(sprintf("mkdir -p %s", tmp))
   ad           <- file.path(tmp, "AllelicDepth.txt")
   system(sprintf("bcftools query -f'%s' %s > %s", expression, vcf, ad))
   depth        <- data.table::fread(ad, nThread = 4L)
-  depth        <- as.matrix(subset(depth, select = -c(1L:2L)))
+  depth        <- as.matrix(subset(depth, select = -(1L:2L)))
   path         <- file.path(dirname(vcf), "phasing")
   system(sprintf("mkdir -p %s", path))
   correlations <- numeric(length = nsim)
@@ -701,6 +692,79 @@ phase_mixed_genotypes <- function(snpdata, nsim = 100L) {
   snpdata
 }
 
+#' Phase genotype when reference and alternate allele counts = 0
+#'
+#' @param ref_count the reference allele count
+#' @param alt_count the alternate allele count
+#'
+#' @keywords internal
+#' @noRd
+#'
+phase_ref_alt_0 <- function(ref_count, alt_count) {
+  if (ref_count < alt_count) {
+    genotype <- 0L
+  } else if (ref_count > alt_count) {
+    genotype <- 1L
+  } else {
+    genotype <- statip::rbern(1L, ref_count / (ref_count + alt_count))
+  }
+  genotype
+}
+
+#' Phase genotype when both reference and alternate allele counts are > 0
+#'
+#' @param genotype a vector of integers
+#' @param ref the population reference allele count on a specific locus
+#' @param alt the population alternate allele count on a specific locus
+#'
+#' @keywords internal
+#' @noRd
+#'
+phase_ref_alt_non_0 <- function(genotype, ref, alt) {
+  if (ref + alt >= 5L &&
+        (ref >= (2L * alt) || alt >= (2L * ref))) {
+    if (ref < alt) {
+      res <- 0L
+    } else if (ref > alt) {
+      res <- 1L
+    } else {
+      ref_count <- sum(genotype == 0L, na.rm = TRUE)
+      alt_count <- sum(genotype == 1L, na.rm = TRUE)
+      res       <- phase_ref_alt_0(ref_count, alt_count)
+    }
+  } else {
+    ref_count <- sum(genotype == 0L, na.rm = TRUE)
+    alt_count <- sum(genotype == 1L, na.rm = TRUE)
+    res       <- phase_ref_alt_0(ref_count, alt_count)
+  }
+  res
+}
+
+#' Phase genotype when either the reference or alternate allele counts = 0
+#'
+#' @param genotype a vector of integers
+#' @param ref the population reference allele count on a specific locus
+#' @param alt the population alternate allele count on a specific locus
+#'
+#' @keywords internal
+#' @noRd
+#'
+phase_ref_or_alt_0 <- function(genotype, ref, alt) {
+  ref_count <- sum(genotype == 0L, na.rm = TRUE)
+  alt_count <- sum(genotype == 1L, na.rm = TRUE)
+  if (ref == 0L && alt >= 5L) {
+    res     <- 1L
+  } else if (ref == 0L && alt < 5L) {
+    res     <- statip::rbern(1L, alt_count / (ref_count + alt_count))
+  }
+  if (alt == 0L && ref >= 5L) {
+    res     <- 0L
+  } else if (alt == 0L && ref < 5L) {
+    res     <- statip::rbern(1L, ref_count / (ref_count + alt_count))
+  }
+  res
+}
+
 #' Phase the mixed genotypes
 #'
 #' @param genotype a vector of genotype data
@@ -718,60 +782,14 @@ phase_data <- function(genotype, depth) {
   for (j in idx) {
     ref <- as.numeric(unlist(strsplit(depth[j], ",", fixed = TRUE))[[1L]])
     alt <- as.numeric(unlist(strsplit(depth[j], ",", fixed = TRUE))[[2L]])
-    if (all(ref == 0L && alt == 0L)) {
-      ref_count <- sum(genotype == 0L, na.rm = TRUE)
-      alt_count <- sum(genotype == 1L, na.rm = TRUE)
-      if (ref_count < alt_count) {
-        genotype[j] <- 0L
-      } else if (ref_count > alt_count) {
-        genotype[j] <- 1L
-      } else {
-        genotype[j] <- statip::rbern(1L, ref_count / (ref_count + alt_count))
-      }
-    } else if (all(ref != 0L && alt != 0L)) {
-      if ((ref + alt) >= 5L && (ref >= (2L * alt) || alt >= (2L * ref))) {
-        if (ref < alt) {
-          genotype[j] <- 0L
-        } else if (ref > alt) {
-          genotype[j] <- 1L
-        } else {
-          ref_count <- sum(genotype == 0L, na.rm = TRUE)
-          alt_count <- sum(genotype == 1L, na.rm = TRUE)
-          if (ref_count < alt_count) {
-            genotype[j] <- 0L
-          } else if (ref_count > alt_count) {
-            genotype[j] <- 1L
-          } else {
-            genotype[j] <- statip::rbern(1L,
-                                         ref_count / (ref_count + alt_count))
-          }
-        }
-      } else {
-        ref_count <- sum(genotype == 0L, na.rm = TRUE)
-        alt_count <- sum(genotype == 1L, na.rm = TRUE)
-        if (ref_count < alt_count) {
-          genotype[j] <- 0L
-        } else if (ref_count > alt_count) {
-          genotype[j] <- 1L
-        } else {
-          genotype[j] <- statip::rbern(1L,
-                                       ref_count / (ref_count + alt_count))
-        }
-      }
-    } else if (all(ref == 0L || alt == 0L)) {
-      ref_count <- sum(genotype == 0L, na.rm = TRUE)
-      alt_count <- sum(genotype == 1L, na.rm = TRUE)
-      if (all(ref == 0L && alt >= 5L)) {
-        genotype[j] <- 1L
-      } else if (all(ref == 0L && alt < 5L)) {
-        genotype[j] <- statip::rbern(1L,
-                                     alt_count / (ref_count + alt_count))
-      }
-      if (all(alt == 0L && ref >= 5L)) {
-        genotype[j] <- 0L
-      } else if (all(alt == 0L && ref < 5L)) {
-        genotype[j] <- statip::rbern(1L, ref_count / (ref_count + alt_count))
-      }
+    if (ref == 0L && alt == 0L) {
+      ref_count   <- sum(genotype == 0L, na.rm = TRUE)
+      alt_count   <- sum(genotype == 1L, na.rm = TRUE)
+      genotype[j] <- phase_ref_alt_0(ref_count, alt_count)
+    } else if (ref != 0L && alt != 0L) {
+      genotype[j] <- phase_ref_alt_non_0(genotype, ref, alt)
+    } else {
+      genotype[j] <- phase_ref_or_alt_0(genotype, ref, alt)
     }
   }
   genotype
@@ -814,16 +832,16 @@ impute_missing_genotypes <- function(snpdata, genotype = "Phased",
   checkmate::assert_class(snpdata, "SNPdata", null.ok = FALSE)
   checkmate::assert_character(genotype, any.missing = FALSE, len = 1L,
                               null.ok = FALSE)
-  checkmate::assert_integer(nsim, lower = 1L, any.missing = FALSE,
+  checkmate::assert_numeric(nsim, lower = 1L, any.missing = FALSE,
                             null.ok = FALSE, len = 1L)
   message("The missing genotypes will be imputed from ", genotype, " table.\n")
   field <- genotype
   path  <- file.path(dirname(snpdata[["vcf"]]), "imputing")
   system(sprintf("mkdir -p %s", path))
   correlations <- numeric(length = nsim)
-  pb <- txtProgressBar(min = 0L, max = nsim, initial = 0L,
-                       style = 3L, char = "*")
-  for (i in 1L:nsim) {
+  pb           <- txtProgressBar(min = 0L, max = nsim, initial = 0L,
+                                 style = 3L, char = "*")
+  for (i in seq_len(nsim)) {
     tmp_snpdata <- snpdata
     mat         <- apply(tmp_snpdata[[field]], 1L, impute)
     tmp_snpdata[["Imputed"]] <- t(mat)
@@ -879,13 +897,22 @@ select_chrom <- function(snpdata, chrom = "all") {
   checkmate::assert_class(snpdata, "SNPdata", null.ok = FALSE)
   checkmate::assert_vector(chrom, any.missing = FALSE, null.ok = FALSE,
                            min.len = 1L)
-  system(sprintf("tabix %s", snpdata[["vcf"]]))
-  m      <- which(names(snpdata) %in% c("meta", "vcf", "index"))
-  fields <- names(snpdata)[-m]
+  system(sprintf("tabix -f %s", snpdata[["vcf"]]))
+  ## make sure to output the metadata
+  meta   <- snpdata[["meta"]] %>%
+    dplyr::select(-c(percentage_missing_sites, Fws, COI)) # nolint: object_name_linter
+
+  # return the input object if no chromosome is specified
   if (chrom == "all") {
     return(snpdata)
   }
+
+  # subset if a chromosome name is specified
+  stopifnot("Specified chromosome name not found in the input SNPdata object"
+            = chrom %in% unique(snpdata[["details"]][["Chrom"]]))
   res    <- list()
+  m      <- which(names(snpdata) %in% c("vcf", "index", "meta"))
+  fields <- names(snpdata)[-m]
   for (chr in chrom) {
     chrom_snpdata <- snpdata
     idx           <- which(chrom_snpdata[["details"]][["Chrom"]] == chr)
@@ -908,7 +935,7 @@ select_chrom <- function(snpdata, chrom = "all") {
                    chrom, chrom_snpdata[["vcf"]], chrom_vcf))
   }
   res[["vcf"]]        <- chrom_vcf
-  snpdata[["meta"]]   <- snpdata[["meta"]]
+  res[["meta"]]       <- meta
   class(res)          <- "SNPdata"
   res
 }
@@ -933,79 +960,27 @@ select_chrom <- function(snpdata, chrom = "all") {
 #'     end               = 500
 #'   )
 #'  }
-#' @details when snp_to_be_dropped is not set to NA (i.e. the genomic
+#' @details when snp_to_be_dropped is not NULL (i.e. the genomic
 #'     coordinates of snps to be removed are in a data frame), then the rest of
-#'     the arguments can be ignored or set to NA (chrom=NA, start=NA, end=NA)
+#'     the arguments can be ignored or set to NULL (chrom = NULL,
+#'     start = NULL, end = NULL)
 #' @export
 #'
 drop_snps <- function(snpdata, snp_to_be_dropped = NULL,
                       chrom = NULL, start = NULL, end = NULL) {
   checkmate::assert_class(snpdata, "SNPdata", null.ok = FALSE)
-  checkmate::assert_data_frame(snp_to_be_dropped, ncols = 2L, null.ok = TRUE,
-                               col.names = c("Chrom", "Pos"))
+  checkmate::assert_data_frame(snp_to_be_dropped, ncols = 2L, null.ok = TRUE)
   checkmate::assert_vector(chrom, min.len = 1L, any.missing = FALSE,
                            null.ok = TRUE)
   checkmate::assert_vector(start, min.len = 1L, any.missing = FALSE,
                            null.ok = TRUE)
   checkmate::assert_vector(end, min.len = 1L, any.missing = FALSE,
                            null.ok = TRUE)
-  if (all(is.null(snp_to_be_dropped) &&
-            is.null(chrom) &&
-            is.null(start) &&
-            is.null(end))) {
-    stop("Please provide genomic coordinates of loci to be removed.")
-  }
-  if (!is.null(snp_to_be_dropped) &&
-        (all(is.null(chrom) && is.null(start) && is.null(end)))) {
-    idx <- which(snpdata[["details"]][["Chrom"]] %in%
-                   snp_to_be_dropped[["Chrom"]] &
-                   snpdata[["details"]][["Pos"]] %in%
-                     snp_to_be_dropped[["Pos"]])
-    m      <- which(names(snpdata) %in% c("meta", "vcf", "index"))
-    fields <- names(snpdata)[-m]
-    for (field in fields) {
-      tmp              <- snpdata[[field]][-idx, ]
-      snpdata[[field]] <- tmp
-    }
-    Chrom <- Pos <- NULL # nolint: object_name_linter
-    f2c      <- snpdata[["details"]] %>%
-      dplyr::select(Chrom, Pos)
-    tmp_file <- file.path(dirname(snpdata[["vcf"]]), "tmp.txt")
-    data.table::fwrite(f2c, tmp_file, col.names = FALSE, row.names = FALSE,
-                       quote = FALSE, sep = "\t", nThread = 4L)
-    snpdata[["vcf"]] <- remove_snps_from_vcf(snpdata[["vcf"]], "tmp.txt",
-                                             path = dirname(snpdata[["vcf"]]),
-                                             index = snpdata[["index"]])
-  } else if (all(!is.null(chrom) && !is.null(start) &&
-                   !is.null(end)) &&
-               is.na(snp_to_be_dropped)) {
-    idx <- which(snpdata[["details"]][["Chrom"]] == chrom &
-                   (snpdata[["details"]][["Pos"]] >= start &
-                      snpdata[["details"]][["Pos"]] <= end))
-    if (length(idx) > 0L) {
-      m      <- which(names(snpdata) %in% c("meta", "vcf", "index"))
-      fields <- names(snpdata)[-m]
-      for (field in fields) {
-        tmp              <- snpdata[[field]][-idx, ]
-        snpdata[[field]] <- tmp
-      }
-      f2c      <- snpdata[["details"]] %>%
-        dplyr::select(Chrom, Pos)
-      tmp_file <- file.path(dirname(snpdata[["vcf"]]), "tmp.txt")
-      data.table::fwrite(f2c, tmp_file, col.names = FALSE,
-                         row.names = FALSE, quote = FALSE,
-                         sep = "\t", nThread = 4L)
-      snpdata[["vcf"]] <- remove_snps_from_vcf(snpdata[["vcf"]],
-                                               "tmp.txt",
-                                               path  = dirname(snpdata[["vcf"]]), # nolint: line_length_linter
-                                               index = snpdata[["index"]])
-      system(sprintf("rm -f %s", tmp_file))
-      message("\n", length(idx), "loci have been successfully removed")
-    } else {
-      stop("There is no loci overlapping the specified region")
-    }
+
+  if (!is.null(snp_to_be_dropped)) {
+    snpdata <- drop_snps_using_gc(snpdata, snp_to_be_dropped)
   } else {
-    stop("Incorrect genomics coordinates")
+    snpdata <- remove_region_from_snpdata(snpdata, chrom, start, end)
   }
   snpdata[["index"]] <- snpdata[["index"]] + 1L
   snpdata
@@ -1025,15 +1000,15 @@ drop_snps <- function(snpdata, snp_to_be_dropped = NULL,
 #' @noRd
 #'
 remove_snps_from_vcf <- function(vcf, loci_to_be_retained, path, index = 1L) {
-  checkmate::assert_file_exists(vcf, extension = c(".vcf", "vcf.gz"))
+  checkmate::assert_file_exists(vcf)
   checkmate::assert_character(loci_to_be_retained, any.missing = FALSE,
                               null.ok = FALSE)
   checkmate::assert_directory_exists(path)
-  checkmate::assert_integer(index, lower = 0L, len = 1L, null.ok = FALSE,
+  checkmate::assert_numeric(index, lower = 0L, len = 1L, null.ok = FALSE,
                             any.missing = FALSE)
-  target_loci <- file.path(path, loci_to_be_retained)
-  header      <- file.path(path, "Header.txt")
-  body        <- file.path(path, "Body.txt")
+  target_loci  <- file.path(path, loci_to_be_retained)
+  header       <- file.path(path, "Header.txt")
+  body         <- file.path(path, "Body.txt")
   correct_rows <- file.path(path, "Good_snps.txt")
   filtered_vcf <- file.path(path, paste0("Filtered_snps_", index, ".vcf"))
   system(sprintf("bcftools view -h %s > %s", vcf, header))
@@ -1045,8 +1020,90 @@ remove_snps_from_vcf <- function(vcf, loci_to_be_retained, path, index = 1L) {
   system(sprintf("rm -f %s %s %s", header, body, correct_rows))
   filtered_vcf <- file.path(path, paste0("Filtered_snps_", index, ".vcf.gz"))
 
-  return(as.character(filtered_vcf))
+  as.character(filtered_vcf)
 }
+
+
+#' Drops SNPs from a `SNPdata` object using their genomic coordinates
+#'
+#' @inheritParams drop_snps
+#'
+#' @keywords internal
+#' @noRd
+#'
+drop_snps_using_gc <- function(snpdata, snp_to_be_dropped) {
+  idx <- which(snpdata[["details"]][["Chrom"]] %in%
+                 snp_to_be_dropped[["Chrom"]] &
+                 snpdata[["details"]][["Pos"]] %in%
+                   snp_to_be_dropped[["Pos"]])
+  meta   <- snpdata[["meta"]]
+  m      <- which(names(snpdata) %in% c("meta", "vcf", "index"))
+  fields <- names(snpdata)[-m]
+  for (field in fields) {
+    tmp              <- snpdata[[field]][-idx, ]
+    snpdata[[field]] <- tmp
+  }
+  Chrom    <- Pos <- NULL # nolint: object_name_linter
+  f2c      <- snpdata[["details"]] %>%
+    dplyr::select(Chrom, Pos)
+  tmp_file <- file.path(dirname(snpdata[["vcf"]]), "tmp.txt")
+  data.table::fwrite(f2c, tmp_file, col.names = FALSE, row.names = FALSE,
+                     quote = FALSE, sep = "\t", nThread = 4L)
+  index    <- ifelse("index" %in% names(snpdata),
+                     snpdata[["index"]] + 1L,
+                     0L)
+  snpdata[["vcf"]] <- remove_snps_from_vcf(snpdata[["vcf"]],
+                                           "tmp.txt",
+                                           path  = dirname(snpdata[["vcf"]]),
+                                           index = index)
+  system(sprintf("rm -f %s", tmp_file))
+  snpdata[["index"]] <- index
+  snpdata[["meta"]]  <- meta
+  snpdata
+}
+
+
+#' Remove SNPs with a specified region of the genome.
+#'
+#' @inheritParams drop_snps
+#'
+#' @keywords internal
+#' @noRd
+#'
+remove_region_from_snpdata <- function(snpdata, chrom, start, end) {
+  stopifnot("Please provide the 'chrom', 'start', 'end' of the region to drop" =
+              !is.null(chrom), !is.null(start), !is.null(end))
+  idx <- which(snpdata[["details"]][["Chrom"]] == chrom &
+                 (snpdata[["details"]][["Pos"]] >= start &
+                    snpdata[["details"]][["Pos"]] <= end))
+  stopifnot("There is no loci overlapping the specified region." =
+              length(idx) > 0L)
+  meta   <- snpdata[["meta"]]
+  m      <- which(names(snpdata) %in% c("meta", "vcf", "index"))
+  fields <- names(snpdata)[-m]
+  for (field in fields) {
+    tmp              <- snpdata[[field]][-idx, ]
+    snpdata[[field]] <- tmp
+  }
+  f2c      <- snpdata[["details"]] %>%
+    dplyr::select(Chrom, Pos)  # nolint: object_name_linter
+  tmp_file <- file.path(dirname(snpdata[["vcf"]]), "tmp.txt")
+  data.table::fwrite(f2c, tmp_file, col.names = FALSE,
+                     row.names = FALSE, quote = FALSE,
+                     sep = "\t", nThread = 4L)
+  index    <- ifelse("index" %in% names(snpdata),
+                     snpdata[["index"]] + 1L,
+                     0L)
+  snpdata[["vcf"]] <- remove_snps_from_vcf(snpdata[["vcf"]],
+                                           "tmp.txt",
+                                           path  = dirname(snpdata[["vcf"]]),
+                                           index = index)
+  system(sprintf("rm -f %s", tmp_file))
+  snpdata[["index"]] <- index
+  snpdata[["meta"]]  <- meta
+  snpdata
+}
+
 
 #' Drop a specific set of samples from the `SNPdata` object
 #'
@@ -1064,11 +1121,10 @@ drop_samples <- function(snpdata, samples_to_be_dropped) {
   checkmate::assert_class(snpdata, "SNPdata", null.ok = FALSE)
   checkmate::assert_vector(samples_to_be_dropped, any.missing = FALSE,
                            null.ok = FALSE, min.len = 1L)
-  if (!all(samples_to_be_dropped %in% snpdata[["meta"]][["sample"]])) {
-    stop("Some samples in the provided vector are not found in the current
-         data")
-  }
-  idx             <- match(samples_to_be_dropped, snpdata[["meta"]][["sample"]])
+  stopifnot("Some samples in the provided vector are not found in the current
+         data" = all(samples_to_be_dropped %in% snpdata[["meta"]][["sample"]]))
+  idx               <- match(samples_to_be_dropped,
+                             snpdata[["meta"]][["sample"]])
   tmp_meta          <- snpdata[["meta"]]
   tmp_meta          <- tmp_meta[-(idx), ]
   snpdata[["meta"]] <- tmp_meta
@@ -1079,18 +1135,21 @@ drop_samples <- function(snpdata, samples_to_be_dropped) {
                                 colnames(snpdata[[field]]))
       m                <- seq_len(ncol(snpdata[[field]]))
       m                <- m[-idx]
-      tmp_meta         <- snpdata[[field]]
-      tmp_meta         <- tmp_meta[, m]
-      snpdata[[field]] <- tmp_meta
+      tmp              <- snpdata[[field]]
+      tmp              <- tmp[, m]
+      snpdata[[field]] <- tmp
     }
   }
   tmp_file <- file.path(dirname(snpdata[["vcf"]]), "tmp.txt")
   write.table(snpdata[["meta"]][["sample"]], tmp_file, col.names = FALSE,
               row.names = FALSE, quote = FALSE, sep = "\t")
-  snpdata[["vcf"]]   <- remove_samples_from_vcf(snpdata[["vcf"]], "tmp.txt",
-                                                path  = dirname(snpdata[["vcf"]]), # nolint: line_length_linter
-                                                index = snpdata[["index"]])
-  snpdata[["index"]] <- snpdata[["index"]] + 1L
+  index    <- ifelse("index" %in% names(snpdata),
+                     snpdata[["index"]] + 1L,
+                     0L)
+  snpdata[["vcf"]]  <- remove_samples_from_vcf(snpdata[["vcf"]], "tmp.txt",
+                                               path = dirname(snpdata[["vcf"]]),
+                                               index = index)
+  snpdata[["index"]] <- index
   snpdata
 }
 
@@ -1112,7 +1171,7 @@ remove_samples_from_vcf <- function(vcf, samples_to_be_retained,
   checkmate::assert_vector(samples_to_be_retained, any.missing = FALSE,
                            null.ok = FALSE, min.len = 1L)
   checkmate::assert_directory_exists(path)
-  checkmate::assert_integer(index, lower = 0L, any.missing = FALSE,
+  checkmate::assert_numeric(index, lower = 0L, any.missing = FALSE,
                             null.ok = FALSE, len = 1L)
   target_samples <- file.path(path, samples_to_be_retained)
   post_qc        <- file.path(path, paste0("Post_QC_", index, ".vcf.gz"))

@@ -126,43 +126,66 @@ The process above is repeated `nsim` times and a new genotype file is generated 
 We recommend `nsim = 50` at least to maximize the change of getting the highest MAF correlation.
     
 ```{r eval=FALSE}
-snpdata = phase_mixed_genotypes(snpdata, nsim = 10)
+snpdata <- phase_mixed_genotypes(snpdata, nsim = 100)
 head(snpdata$Phased[, 1:5])
 ```
 
 ## Impute the missing data  
 
-use the `impute_missing_genotypes` function to impute the missing genotypes. the `genotype` argument determines which genotype table should be used to impute the missing data ("GT" to impute from raw data, "Phased" to impute from the phased data).    
+Some population genetics methods require genotype data with no missing allele. In {mpbr}, missing genotypes can be imputed using the `impute_missing_genotypes()`
+use the `impute_missing_genotypes` function to impute the missing genotypes. The `genotype` argument determines which genotype table should be used when imputing the missing data (**"GT"** to impute from raw data, **"Phased"** to impute from the phased data).
+
+For every missing allele, we compute the reference and alternate allele frequencies at the given locus and identify the minor allele frequency (MAF). The missing allele will be replaced based on a Bernoulli simulation with a probability that is set at the resulting MAF value.
+
+This process is repeated `nsim` times and a new genotype file is generated and stored in the output directory. After all the iterations, the correlation between the MAF before imputation and the MAF from each imputed genotype data is calculated. The imputed genotype with the highest correlation will be retained and stored in the output `SNPdata` object.
+We recommend `nsim = 50` at least to maximize the change of getting the highest MAF correlation.
+
 ```{r eval=FALSE}
-snpdata = impute_missing_genotypes(snpdata, genotype="GT", nsim=100)
-head(snpdata$Imputed[,1:5])
+snpdata <- impute_missing_genotypes(snpdata, genotype = "GT", nsim = 100)
+head(snpdata$Imputed[, 1:5])
 ```
 
-## select data for a given chromosome     
-to get the data from chromosome 7 ("Pf3D7_07_v3"), use the `select_chrom`    
+## Select data for a given chromosome  
+
+The package also contains functions that can be used to subset the `SNPdata` object. To generate a `SNPdata` object with data from chromosome 7 only ("Pf3D7_07_v3") from an existing object of the same class, use the `select_chrom()` function.
+Note that the **meta** table in the output object will not have the *percentage_missing_sites*, *Fws*, *COI* columns. This is due to the fact that the existing values in these columns are calculated from the entire dataset and are not specific the chosen chromosome.
+
 ```{r eval=FALSE}
-chrom7_snpdata = select_chrom(snpdata, chrom="Pf3D7_07_v3")
+## subset only chromosome 7 data
+chrom7_snpdata <- select_chrom(snpdata, chrom = "Pf3D7_07_v3")
 print(chrom7_snpdata)
 ```
 
-## drop a set of SNPs from the data       
-if you want to remove some loci from the data, use the `drop_snps` function and provide it with a data frame with 2 columns, "Chrom" and "Pos", representing the genomic coordinates of the loci to be dropped or the chrom, start and end position of the loci to be dropped    
+## drop a set of SNPs from the data  
+
+If you want to remove some loci from the current `SNPdata` object, use the `drop_snps()` function and provide it with a data frame with 2 columns named as: *Chrom* and *Pos"*, representing the genomic coordinates of the loci to be dropped. Another alternative will be to provide the `chrom` (chromosome name), `start` (the start position of the region to be discarded) and `end` (the ens position of the region to be discarded).
+
 ```{r eval=FALSE}
-snp.to.be.dropped = chrom7_snpdata$details %>% select(Chrom,Pos)
-idx = sample(1:nrow(snp.to.be.dropped),100, replace = FALSE)
-snp.to.be.dropped = snp.to.be.dropped[idx,]
-reduced_snpdata = drop_snps(chrom7_snpdata, snp.to.be.dropped)
+## drop a set of SNPs based on their genomic coordinates
+snp_to_be_dropped <- chrom7_snpdata$details %>% dplyr::select(Chrom, Pos)
+idx               <- sample(1:nrow(snp_to_be_dropped), 100, replace = FALSE)
+snp_to_be_dropped <- snp_to_be_dropped[idx, ]
+
+# there is a problem in the way the index of the vcf file is set when dropping snps. # solution: consider replacing index with an appropriated value 
+reduced_snpdata   <- drop_snps(chrom7_snpdata, snp_to_be_dropped)
 print(reduced_snpdata)
-reduced_snpdata = drop_snps(chrom7_snpdata, chrom="Pf3D7_10_v3", start=100, end=500)
+
+# drop a region from a chromosome
+reduced_snpdata   <- drop_snps(chrom7_snpdata,
+                               chrom = "Pf3D7_07_v3",
+                               start = 110031, end = 154906)
 print(reduced_snpdata)
 ```
 
-## drop a set of samples from the data       
-if you want to remove some samples from the data, use the `drop_samples` function and provide it with a vector of samples to be dropped.     
+## drop a set of samples from the data  
+
+When you want to remove some samples from the `SNPdata` object, use the `drop_samples()` function and provide it with a vector of sample IDs to drop. 
+
 ```{r eval=FALSE}
-idx = sample(1:nrow(reduced_snpdata$meta),10, replace = FALSE)
-samples.to.be.dropped = reduced_snpdata$meta$sample[idx]
-reduced_snpdata = drop_samples(reduced_snpdata, samples.to.be.dropped)
+idx                   <- sample(1:nrow(reduced_snpdata$meta), 10,
+                                replace = FALSE)
+samples_to_be_dropped <- reduced_snpdata$meta$sample[idx]
+reduced_snpdata       <- drop_samples(reduced_snpdata, samples_to_be_dropped)
 print(reduced_snpdata)
 ```
 

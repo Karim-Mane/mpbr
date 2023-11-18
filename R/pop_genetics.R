@@ -40,16 +40,16 @@ calculate_wcFst <- function(snpdata, from, groups) { # nolint: object_name_linte
   checkmate::assert_class(snpdata, "SNPdata", null.ok = FALSE)
 
   if (is.null(groups) && !is.null(from)) {
-    groups <- as.character(uniqque(snpdata[["meta"]][[from]]))
+    groups <- as.character(unique(snpdata[["meta"]][[from]]))
   } else if (all(!is.null(groups) &&
                    !is.null(from) &&
-                   (!all(groups %in% uniqque(snpdata[["meta"]][[from]]))))) {
+                   (!all(groups %in% unique(snpdata[["meta"]][[from]]))))) {
     stop(sprintf("Not all specified groups belong to the %s column of
                  the metadata table", from))
   }
   system(sprintf("tabix %s", snpdata[["vcf"]]))
   fst <- list()
-  for (i in ((seqq_len(groups) - 1L))) {
+  for (i in ((seq_len(groups) - 1L))) {
     idx1 <- which(snpdata[["meta"]][[from]] == groups[i])
     idx1 <- paste(idx1, collapse = ",")
     for (j in (i + 1L):length(groups)) {
@@ -157,7 +157,7 @@ calculate_IBS <- function(snpdata, mat_name = "GT") { # nolint: object_name_lint
   x  <- t(snpdata[[mat_name]]) # nolint: object_name_linter
   y  <- matrix(NA, nrow = nrow(x), ncol = nrow(x))
   pb <- utils::txtProgressBar(min = 0L, max = nrow(x),
-                       initial = 0L, style = 3L, char = "*")
+                              initial = 0L, style = 3L, char = "*")
   for (i in seq_along(x)) {
     for (j in seq_along(x)) {
       m       <- x[i, ] - x[j, ]
@@ -764,7 +764,7 @@ calculate_relatedness <- function(snpdata,
   # check whether the provided groups are found in the metadata
   if (!is.null(groups)) {
     stopifnot("Some groups are not found in the metadata" =
-                all(groups %in% uniqque(metadata[[from]])))
+                all(groups %in% unique(metadata[[from]])))
     pops   <- groups
   } else {
     pops   <- unique(metadata[[from]])
@@ -804,17 +804,16 @@ calculate_relatedness <- function(snpdata,
   snpdata
 }
 
-#' Title
+#' create relatedness matrix
 #'
-#' @param ibd 
-#' @param metadata 
-#' @param pops 
-#' @param from 
+#' @param ibd ibd
+#' @param metadata metadata
+#' @param pops pops
+#' @param from from
 #'
-#' @return
+#' @return a test
 #' @export
 #'
-#' @examples
 create_relatedness_matrix <- function(ibd,
                                       metadata,
                                       pops,
@@ -826,7 +825,7 @@ create_relatedness_matrix <- function(ibd,
   idx      <- unique(idx)
   metadata <- metadata[idx, ]
   modifier <- function(x) {
-    gsub('-', '.', x)
+    gsub("-", ".", x, fixed = TRUE)
   }
   metadata[["sample"]] <- as.character(lapply(metadata[["sample"]], modifier))
   relatedness_matrix   <- matrix(NA, nrow = length(metadata[["sample"]]),
@@ -862,33 +861,32 @@ create_relatedness_matrix <- function(ibd,
   relatedness_matrix
 }
 
-#' Title
+#' construct genotype file
 #'
-#' @param pops 
-#' @param details 
-#' @param mat 
-#' @param metadata 
-#' @param from 
-#' @param sweep_regions 
+#' @param pops pops
+#' @param details details
+#' @param mat mat
+#' @param metadata metadata
+#' @param from from
+#' @param sweep_regions sweep_regions
 #'
-#' @return
+#' @return test
 #' @export
 #'
-#' @examples
 construct_genotype_file <- function(pops,
-                                   details,
-                                   mat,
-                                   metadata,
-                                   from,
-                                   sweep_regions) {
+                                    details,
+                                    mat,
+                                    metadata,
+                                    from,
+                                    sweep_regions) {
   if (!is.null(sweep_regions)) {
-    selectiveRegions <- data.table::fread(sweep_regions, nThread = 4L)
+    selective_regions <- data.table::fread(sweep_regions, nThread = 4L)
     rtd              <- NULL
-    for (j in seq_along(selectiveRegions)) {
+    for (j in seq_along(selective_regions)) {
       rtd <- c(rtd,
-               which(details[["Chrom"]] == selectiveRegions[["Chrom"]][j] &
-                       (details[["Pos"]] >= selectiveRegions[["Start"]][j] &
-                          details[["Pos"]] <= selectiveRegions[["End"]][j])))
+               which(details[["Chrom"]] == selective_regions[["Chrom"]][j] &
+                       (details[["Pos"]] >= selective_regions[["Start"]][j] &
+                          details[["Pos"]] <= selective_regions[["End"]][j])))
     }
     rtd     <- unique(rtd)
     details <- details[-rtd, ]
@@ -913,8 +911,8 @@ construct_genotype_file <- function(pops,
 gen_mles <- function(res,
                      site1,
                      site2,
-                     f = 0.3,
-                     dir) {
+                     dir,
+                     f = 0.3) {
   epsilon          <- 0.001
   out_file_prefix  <- paste0(site1, "_", site2)
   country_a        <- res[[site1]]
@@ -1019,7 +1017,7 @@ gen_mles <- function(res,
   x
 }
 
-#' Title
+#' compute rhat
 #'
 #' @param freqquencies the freq
 #' @param distances the dist
@@ -1029,45 +1027,43 @@ gen_mles <- function(res,
 #' @return a matrix
 #' @keywords internal
 #'
-#' @examples
 compute_rhat_hmm <- function(freqquencies, distances, ys, epsilon) {
-    ll <- function(k, r){
-      loglikelihood(k, r, ys, freqquencies, distances, epsilon,
-                    rho = 7.4 * 10^(-7))
-    }
-    optimizzation <- optim(par = c(50L, 0.5),
-                          fn = function(x) - ll(x[[1L]], x[[2L]]))
-    rhat         <- optimizzation[["par"]]
-    rhat
+  ll <- function(k, r) {
+    loglikelihood(k, r, ys, freqquencies, distances, epsilon,
+                  rho = 7.4 * 10L^(-7L))
+  }
+  optimizzation <- optim(par = c(50L, 0.5),
+                         fn = function(x) - ll(x[[1L]], x[[2L]]))
+  rhat          <- optimizzation[["par"]]
+  rhat
 }
 
 ## Mechanism to generate ys given fs, distances, k, r, epsilon
 #' Title
 #'
-#' @param freqquencies 
-#' @param distances 
-#' @param k 
-#' @param r 
-#' @param epsilon 
+#' @param freqquencies freqquencies
+#' @param distances distances
+#' @param k k
+#' @param r r
+#' @param epsilon epsilon
 #'
-#' @return
+#' @return test
 #' @export
 #'
-#' @examples
 simulate_ys_hmm <- function(freqquencies, distances, k, r, epsilon) {
-    ys <- simulate_data(freqquencies, distances, k = k, r = r, epsilon,
-                        rho = 7.4 * 10^(-7))
-    ys
+  ys <- simulate_data(freqquencies, distances, k = k, r = r, epsilon,
+                      rho = 7.4 * 10L^(-7L))
+  ys
 }
 
 
 run_country <- function(country_a, f) {
   matchy <- function(x) {
-    regmatches(x, regexec('_(.*?)\\_', x))[[1L]][2L]
+    regmatches(x, regexec("_(.*?)\\_", x))[[1L]][[2L]]
   }
-  l <- country_a  #readRDS(country_a)
+  l <- country_a
   qq <- data.frame(l[["x"]])
-  qq <- lapply(qq, function(x) as.integer(x))
+  qq <- lapply(qq, as.integer)
   qq <- matrix(unlist(qq), ncol = length(qq[[1L]]), byrow = TRUE)
   maf <- colSums(qq == 1L, na.rm = TRUE) / colSums(qq <= 1L, na.rm = TRUE)
   i <- which(colSums(qq == 0L, na.rm = TRUE) < colSums(qq == 1L, na.rm = TRUE))
@@ -1080,37 +1076,36 @@ run_country <- function(country_a, f) {
   nindividuals     <- length(individual_names)
   chrom <- as.integer(unlist(lapply(l[["chroms"]][-j], matchy)))
   pos <- l[["pos"]][-j]
-  list(data_set         = data_set,
-       j                = j,
-       individual_names = individual_names,
-       nindividuals     = nindividuals,
-       chrom            = chrom,
-       pos              = pos
-      )
+  list(
+    data_set         = data_set,
+    j                = j,
+    individual_names = individual_names,
+    nindividuals     = nindividuals,
+    chrom            = chrom,
+    pos              = pos
+  )
 }
 
-#' Title
+#' run 2 countries
 #'
-#' @param country_a 
-#' @param country_b 
-#' @param f 
+#' @param country_a country_a
+#' @param country_b country_b
+#' @param f f
 #'
-#' @return
+#' @return test
 #' @export
 #'
-#' @examples
 run_2country <- function(country_a, country_b, f) {
   matchy <- function(x) {
-    regmatches(x, regexec('_(.*?)\\_', x))[[1L]][2L]
+    regmatches(x, regexec("_(.*?)\\_", x))[[1L]][[2L]]
   }
   zz <- country_a
-  M <- country_b
+  M <- country_b # nolint: object_name_linter
   x <- cbind(zz[["x"]], M[["x"]])
-  samps <- c(zz[["samps"]], M[["samps"]])
   chroms <- c(zz[["chroms"]])
   pos <- c(zz[["pos"]])
   qq <- data.frame(x)
-  qq <- lapply(qq, function(x) as.integer(x))
+  qq <- lapply(qq, as.integer)
   qq <- matrix(unlist(qq), ncol = length(qq[[1L]]), byrow = TRUE)
   maf <- colSums(qq == 1L, na.rm = TRUE) / colSums(qq <= 1L, na.rm = TRUE)
   i <- which(colSums(qq == 0L, na.rm = TRUE) < colSums(qq == 1L, na.rm = TRUE))
@@ -1118,7 +1113,7 @@ run_2country <- function(country_a, country_b, f) {
                                                            na.rm = TRUE)
   j <- which(maf <= f)
   data_set <- data.frame(qq)[-j, ]
-  
+
   # Create indices for pairwise comparisons
   individual_names <- names(qq)
   nindividuals <- length(individual_names)
@@ -1134,23 +1129,23 @@ run_2country <- function(country_a, country_b, f) {
   )
 }
 
-#' Title
+#' compute loglikelihood
 #'
-#' @param k 
-#' @param r 
-#' @param ys 
-#' @param f 
-#' @param gendist 
-#' @param epsilon 
-#' @param rho 
+#' @param k k
+#' @param r r
+#' @param ys ys
+#' @param f f
+#' @param gendist gendist
+#' @param epsilon epsilon
+#' @param rho rho
 #'
-#' @return
+#' @return test
 #' @export
 #'
-#' @examples
-loglikelihood <- function(k, r, ys, f, gendist, epsilon, rho = 7.4 * 10^(-7)) {
-  loglikelihood_value = 0L
-  if (r < 0L | r > 1L | k < 0L) {
+loglikelihood <- function(k, r, ys, f, gendist, epsilon,
+                          rho = 7.4 * 10L^(-7L)) {
+  loglikelihood_value <- 0L
+  if (r < 0L || r > 1L || k < 0L) {
     return(log(0L))
   }
   current_predictive <- numeric(length = 2L)
@@ -1161,14 +1156,14 @@ loglikelihood <- function(k, r, ys, f, gendist, epsilon, rho = 7.4 * 10^(-7)) {
   maxnstates <- ncol(f)
   for (idata in seq_along(ndata)) {
     nstates <- 1L
-    while(nstates <= maxnstates && f[idata, nstates] > 1e-20) {
+    while (nstates <= maxnstates && f[idata, nstates] > 1e-20) {
       nstates <- nstates + 1L
     }
     lk0 <- 0L
     incr <- 0L
     if (nstates > maxnstates) nstates <- maxnstates
-    for (g in 1:nstates) {
-      for (gprime in 1:nstates) {
+    for (g in seq_len(nstates)) {
+      for (gprime in seq_len(nstates)) {
         if (gprime <= nstates) {
           incr <- f[idata, g] * f[idata, gprime]
           incr <- ifelse(ys[idata, 1L] == g,
@@ -1177,7 +1172,7 @@ loglikelihood <- function(k, r, ys, f, gendist, epsilon, rho = 7.4 * 10^(-7)) {
           incr <- ifelse(ys[idata, 2L] == gprime,
                          incr * (1L - (nstates - 1L) * epsilon),
                          incr * epsilon)
-          lk0 = lk0 + incr
+          lk0 <- lk0 + incr
         }
       }
     }
@@ -1190,22 +1185,22 @@ loglikelihood <- function(k, r, ys, f, gendist, epsilon, rho = 7.4 * 10^(-7)) {
                      incr * (1L - (nstates - 1L) * epsilon),
                      incr * epsilon)
       incr <- ifelse(ys[idata, 2L] == g,
-                     incr * (1 - (nstates - 1) * epsilon),
+                     incr * (1L - (nstates - 1L) * epsilon),
                      incr * epsilon)
       lk1 <- lk1 + incr
     }
-    current_filter[1L] <- current_predictive[1L] * lk0
-    current_filter[2L] <- current_predictive[2L] * lk1
-    l_idata <- current_filter[1L] + current_filter[2L]
+    current_filter[[1L]] <- current_predictive[[1L]] * lk0
+    current_filter[[2L]] <- current_predictive[[2L]] * lk1
+    l_idata <- current_filter[[1L]] + current_filter[[2L]]
     loglikelihood_value <- loglikelihood_value + log(l_idata)
     if (idata < (ndata - 1L)) {
       current_filter <- current_filter / l_idata
       exp_ <- exp(-k * rho * gendist[idata])
       a01 <- r * (1.0 - exp_)
       a11 <- r + (1.0 - r) * exp_
-      current_predictive[2L] <- current_filter[1L] * a01 +
-        current_filter[2L] * a11
-      current_predictive[1L] <- 1L - current_predictive[2L]
+      current_predictive[[2L]] <- current_filter[[1L]] * a01 +
+        current_filter[[2L]] * a11
+      current_predictive[[1L]] <- 1L - current_predictive[[2L]]
     }
   }
   loglikelihood_value

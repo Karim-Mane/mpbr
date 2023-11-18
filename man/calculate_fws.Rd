@@ -4,10 +4,14 @@
 \alias{calculate_fws}
 \title{Calculate the complexity of the infection (COI) in every sample}
 \usage{
-calculate_fws(snpdata)
+calculate_fws(snpdata, threshold = 0.95)
 }
 \arguments{
 \item{snpdata}{a \code{SNPdata} object}
+
+\item{threshold}{a \code{numeric} value between 0 and 1. This will be used to
+categorize the infections into monoclonal (Fws > threshold) or polyclonal
+(Fws <= threshold)}
 }
 \value{
 a \code{SNPdata} object with 2 additional columns in the meta table
@@ -22,7 +26,7 @@ using the {moimix} R package.
 }
 \examples{
 \dontrun{
-  snpdata <- calculate_fws(snpdata)
+  snpdata <- calculate_fws(snpdata, threshold = 0.95)
  }
 
 }

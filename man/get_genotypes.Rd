@@ -16,19 +16,35 @@ get_genotypes(
 )
 }
 \arguments{
-\item{reference_ped_map}{}
+\item{ped_map}{a \code{list} of 2 elements of type data frame with the data in ped
+and map format}
 
-\item{maf}{}
+\item{reference_ped_map}{a \code{list} of 2 elements of type data frame with the
+reference data in ped and map format}
 
-\item{isolate_max_missing}{}
+\item{maf}{A numeric value denoting the smallest minor allele frequency
+allowed in the analysis. The default value is 0.01}
 
-\item{snp_max_missing}{}
+\item{isolate_max_missing}{A numeric value denoting the maximum proportion of
+missing data allowed for each isolate. The default value is 0.1}
 
-\item{chromosomes}{}
+\item{snp_max_missing}{A numeric value denoting the maximum proportion of
+missing data allowed for each SNP. The default value is 0.1}
 
-\item{input_map_distance}{}
+\item{chromosomes}{A vector containing a subset of chromosomes to perform
+formatting on. The default value is chromosomes=NULL which will reformat
+all genotypes for all chromosomes in the MAP data frame}
 
-\item{reference_map_distance}{}
+\item{input_map_distance}{A character string of either "M" or "cM" denoting
+whether the genetic map distances in the input MAP data frame are in
+Morgans (M) or centi-Morgans (cM). The default is cM}
+
+\item{reference_map_distance}{A character string of either "M" or "cM"
+denoting whether the genetic map distances in the reference MAP data frame
+are in Morgans (M) or centi-Morgans (cM). The default is cM}
+}
+\value{
+A \code{list} of two objects named pedigree and genotypes
 }
 \description{
 Title
