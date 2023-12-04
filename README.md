@@ -39,6 +39,10 @@ pak::pak("{{ gh_repo }}")
 library(mpbr)
 ```
 
+``` r
+library(mpbr)
+```
+
 ## Create the `SNPdata` object
 
 The functions in the {{ packagename }} require a **SNPdata** object.

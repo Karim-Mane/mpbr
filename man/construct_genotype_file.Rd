@@ -2,23 +2,26 @@
 % Please edit documentation in R/pop_genetics.R
 \name{construct_genotype_file}
 \alias{construct_genotype_file}
-\title{Title}
+\title{construct genotype file}
 \usage{
 construct_genotype_file(pops, details, mat, metadata, from, sweep_regions)
 }
 \arguments{
-\item{pops}{}
+\item{pops}{pops}
 
-\item{details}{}
+\item{details}{details}
 
-\item{mat}{}
+\item{mat}{mat}
 
-\item{metadata}{}
+\item{metadata}{metadata}
 
-\item{from}{}
+\item{from}{from}
 
-\item{sweep_regions}{}
+\item{sweep_regions}{sweep_regions}
+}
+\value{
+test
 }
 \description{
-Title
+construct genotype file
 }

@@ -2,17 +2,20 @@
 % Please edit documentation in R/pop_genetics.R
 \name{run_2country}
 \alias{run_2country}
-\title{Title}
+\title{run 2 countries}
 \usage{
 run_2country(country_a, country_b, f)
 }
 \arguments{
-\item{country_a}{}
+\item{country_a}{country_a}
 
-\item{country_b}{}
+\item{country_b}{country_b}
 
-\item{f}{}
+\item{f}{f}
+}
+\value{
+test
 }
 \description{
-Title
+run 2 countries
 }

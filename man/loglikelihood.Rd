@@ -2,25 +2,28 @@
 % Please edit documentation in R/pop_genetics.R
 \name{loglikelihood}
 \alias{loglikelihood}
-\title{Title}
+\title{compute loglikelihood}
 \usage{
-loglikelihood(k, r, ys, f, gendist, epsilon, rho = 7.4 * 10^(-7))
+loglikelihood(k, r, ys, f, gendist, epsilon, rho = 7.4 * 10L^(-7L))
 }
 \arguments{
-\item{k}{}
+\item{k}{k}
 
-\item{r}{}
+\item{r}{r}
 
-\item{ys}{}
+\item{ys}{ys}
 
-\item{f}{}
+\item{f}{f}
 
-\item{gendist}{}
+\item{gendist}{gendist}
 
-\item{epsilon}{}
+\item{epsilon}{epsilon}
 
-\item{rho}{}
+\item{rho}{rho}
+}
+\value{
+test
 }
 \description{
-Title
+compute loglikelihood
 }

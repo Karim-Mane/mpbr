@@ -2,19 +2,22 @@
 % Please edit documentation in R/pop_genetics.R
 \name{create_relatedness_matrix}
 \alias{create_relatedness_matrix}
-\title{Title}
+\title{create relatedness matrix}
 \usage{
 create_relatedness_matrix(ibd, metadata, pops, from)
 }
 \arguments{
-\item{ibd}{}
+\item{ibd}{ibd}
 
-\item{metadata}{}
+\item{metadata}{metadata}
 
-\item{pops}{}
+\item{pops}{pops}
 
-\item{from}{}
+\item{from}{from}
+}
+\value{
+a test
 }
 \description{
-Title
+create relatedness matrix
 }

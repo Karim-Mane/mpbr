@@ -13,19 +13,21 @@
 # or equivalently, gendist[p-1] contains the distance between position p-1 and p, for p > 1.
 # so only ndata-1 first entries of gendist are being used.
 #################################################################################
-simulate_data <- function(fs, gendist, k, r, epsilon = 0.001, rho = 7.4 * 10^(-7)){
-    ndata <- dim(fs)[1]
-    maxnstates <- dim(fs)[2]
-    nstates <- 0
-    Ys <- matrix(NA, nrow = ndata, ncol = 2)
-    for (position in 1:ndata){
-        if (position == 1){
-            IBD_current <- (runif(1) <= r) # Bernoulli(r)
+simulate_data <- function(fs, gendist, k, r,
+                          epsilon = 0.001,
+                          rho     = 7.4 * 10^(-7)){
+    ndata      <- dim(fs)[[1L]]
+    maxnstates <- dim(fs)[[2L]]
+    nstates    <- 0L
+    Ys         <- matrix(NA, nrow = ndata, ncol = 2L)
+    for (position in seq_len(ndata)) {
+        if (position == 1L){
+            IBD_current <- (runif(1L) <= r) # Bernoulli(r)
         } else {
-            if (IBD_current){
-                IBD_current <- (runif(1) < (1 - (1-r)*(1 - exp(-k * rho * gendist[position-1]))))
+            if (IBD_current) {
+                IBD_current <- (runif(1L) < (1L - (1L - r) * (1 - exp(-k * rho * gendist[position - 1L])))) # nolint: line_length_linter
             } else {
-                IBD_current <- (runif(1) < r*(1 - exp(-k * rho * gendist[position-1])))
+                IBD_current <- (runif(1L) < r*(1L - exp(-k * rho * gendist[position - 1L]))) # nolint: line_length_linter
             }
         }
         # number of possible allele types at current position

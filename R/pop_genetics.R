@@ -538,7 +538,7 @@ get_genotypes <- function(ped_map,
                                    reference_ped_map, reference_map_distance)
 
   # create new isolate IDs from PED FIDs and IIDs
-  isolate_names <- paste(input_ped[, 1L], input_ped[, 2L], sep = "/")
+  isolate_names <- paste(input_ped[, 1L], input_ped[, 2L], sep = "/") # nolint: paste_linter
   if (anyDuplicated(isolate_names) > 0L) {
     stop("\nDuplicate sample IDs found.")
   }

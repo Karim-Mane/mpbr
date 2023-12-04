@@ -7,15 +7,18 @@
 simulate_ys_hmm(freqquencies, distances, k, r, epsilon)
 }
 \arguments{
-\item{freqquencies}{}
+\item{freqquencies}{freqquencies}
 
-\item{distances}{}
+\item{distances}{distances}
 
-\item{k}{}
+\item{k}{k}
 
-\item{r}{}
+\item{r}{r}
 
-\item{epsilon}{}
+\item{epsilon}{epsilon}
+}
+\value{
+test
 }
 \description{
 Title

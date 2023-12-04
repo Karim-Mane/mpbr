@@ -504,23 +504,23 @@ compute_maf <- function(snpdata, include_het = FALSE, mat_name = "GT") {
   ref <- rowSums(x == 0L, na.rm = TRUE)
   alt <- rowSums(x == 1L, na.rm = TRUE)
   het <- rowSums(x == 2L, na.rm = TRUE)
-  if (!include_het) {
-    tmp_mat <- cbind(ref, alt)
-  } else {
+  if (include_het) {
     tmp_mat <- cbind(ref, alt, het)
+  } else {
+    tmp_mat <- cbind(ref, alt)
   }
   res       <- apply(tmp_mat, 1L, get_maf)
-  if (!("MAF" %in% names(snpdata[["details"]]))) {
-    snpdata[["details"]][["MAF"]]           <- as.numeric(res[1L, ])
+  if ("MAF" %in% names(snpdata[["details"]])) {
+    new_maf <- paste0("MAF_", mat_name)
+    snpdata[["details"]][[new_maf]] <- as.numeric(res[1L, ])
+  } else {
+    snpdata[["details"]][["MAF"]]        <- as.numeric(res[1L, ])
     snpdata[["details"]][["MAF_allele"]] <-
       as.factor(as.character(as.numeric(round(res[2L, ]))))
     levels(snpdata[["details"]][["MAF_allele"]]) <-
       dplyr::recode_factor(snpdata[["details"]][["MAF_allele"]], REF = "0",
                            ALT = "1", HET = "2", REF_ALT = "3",
                            REF_ALT_HET = "4")
-  } else {
-    new_maf <- paste0("MAF_", mat_name)
-    snpdata[["details"]][[new_maf]] <- as.numeric(res[1L, ])
   }
 
   snpdata

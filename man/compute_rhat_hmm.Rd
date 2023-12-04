@@ -2,7 +2,7 @@
 % Please edit documentation in R/pop_genetics.R
 \name{compute_rhat_hmm}
 \alias{compute_rhat_hmm}
-\title{Title}
+\title{compute rhat}
 \usage{
 compute_rhat_hmm(freqquencies, distances, ys, epsilon)
 }
@@ -19,6 +19,6 @@ compute_rhat_hmm(freqquencies, distances, ys, epsilon)
 a matrix
 }
 \description{
-Title
+compute rhat
 }
 \keyword{internal}
