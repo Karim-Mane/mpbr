@@ -173,9 +173,10 @@ add_metadata <- function(sample_ids, metadata, output_dir) {
             glue::glue_collapse(sample_ids[["sample"]][!are_in_meta_file],
                                 sep = ", "),
             call. = FALSE)
-    write.table(sample_ids[["sample"]][!are_in_meta_file],
-                file.path(output_dir, "samples_in_metadata_not_in_vcf.txt"),
-                row.names = FALSE, col.names = FALSE, quote = FALSE)
+    utils::write.table(sample_ids[["sample"]][!are_in_meta_file],
+                       file.path(output_dir,
+                                 "samples_in_metadata_not_in_vcf.txt"),
+                       row.names = FALSE, col.names = FALSE, quote = FALSE)
   }
 
   # samples from the metadata file should also match with the ones from
