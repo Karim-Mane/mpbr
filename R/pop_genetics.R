@@ -1,11 +1,11 @@
 #' Calculate Weir & Cockerham's Fst
 #'
 #' @param snpdata `SNPdata` object
+#' @param from the metadata column that contains the sample's population
+#'    information.
 #' @param groups a vector of population names. Every sample in the metadata file
 #'    is associated to its population of origin. The differentiation index will
 #'    be estimated between these groups.
-#' @param from the metadata column that contains the sample's population
-#'    information.
 #'
 #' @return a `SNPdata` object with an extra field named as **Fst**. This is a
 #'    `list` of data frames with the Fst values for each pair of comparison.
@@ -26,49 +26,46 @@
 #' \dontrun{
 #'   snpdata <- calculate_wcFst(
 #'     snpdata,
-#'     groups = c("Senegal", "Gambia"),
-#'     from   = "Country"
+#'     from   = "Country",
+#'     groups = c("Senegal", "Gambia")
 #'   )
 #' }
 #' @export
 #'
-calculate_wcFst <- function(snpdata, from, groups) { # nolint: object_name_linter
+calculate_wcFst <- function(snpdata, from, groups = NULL) { # nolint: object_name_linter
   checkmate::assert_vector(groups, any.missing = FALSE, min.len = 0L,
                            null.ok = TRUE)
   checkmate::assert_character(from, len = 1L, any.missing = FALSE,
                               null.ok = FALSE)
   checkmate::assert_class(snpdata, "SNPdata", null.ok = FALSE)
 
-  if (is.null(groups) && !is.null(from)) {
+  if (is.null(groups)) {
     groups <- as.character(unique(snpdata[["meta"]][[from]]))
   } else if (all(!is.null(groups) &&
-                   !is.null(from) &&
-                   (!all(groups %in% unique(snpdata[["meta"]][[from]]))))) {
+                 (!all(groups %in% unique(snpdata[["meta"]][[from]]))))) {
     stop(sprintf("Not all specified groups belong to the %s column of
                  the metadata table", from))
   }
-  system(sprintf("tabix %s", snpdata[["vcf"]]))
+  system(sprintf("tabix -f %s", snpdata[["vcf"]]))
   fst <- list()
-  for (i in ((seq_len(groups) - 1L))) {
+  for (i in (1L:(length(groups) - 1L))) {
     idx1 <- which(snpdata[["meta"]][[from]] == groups[i])
     idx1 <- paste(idx1, collapse = ",")
     for (j in (i + 1L):length(groups)) {
       idx2 <- which(snpdata[["meta"]][[from]] == groups[j])
       idx2 <- paste(idx2, collapse = ",")
-      out  <- file.path(dirname(snpdata[["vcf"]]), "out.wc.fst")
-      pout <- file.path(dirname(snpdata[["vcf"]]), "out.wc.fst.pvalues")
-      system(sprintf("wcFst --target %s --background %s --file %s \
-                     --deltaaf 0 --type GT > %s",
-                     idx1, idx2, snpdata[["vcf"]], out))
-      system(sprintf("pFst --target %s --background %s --file %s \
-                     --deltaaf 0 --type GT > %s",
-                     idx1, idx2, snpdata[["vcf"]], pout))
-      out        <- data.table::fread(out)
-      pout       <- data.table::fread(pout)
-      data.table::setkeyv(out,  c("V1", "V2"))
-      data.table::setkeyv(pout, c("V1", "V2"))
-      tmp        <- out[pout, nomatch = 0L]
-      names(tmp) <- c("Chrom", "Pos", "AF_in_target", "AF_in_background",
+      out_file  <- file.path(dirname(snpdata[["vcf"]]), "out.wc.fst")
+      pout_file <- file.path(dirname(snpdata[["vcf"]]), "out.wc.fst.pvalues")
+      system(sprintf("wcFst --target %s --background %s --file %s --deltaaf 0 --type GT > %s", # nolint: line_length_linter
+                     idx1, idx2, snpdata[["vcf"]], out_file))
+      system(sprintf("pFst --target %s --background %s --file %s --deltaaf 0 --type GT > %s", # nolint: line_length_linter
+                     idx1, idx2, snpdata[["vcf"]], pout_file))
+      out        <- data.table::fread(out_file)
+      pout       <- data.table::fread(pout_file)
+      tmp        <- dplyr::left_join(out, pout, by = c("V1", "V2"))
+      af_name_1  <- paste0("AF_in_", groups[i])
+      af_name_2  <- paste0("AF_in_", groups[j])
+      names(tmp) <- c("Chrom", "Pos", af_name_1, af_name_2,
                       "wcFst", "wcFst_pvalue")
       idx        <- which(tmp[["wcFst"]] < 0L)
       if (length(idx) > 0L) {

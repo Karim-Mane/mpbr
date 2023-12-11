@@ -160,10 +160,13 @@ If you want to remove some loci from the current `SNPdata` object, use the `drop
 ```{r eval=FALSE}
 ## drop a set of SNPs based on their genomic coordinates
 snp_to_be_dropped <- chrom7_snpdata$details %>% dplyr::select(Chrom, Pos)
-idx               <- sample(1:nrow(snp_to_be_dropped), 100, replace = FALSE)
+idx               <- sample(seq_len(nrow(snp_to_be_dropped)), 100,
+                            replace = FALSE)
 snp_to_be_dropped <- snp_to_be_dropped[idx, ]
 
-# there is a problem in the way the index of the vcf file is set when dropping snps. # solution: consider replacing index with an appropriated value 
+# there is a problem in the way the index of the vcf file is set when
+# dropping snps.
+# solution: consider replacing index with an appropriated value
 reduced_snpdata   <- drop_snps(chrom7_snpdata, snp_to_be_dropped)
 print(reduced_snpdata)
 
@@ -179,7 +182,7 @@ print(reduced_snpdata)
 When you want to remove some samples from the `SNPdata` object, use the `drop_samples()` function and provide it with a vector of sample IDs to drop. 
 
 ```{r eval=FALSE}
-idx                   <- sample(1:nrow(reduced_snpdata$meta), 10,
+idx                   <- sample(seq_len(nrow(reduced_snpdata$meta)), 10,
                                 replace = FALSE)
 samples_to_be_dropped <- reduced_snpdata$meta$sample[idx]
 reduced_snpdata       <- drop_samples(reduced_snpdata, samples_to_be_dropped)
