@@ -56,7 +56,6 @@ get_snpdata <- function(vcf_file    = NULL,
   checkmate::assert_character(gof, any.missing = FALSE, len = 1L,
                               null.ok = TRUE)
   checkmate::assert_numeric(num_threads, lower = 1L,
-                            upper = (parallel::detectCores() - 1L),
                             any.missing = FALSE, null.ok = FALSE, len = 1L)
   # the user need to provide the GOF file from which the gene ontology
   # annotation will be extracted.
