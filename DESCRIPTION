@@ -21,9 +21,7 @@ Imports:
     glue,
     IRanges,
     magrittr,
-    moimix,
     parallel,
-    SeqArray,
     statip,
     stats,
     utils

@@ -1,16 +1,12 @@
 ---
-title: "Summary statistics"
+title: "mpbr: Summary statistics"
 output:
   rmarkdown::html_vignette:
     df_print: "kable"
 vignette: >
-  %\VignetteIndexEntry{Summary statistics}
+  %\VignetteIndexEntry{mpbr: Summary statistics}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
----
-
----
-date: `r format(Sys.Date(), "%d/%m/%Y")`
 ---
 
 ```{r, include = FALSE}
