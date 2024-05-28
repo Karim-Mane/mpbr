@@ -175,23 +175,6 @@ object looks like below:</p>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/grid.html" class="external-link">grid</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
-<h2 id="calculate-the-within-host-genetics-diversity-index-fws">Calculate the within-host genetics diversity index (Fws)<a class="anchor" aria-label="anchor" href="#calculate-the-within-host-genetics-diversity-index-fws"></a>
-</h2>
-<p>The within-hosts fixation index (Fws) metric measures the genetic
-diversity of an individual infection relative to the population level
-genetic diversity using the <a href="https://github.com/bahlolab/moimix" class="external-link">moimix</a> R package. The
-function creates 2 extra columns in the <strong>meta</strong> table. The
-<strong>Fws</strong> column contains the Fws values. They vary between 0
-(for polyclonal infection) and 1 (for monoclonal infections). The
-<strong>COI</strong> column is created from the Fws column such that
-infections with Fws greater than the specified threshold are considered
-as monoclonal (1). Otherwise, the infection is considered as polyclonal
-(2).</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">snpdata</span> <span class="op">&lt;-</span> <span class="fu">calculate_fws</span><span class="op">(</span><span class="va">snpdata</span>, threshold <span class="op">=</span> <span class="fl">0.95</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">snpdata</span><span class="op">$</span><span class="va">meta</span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level2">
 <h2 id="mixed-genotypes-phasing">Mixed genotypes phasing<a class="anchor" aria-label="anchor" href="#mixed-genotypes-phasing"></a>
 </h2>
 <p>Mixed genotypes are not accounted for in many population genetics
@@ -224,7 +207,7 @@ MAF from each phased genotype data is calculated. The phased genotype
 with the highest correlation will be retained and stored in the output
 <code>SNPdata</code> object. We recommend <code>nsim = 50</code> at
 least to maximize the change of getting the highest MAF correlation.</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">snpdata</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/phase_mixed_genotypes.html">phase_mixed_genotypes</a></span><span class="op">(</span><span class="va">snpdata</span>, nsim <span class="op">=</span> <span class="fl">100</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">snpdata</span><span class="op">$</span><span class="va">Phased</span><span class="op">[</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">5</span><span class="op">]</span><span class="op">)</span></span></code></pre></div>
 </div>
@@ -251,7 +234,7 @@ MAF from each imputed genotype data is calculated. The imputed genotype
 with the highest correlation will be retained and stored in the output
 <code>SNPdata</code> object. We recommend <code>nsim = 50</code> at
 least to maximize the change of getting the highest MAF correlation.</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">snpdata</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/impute_missing_genotypes.html">impute_missing_genotypes</a></span><span class="op">(</span><span class="va">snpdata</span>, genotype <span class="op">=</span> <span class="st">"GT"</span>, nsim <span class="op">=</span> <span class="fl">100</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">snpdata</span><span class="op">$</span><span class="va">Imputed</span><span class="op">[</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">5</span><span class="op">]</span><span class="op">)</span></span></code></pre></div>
 </div>
@@ -267,7 +250,7 @@ the <em>percentage_missing_sites</em>, <em>Fws</em>, <em>COI</em>
 columns. This is due to the fact that the existing values in these
 columns are calculated from the entire dataset and are not specific the
 chosen chromosome.</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">## subset only chromosome 7 data</span></span>
 <span><span class="va">chrom7_snpdata</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/select_chrom.html">select_chrom</a></span><span class="op">(</span><span class="va">snpdata</span>, chrom <span class="op">=</span> <span class="st">"Pf3D7_07_v3"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">chrom7_snpdata</span><span class="op">)</span></span></code></pre></div>
@@ -283,7 +266,7 @@ alternative will be to provide the <code>chrom</code> (chromosome name),
 <code>start</code> (the start position of the region to be discarded)
 and <code>end</code> (the ens position of the region to be
 discarded).</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">## drop a set of SNPs based on their genomic coordinates</span></span>
 <span><span class="va">snp_to_be_dropped</span> <span class="op">&lt;-</span> <span class="va">chrom7_snpdata</span><span class="op">$</span><span class="va">details</span> <span class="op">%&gt;%</span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">Chrom</span>, <span class="va">Pos</span><span class="op">)</span></span>
 <span><span class="va">idx</span>               <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">snp_to_be_dropped</span><span class="op">)</span><span class="op">)</span>, <span class="fl">100</span>,</span>
@@ -308,7 +291,7 @@ discarded).</p>
 <p>When you want to remove some samples from the <code>SNPdata</code>
 object, use the <code><a href="../reference/drop_samples.html">drop_samples()</a></code> function and provide it with
 a vector of sample IDs to drop.</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">idx</span>                   <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">reduced_snpdata</span><span class="op">$</span><span class="va">meta</span><span class="op">)</span><span class="op">)</span>, <span class="fl">10</span>,</span>
 <span>                                replace <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span><span class="va">samples_to_be_dropped</span> <span class="op">&lt;-</span> <span class="va">reduced_snpdata</span><span class="op">$</span><span class="va">meta</span><span class="op">$</span><span class="va">sample</span><span class="op">[</span><span class="va">idx</span><span class="op">]</span></span>
