@@ -3,8 +3,5 @@ pkgdown: 2.0.9.9000
 pkgdown_sha: edc41f4423da5d1625ea0ae717fc3e4b2421419f
 articles:
   mpbr: mpbr.html
-last_built: 2024-05-28T23:06Z
-urls:
-  reference: https://Karim-Mane.github.io/mpbr/reference
-  article: https://Karim-Mane.github.io/mpbr/articles
+last_built: 2024-05-28T23:18Z
 

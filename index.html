@@ -19,7 +19,7 @@
 <!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- pkgdown --><link href="pkgdown.css" rel="stylesheet">
 <script src="pkgdown.js"></script><meta property="og:title" content="Population Genomics Analysis for Plasmodium falciparum">
 <meta property="og:description" content="provides functions to perform population genomics analyses using genome-wide Single Nucleotide Polymorphisms (SNPs) from the malaria parasite Plasmodium falciparum.">
-<meta property="og:image" content="https://Karim-Mane.github.io/mpbr/logo.svg">
+<meta property="og:image" content="/logo.svg">
 <!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha256-nvJJv9wWKEm88qvoQl9ekL2J+k/RWIsaSScxxlsrv8k=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/config/TeX-AMS-MML_HTMLorMML.js" integrity="sha256-84DKXVJXs0/F8OTMzX4UR909+jtl4G7SPypPavF+GfA=" crossorigin="anonymous"></script><!--[if lt IE 9]>
 <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
 <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
@@ -70,23 +70,23 @@
 </h1></div>
 <!-- badges: start -->
 
-<p>mpbr provides functions to perform population genomics analyses using genome-wide Single Nucleotide Polymorphisms (SNPs) from the malaria parasite <em>Plasmodium falciparum</em>.</p>
+<p><strong>mpbr</strong> provides functions to perform population genomics analyses using genome-wide Single Nucleotide Polymorphisms (SNPs) from the malaria parasite <em>Plasmodium falciparum</em>.</p>
 <!-- This sentence is optional and can be removed -->
-<p>mpbr is developed at the <a href="https://www.lshtm.ac.uk/research/units/mrc-gambia" class="external-link">Medical Research Council, The Gambia Unit at London School of Hygiene and Tropical Medicine</a> as part of the <a href="https://data.org/initiatives/epiverse/" class="external-link">Malaria Population Genomics (MPB)</a> initiative.</p>
+<p><strong>mpbr</strong> is developed at the <a href="https://www.lshtm.ac.uk/research/units/mrc-gambia" class="external-link">Medical Research Council, The Gambia Unit at London School of Hygiene and Tropical Medicine</a> as part of the <a href="https://data.org/initiatives/epiverse/" class="external-link">Malaria Population Genomics (MPB)</a> initiative.</p>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
-<p>You can install the development version of mpbr from <a href="https://github.com/" class="external-link">GitHub</a> with:</p>
+<p>You can install the development version of <strong>mpbr</strong> from <a href="https://github.com/" class="external-link">GitHub</a> with:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">pak</span><span class="fu">::</span><span class="fu"><a href="https://pak.r-lib.org/reference/pak.html" class="external-link">pak</a></span><span class="op">(</span><span class="st">"Karim-Mane/mpbr"</span><span class="op">)</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://Karim-Mane.github.io/mpbr/">mpbr</a></span><span class="op">)</span></span></code></pre></div>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://Karim-Mane.github.io/mpbr/" class="external-link">mpbr</a></span><span class="op">)</span></span></code></pre></div>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://Karim-Mane.github.io/mpbr/">mpbr</a></span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://Karim-Mane.github.io/mpbr/" class="external-link">mpbr</a></span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="create-the-snpdata-object">Create the <code>SNPdata</code> object<a class="anchor" aria-label="anchor" href="#create-the-snpdata-object"></a>
 </h2>
-<p>The functions in the mpbr require a <strong>SNPdata</strong> object. This is generated with the <code><a href="reference/get_snpdata.html">get_snpdata()</a></code> function.<br>
+<p>The functions in the <strong>mpbr</strong> require a <strong>SNPdata</strong> object. This is generated with the <code><a href="reference/get_snpdata.html">get_snpdata()</a></code> function.<br>
 The function’s arguments and returned object are described in the vignette and the function documentation.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">snpdata</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/get_snpdata.html">get_snpdata</a></span><span class="op">(</span></span>
@@ -101,11 +101,10 @@ The function’s arguments and returned object are described in the vignette and
 <div class="section level2">
 <h2 id="package-vignettes">Package Vignettes<a class="anchor" aria-label="anchor" href="#package-vignettes"></a>
 </h2>
-<p>The vignette of the mpbr contains detailed illustrations about the use of each function. This can be accessed by typing the command below:</p>
+<p>The vignette of the <strong>mpbr</strong> contains detailed illustrations about the use of each function. This can be accessed by typing the command below:</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># OPEN THE VIGNETTE WITHIN RSTUDIO</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/vignette.html" class="external-link">vignette</a></span><span class="op">(</span><span class="st">"Summary statistics"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/vignette.html" class="external-link">vignette</a></span><span class="op">(</span><span class="st">"Population genetics analysis"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/vignette.html" class="external-link">vignette</a></span><span class="op">(</span><span class="st">"mpbr"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># OPEN THE VIGNETTE IN YOUR WEB BROWSER.</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/browseVignettes.html" class="external-link">browseVignettes</a></span><span class="op">(</span><span class="st">"mpbr"</span><span class="op">)</span></span></code></pre></div>
@@ -126,7 +125,7 @@ The function’s arguments and returned object are described in the vignette and
 <div class="section level3">
 <h3 id="code-of-conduct">Code of Conduct<a class="anchor" aria-label="anchor" href="#code-of-conduct"></a>
 </h3>
-<p>Please note that the mpbr project is released with a <a href="https://github.com/epiverse-trace/.github/blob/main/CODE_OF_CONDUCT.md" class="external-link">Contributor Code of Conduct</a>. By contributing to this project, you agree to abide by its terms.</p>
+<p>Please note that the <strong>mpbr</strong> project is released with a <a href="https://github.com/epiverse-trace/.github/blob/main/CODE_OF_CONDUCT.md" class="external-link">Contributor Code of Conduct</a>. By contributing to this project, you agree to abide by its terms.</p>
 </div>
 </div>
 </div>
