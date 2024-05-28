@@ -69,7 +69,8 @@ use of each function. This can be accessed by typing the command below:
 
 ```{r "vignette", echo = TRUE, eval = FALSE}
 # OPEN THE VIGNETTE WITHIN RSTUDIO
-vignette("mpbr")
+vignette("Summary statistics")
+vignette("Population genetics analysis")
 
 # OPEN THE VIGNETTE IN YOUR WEB BROWSER.
 browseVignettes("mpbr")
