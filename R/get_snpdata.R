@@ -76,12 +76,17 @@ get_snpdata <- function(vcf_file    = NULL,
   # extracted. This is converted into BED format because the `GenomicRange`
   # package requires that file type.
   if (!is.null(gff) && file.exists(gff)) {
-    bed <- file.path(output_dir, "file.bed")
-    system(sprintf("gff2bed < %s > %s", gff, bed))
-    bed <- data.table::fread(bed, nThread = num_threads, sep = "\t")
-  } else {
-    bed <- readRDS(system.file("extdata", "PlasmoDB-56_Pfalciparum3D7.RDS",
-                               package = "mpbr"))
+    if (grepl(".RDS", basename(gff))) {
+      # read annotation from existing file
+      bed <- readRDS(system.file("extdata", "PlasmoDB-56_Pfalciparum3D7.RDS",
+                                 package = "mpbr"))
+    }
+    if (grepl(".gz", basename(gff))) {
+      # create bed file from downloaded annotation file
+      bed <- file.path(output_dir, "file.bed")
+      system(sprintf("gff2bed < %s > %s", gff, bed))
+      bed <- data.table::fread(bed, nThread = num_threads, sep = "\t")
+    }
   }
   
   # the sample IDs will be used to create the sample metadata file.

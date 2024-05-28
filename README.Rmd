@@ -57,7 +57,7 @@ snpdata <- get_snpdata(
   meta_file  = system.file("extdata", "SampleMetadata.RDS", package = "mpbr"), 
   output_dir = tempdir(), 
   gof        = system.file("extdata", "pf_gene_ontology.RDS", package = "mpbr"), 
-  gff        = system.file("extdata", "PlasmoDB-56_Pfalciparum3D7.gff",
+  gff        = system.file("extdata", "PlasmoDB-56_Pfalciparum3D7.RDS",
                            package = "mpbr")
 )
 ```
