@@ -138,17 +138,6 @@ references:
     email: hadley@rstudio.com
   year: '2024'
 - type: software
-  title: moimix
-  abstract: 'moimix: Estimating mulitplicity of infection from high-throughput sequencing
-    data'
-  notes: Imports
-  url: https://github.com/bahlolab/moimix
-  authors:
-  - family-names: Lee"
-    given-names: '"Stuart'
-    email: lee.s@wehi.edu.au
-  year: '2024'
-- type: software
   title: parallel
   abstract: 'R: A Language and Environment for Statistical Computing'
   notes: Imports
@@ -157,22 +146,6 @@ references:
   institution:
     name: R Foundation for Statistical Computing
     address: Vienna, Austria
-  year: '2024'
-- type: software
-  title: SeqArray
-  abstract: 'SeqArray: Data Management of Large-Scale Whole-Genome Sequence Variant
-    Calls'
-  notes: Imports
-  url: https://github.com/zhengxwen/SeqArray
-  repository: https://bioconductor.org/
-  authors:
-  - family-names: Zheng
-    given-names: Xiuwen
-    email: zhengx@u.washington.edu
-    orcid: https://orcid.org/0000-0002-1390-0708
-  - family-names: Gogarten
-    given-names: Stephanie
-    email: sdmorris@uw.edu
   year: '2024'
 - type: software
   title: statip
