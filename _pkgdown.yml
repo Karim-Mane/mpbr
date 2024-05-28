@@ -1,6 +1,6 @@
-url: https://github.com/Karim-Mane/mpbr
-template:
-  package: epiversetheme
+url: https://Karim-Mane.github.io/mpbr
+# template:
+#   package: epiversetheme
 
 reference:
 - title: Exported functions
