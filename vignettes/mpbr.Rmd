@@ -97,16 +97,6 @@ hist(snpdata$details$MAF, 100)
 grid()
 ```
 
-## Calculate the within-host genetics diversity index (Fws)  
-
-The within-hosts fixation index (Fws) metric measures the genetic diversity of an individual infection relative to the population level genetic diversity using the [moimix](https://github.com/bahlolab/moimix) R package.
-The function creates 2 extra columns in the **meta** table. The **Fws** column contains the Fws values. They vary between 0 (for polyclonal infection) and 1 (for monoclonal infections). The **COI** column is created from the Fws column such that infections with Fws greater than the specified threshold are considered as monoclonal (1). Otherwise, the infection is considered as polyclonal (2).
-
-```{r, eval=FALSE}
-snpdata <- calculate_fws(snpdata, threshold = 0.95)
-head(snpdata$meta)
-```
-
 ## Mixed genotypes phasing  
 
 Mixed genotypes are not accounted for in many population genetics methods as they introduce a extra layer of complexity. Genotype phasing is the most common way of dealing with mixed genotype. In this package, we use the `phase_mixed_genotypes()` to phase the mixed genotypes based on their allelic depth (AD) and the total allele count on the specific locus through the following procedure:
