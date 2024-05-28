@@ -1,93 +1,93 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>/404.html</loc>
+    <loc>https://Karim-Mane.github.io/mpbr/404.html</loc>
   </url>
   <url>
-    <loc>/LICENSE-text.html</loc>
+    <loc>https://Karim-Mane.github.io/mpbr/LICENSE-text.html</loc>
   </url>
   <url>
-    <loc>/LICENSE.html</loc>
+    <loc>https://Karim-Mane.github.io/mpbr/LICENSE.html</loc>
   </url>
   <url>
-    <loc>/articles/index.html</loc>
+    <loc>https://Karim-Mane.github.io/mpbr/articles/index.html</loc>
   </url>
   <url>
-    <loc>/articles/mpbr.html</loc>
+    <loc>https://Karim-Mane.github.io/mpbr/articles/mpbr.html</loc>
   </url>
   <url>
-    <loc>/authors.html</loc>
+    <loc>https://Karim-Mane.github.io/mpbr/authors.html</loc>
   </url>
   <url>
-    <loc>/index.html</loc>
+    <loc>https://Karim-Mane.github.io/mpbr/index.html</loc>
   </url>
   <url>
-    <loc>/reference/compute_maf.html</loc>
+    <loc>https://Karim-Mane.github.io/mpbr/reference/compute_maf.html</loc>
   </url>
   <url>
-    <loc>/reference/drop_samples.html</loc>
+    <loc>https://Karim-Mane.github.io/mpbr/reference/drop_samples.html</loc>
   </url>
   <url>
-    <loc>/reference/drop_snps.html</loc>
+    <loc>https://Karim-Mane.github.io/mpbr/reference/drop_snps.html</loc>
   </url>
   <url>
-    <loc>/reference/drop_snps_using_gc.html</loc>
+    <loc>https://Karim-Mane.github.io/mpbr/reference/drop_snps_using_gc.html</loc>
   </url>
   <url>
-    <loc>/reference/filter_snps_samples.html</loc>
+    <loc>https://Karim-Mane.github.io/mpbr/reference/filter_snps_samples.html</loc>
   </url>
   <url>
-    <loc>/reference/gene_annotation.html</loc>
+    <loc>https://Karim-Mane.github.io/mpbr/reference/gene_annotation.html</loc>
   </url>
   <url>
-    <loc>/reference/get_clean_name.html</loc>
+    <loc>https://Karim-Mane.github.io/mpbr/reference/get_clean_name.html</loc>
   </url>
   <url>
-    <loc>/reference/get_gene_annotation.html</loc>
+    <loc>https://Karim-Mane.github.io/mpbr/reference/get_gene_annotation.html</loc>
   </url>
   <url>
-    <loc>/reference/get_maf.html</loc>
+    <loc>https://Karim-Mane.github.io/mpbr/reference/get_maf.html</loc>
   </url>
   <url>
-    <loc>/reference/get_snpdata.html</loc>
+    <loc>https://Karim-Mane.github.io/mpbr/reference/get_snpdata.html</loc>
   </url>
   <url>
-    <loc>/reference/impute.html</loc>
+    <loc>https://Karim-Mane.github.io/mpbr/reference/impute.html</loc>
   </url>
   <url>
-    <loc>/reference/impute_missing_genotypes.html</loc>
+    <loc>https://Karim-Mane.github.io/mpbr/reference/impute_missing_genotypes.html</loc>
   </url>
   <url>
-    <loc>/reference/index.html</loc>
+    <loc>https://Karim-Mane.github.io/mpbr/reference/index.html</loc>
   </url>
   <url>
-    <loc>/reference/phase_data.html</loc>
+    <loc>https://Karim-Mane.github.io/mpbr/reference/phase_data.html</loc>
   </url>
   <url>
-    <loc>/reference/phase_mixed_genotypes.html</loc>
+    <loc>https://Karim-Mane.github.io/mpbr/reference/phase_mixed_genotypes.html</loc>
   </url>
   <url>
-    <loc>/reference/phase_ref_alt_0.html</loc>
+    <loc>https://Karim-Mane.github.io/mpbr/reference/phase_ref_alt_0.html</loc>
   </url>
   <url>
-    <loc>/reference/phase_ref_alt_non_0.html</loc>
+    <loc>https://Karim-Mane.github.io/mpbr/reference/phase_ref_alt_non_0.html</loc>
   </url>
   <url>
-    <loc>/reference/phase_ref_or_alt_0.html</loc>
+    <loc>https://Karim-Mane.github.io/mpbr/reference/phase_ref_or_alt_0.html</loc>
   </url>
   <url>
-    <loc>/reference/print.SNPdata.html</loc>
+    <loc>https://Karim-Mane.github.io/mpbr/reference/print.SNPdata.html</loc>
   </url>
   <url>
-    <loc>/reference/remove_region_from_snpdata.html</loc>
+    <loc>https://Karim-Mane.github.io/mpbr/reference/remove_region_from_snpdata.html</loc>
   </url>
   <url>
-    <loc>/reference/remove_samples_from_vcf.html</loc>
+    <loc>https://Karim-Mane.github.io/mpbr/reference/remove_samples_from_vcf.html</loc>
   </url>
   <url>
-    <loc>/reference/remove_snps_from_vcf.html</loc>
+    <loc>https://Karim-Mane.github.io/mpbr/reference/remove_snps_from_vcf.html</loc>
   </url>
   <url>
-    <loc>/reference/select_chrom.html</loc>
+    <loc>https://Karim-Mane.github.io/mpbr/reference/select_chrom.html</loc>
   </url>
 </urlset>
