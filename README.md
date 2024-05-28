@@ -17,21 +17,21 @@ coverage](https://codecov.io/gh/Karim-Mane/mpbr/branch/main/graph/badge.svg)](ht
 [![lifecycle-concept](https://raw.githubusercontent.com/reconverse/reconverse.github.io/master/images/badge-experimental.svg)](https://www.reconverse.org/lifecycle.html#concept)
 <!-- badges: end -->
 
-mpbr provides functions to perform population genomics analyses using
-genome-wide Single Nucleotide Polymorphisms (SNPs) from the malaria
-parasite *Plasmodium falciparum*.
+**mpbr** provides functions to perform population genomics analyses
+using genome-wide Single Nucleotide Polymorphisms (SNPs) from the
+malaria parasite *Plasmodium falciparum*.
 
 <!-- This sentence is optional and can be removed -->
 
-mpbr is developed at the [Medical Research Council, The Gambia Unit at
-London School of Hygiene and Tropical
+**mpbr** is developed at the [Medical Research Council, The Gambia Unit
+at London School of Hygiene and Tropical
 Medicine](https://www.lshtm.ac.uk/research/units/mrc-gambia) as part of
 the [Malaria Population Genomics
 (MPB)](https://data.org/initiatives/epiverse/) initiative.
 
 ## Installation
 
-You can install the development version of mpbr from
+You can install the development version of **mpbr** from
 [GitHub](https://github.com/) with:
 
 ``` r
@@ -45,7 +45,7 @@ library(mpbr)
 
 ## Create the `SNPdata` object
 
-The functions in the mpbr require a **SNPdata** object. This is
+The functions in the **mpbr** require a **SNPdata** object. This is
 generated with the `get_snpdata()` function.  
 The function’s arguments and returned object are described in the
 vignette and the function documentation.
@@ -63,13 +63,12 @@ snpdata <- get_snpdata(
 
 ## Package Vignettes
 
-The vignette of the mpbr contains detailed illustrations about the use
-of each function. This can be accessed by typing the command below:
+The vignette of the **mpbr** contains detailed illustrations about the
+use of each function. This can be accessed by typing the command below:
 
 ``` r
 # OPEN THE VIGNETTE WITHIN RSTUDIO
-vignette("Summary statistics")
-vignette("Population genetics analysis")
+vignette("mpbr")
 
 # OPEN THE VIGNETTE IN YOUR WEB BROWSER.
 browseVignettes("mpbr")
@@ -91,7 +90,7 @@ requests](https://github.com/Karim-Mane/mpbr/pulls).
 
 ### Code of Conduct
 
-Please note that the mpbr project is released with a [Contributor Code
-of
+Please note that the **mpbr** project is released with a [Contributor
+Code of
 Conduct](https://github.com/epiverse-trace/.github/blob/main/CODE_OF_CONDUCT.md).
 By contributing to this project, you agree to abide by its terms.
