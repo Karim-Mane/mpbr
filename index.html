@@ -80,15 +80,13 @@
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">pak</span><span class="fu">::</span><span class="fu"><a href="https://pak.r-lib.org/reference/pak.html" class="external-link">pak</a></span><span class="op">(</span><span class="st">"Karim-Mane/mpbr"</span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://Karim-Mane.github.io/mpbr/" class="external-link">mpbr</a></span><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://Karim-Mane.github.io/mpbr/" class="external-link">mpbr</a></span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="create-the-snpdata-object">Create the <code>SNPdata</code> object<a class="anchor" aria-label="anchor" href="#create-the-snpdata-object"></a>
 </h2>
 <p>The functions in the <strong>mpbr</strong> require a <strong>SNPdata</strong> object. This is generated with the <code><a href="reference/get_snpdata.html">get_snpdata()</a></code> function.<br>
 The function’s arguments and returned object are described in the vignette and the function documentation.</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">snpdata</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/get_snpdata.html">get_snpdata</a></span><span class="op">(</span></span>
 <span>  vcf_file   <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"Input_Data.vcf.gz"</span>, package <span class="op">=</span> <span class="st">"mpbr"</span><span class="op">)</span>, </span>
 <span>  meta_file  <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"SampleMetadata.RDS"</span>, package <span class="op">=</span> <span class="st">"mpbr"</span><span class="op">)</span>, </span>
@@ -102,7 +100,7 @@ The function’s arguments and returned object are described in the vignette and
 <h2 id="package-vignettes">Package Vignettes<a class="anchor" aria-label="anchor" href="#package-vignettes"></a>
 </h2>
 <p>The vignette of the <strong>mpbr</strong> contains detailed illustrations about the use of each function. This can be accessed by typing the command below:</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># OPEN THE VIGNETTE WITHIN RSTUDIO</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/vignette.html" class="external-link">vignette</a></span><span class="op">(</span><span class="st">"mpbr"</span><span class="op">)</span></span>
 <span></span>
