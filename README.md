@@ -90,3 +90,24 @@ Please note that the **mpbr** project is released with a [Contributor
 Code of
 Conduct](https://github.com/epiverse-trace/.github/blob/main/CODE_OF_CONDUCT.md).
 By contributing to this project, you agree to abide by its terms.
+
+## Citing this package
+
+``` r
+citation("mpbr")
+#> To cite package 'mpbr' in publications use:
+#> 
+#>   Mané K, Ngwa A, Jeffries D (2024). _mpbr: Population Genomics
+#>   Analysis for Plasmodium falciparum_.
+#>   <https://Karim-Mane.github.io/mpbr/,https://github.com/Karim-Mane/mpbr/>.
+#> 
+#> A BibTeX entry for LaTeX users is
+#> 
+#>   @Manual{,
+#>     title = {mpbr: Population Genomics Analysis for Plasmodium falciparum},
+#>     author = {Karim Mané and Alfred Amambua Ngwa and David Jeffries},
+#>     year = {2024},
+#>     url = {https://Karim-Mane.github.io/mpbr/,
+#> https://github.com/Karim-Mane/mpbr/},
+#>   }
+```
