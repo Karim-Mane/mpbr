@@ -39,10 +39,6 @@ pak::pak("Karim-Mane/mpbr")
 library(mpbr)
 ```
 
-``` r
-library(mpbr)
-```
-
 ## Create the `SNPdata` object
 
 The functions in the **mpbr** require a **SNPdata** object. This is
