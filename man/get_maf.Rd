@@ -2,7 +2,7 @@
 % Please edit documentation in R/compute_maf.R
 \name{get_maf}
 \alias{get_maf}
-\title{get the minor allele frequency (MAF) and the corresponding allele}
+\title{Get the minor allele frequency (MAF) and the corresponding allele}
 \usage{
 get_maf(mat)
 }
@@ -14,6 +14,6 @@ the count of the allele of interest across all samples.}
 a \code{vector} of the MAF and the corresponding allele
 }
 \description{
-get the minor allele frequency (MAF) and the corresponding allele
+Get the minor allele frequency (MAF) and the corresponding allele
 }
 \keyword{internal}

@@ -1,31 +1,35 @@
-#' Calculate minor allele frequency (MAF)
+#' Calculate minor allele frequency (MAF) at every loci
 #'
-#' Uses the `SNPdata` object to calculate the MAF at every loci
+#' @param snpdata An object of class `SNPdata`
+#' @param mat_name A string with the name of the matrix to be used. Default is
+#'    "GT". The other possible values are "Phased", "Imputed", "Phased_imputed".
+#' @param include_het A Boolean that specifies whether to account for the
+#'    heterozygous allele or not. This can only be activated when
+#'    `mat_name = "GT"`.
 #'
-#' @param snpdata a `SNPdata` object
-#' @param include_het whether to account for the heterozygous allele or not.
-#'    This is only used when `mat_name = "GT"`
-#' @param mat_name the name of the matrix to use. default is "GT"
-#'
-#' @return a `SNPdata` object with 2 additional columns in the **details**
-#'    table.
+#' @return The input `SNPdata` object with following 2 additional columns in the
+#'    **details** table:
 #' \enumerate{
-#'   \item MAF: minor allele frequency of each SNPs
-#'   \item MAF_allele: 1 if the alternate allele is the minor allele.
-#'         0 otherwise
+#'   \item MAF: minor allele frequency at every each SNPs
+#'   \item MAF_allele: the code for the minor allele. Possible values are:
+#'      **1**: the alternate allele is the minor allele,
+#'      **0**: the alternate allele is the minor allele,
+#'      **0/1**: the heterozygous allele is the minor allele,
+#'      **0=1**: the reference and alternate alleles have the same frequencies,
+#'      **0=1=2**: the three alleles have the same frequencies.
 #' }
 #'
-#' @details if `include_het = FALSE`, the mixed allele will not be considered in
-#'    the MAF calculation
+#' @details If `include_het = FALSE`, the mixed alleles will not be considered
+#'    in the MAF calculation.
 #'
 #' @examples
 #' \dontrun{
 #'   snpdata <- compute_maf(
-#'    snpdata,
-#'    include_het = FALSE,
-#'    mat_name    = "GT"
-#'  )
-#'  }
+#'     snpdata,
+#'     include_het = FALSE,
+#'     mat_name    = "GT"
+#'   )
+#' }
 #' @export
 #'
 compute_maf <- function(snpdata, include_het = FALSE, mat_name = "GT") {
@@ -34,6 +38,10 @@ compute_maf <- function(snpdata, include_het = FALSE, mat_name = "GT") {
                             null.ok = FALSE)
   checkmate::assert_character(mat_name, any.missing = FALSE, null.ok = FALSE,
                               len = 1L)
+  mat_name <- match.arg(
+    mat_name,
+    choices = c("GT", "Phased", "Imputed", "Phased_imputed")
+  )
   x   <- snpdata[[mat_name]]
   ref <- rowSums(x == 0L, na.rm = TRUE)
   alt <- rowSums(x == 1L, na.rm = TRUE)
@@ -43,24 +51,19 @@ compute_maf <- function(snpdata, include_het = FALSE, mat_name = "GT") {
   } else {
     tmp_mat <- cbind(ref, alt)
   }
-  res       <- apply(tmp_mat, 1L, get_maf)
+  res       <- t(apply(tmp_mat, 1L, get_maf))
   if ("MAF" %in% names(snpdata[["details"]])) {
     new_maf <- paste0("MAF_", mat_name)
     snpdata[["details"]][[new_maf]] <- as.numeric(res[1L, ])
   } else {
-    snpdata[["details"]][["MAF"]]        <- as.numeric(res[1L, ])
-    snpdata[["details"]][["MAF_allele"]] <-
-      as.factor(as.character(as.numeric(round(res[2L, ]))))
-    levels(snpdata[["details"]][["MAF_allele"]]) <-
-      dplyr::recode_factor(snpdata[["details"]][["MAF_allele"]], REF = "0",
-                           ALT = "1", HET = "2", REF_ALT = "3",
-                           REF_ALT_HET = "4")
+    snpdata[["details"]][["MAF"]]        <- as.numeric(res[, 1L])
+    snpdata[["details"]][["MAF_allele"]] <- as.character(res[, 2L])
   }
   
   snpdata
 }
 
-#' get the minor allele frequency (MAF) and the corresponding allele
+#' Get the minor allele frequency (MAF) and the corresponding allele
 #'
 #' @param mat a matrix with the 2 or 3 columns. Every column should contain the
 #'    the count of the allele of interest across all samples.
@@ -72,35 +75,35 @@ get_maf <- function(mat) {
   if (length(mat) == 2L) {
     if (mat[[1L]] < mat[[2L]]) {
       maf    <- mat[[1L]] / sum(mat[[1L]], mat[[2L]])
-      allele <- 0L
+      allele <- "0"
     } else if (mat[[1L]] > mat[[2L]]) {
       maf    <- mat[[2L]] / sum(mat[[1L]], mat[[2L]])
-      allele <- 1L
+      allele <- "1"
     } else {
       maf    <- mat[[2L]] / sum(mat[[1L]], mat[[2L]])
-      allele <- 3L
+      allele <- "0=1"
     }
   } else {
     if (mat[[1L]] < mat[[2L]]) {
       minor  <- mat[[1L]]
-      allele <- 0L
+      allele <- "0"
     } else if (mat[[1L]] > mat[[2L]]) {
       minor  <- mat[[2L]]
-      allele <- 1L
+      allele <- "1"
     } else {
       minor  <- mat[[2L]]
-      allele <- 3L
+      allele <- "0=1"
     }
     
     if (minor < mat[[3L]]) {
       maf    <- minor / sum(mat[[1L]], mat[[2L]], mat[[3L]])
-      allele <- 3L
+      # allele <- 3L
     } else if (minor > mat[[3L]]) {
       maf    <- mat[[3L]] / sum(mat[[1L]], mat[[2L]], mat[[3L]])
-      allele <- 2L
+      allele <- "0/1"
     } else {
       maf    <- mat[[3L]] / sum(mat[[1L]], mat[[2L]], mat[[3L]])
-      allele <- 4L
+      allele <- "0=1=2"
     }
   }
   

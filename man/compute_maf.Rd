@@ -2,40 +2,46 @@
 % Please edit documentation in R/compute_maf.R
 \name{compute_maf}
 \alias{compute_maf}
-\title{Calculate minor allele frequency (MAF)}
+\title{Calculate minor allele frequency (MAF) at every loci}
 \usage{
 compute_maf(snpdata, include_het = FALSE, mat_name = "GT")
 }
 \arguments{
-\item{snpdata}{a \code{SNPdata} object}
+\item{snpdata}{An object of class \code{SNPdata}}
 
-\item{include_het}{whether to account for the heterozygous allele or not.
-This is only used when \code{mat_name = "GT"}}
+\item{include_het}{A Boolean that specifies whether to account for the
+heterozygous allele or not. This can only be activated when
+\code{mat_name = "GT"}.}
 
-\item{mat_name}{the name of the matrix to use. default is "GT"}
+\item{mat_name}{A string with the name of the matrix to be used. Default is
+"GT". The other possible values are "Phased", "Imputed", "Phased_imputed".}
 }
 \value{
-a \code{SNPdata} object with 2 additional columns in the \strong{details}
-table.
+The input \code{SNPdata} object with following 2 additional columns in the
+\strong{details} table:
 \enumerate{
-\item MAF: minor allele frequency of each SNPs
-\item MAF_allele: 1 if the alternate allele is the minor allele.
-0 otherwise
+\item MAF: minor allele frequency at every each SNPs
+\item MAF_allele: the code for the minor allele. Possible values are:
+\strong{1}: the alternate allele is the minor allele,
+\strong{0}: the alternate allele is the minor allele,
+\strong{0/1}: the heterozygous allele is the minor allele,
+\strong{0=1}: the reference and alternate alleles have the same frequencies,
+\strong{0=1=2}: the three alleles have the same frequencies.
 }
 }
 \description{
-Uses the \code{SNPdata} object to calculate the MAF at every loci
+Calculate minor allele frequency (MAF) at every loci
 }
 \details{
-if \code{include_het = FALSE}, the mixed allele will not be considered in
-the MAF calculation
+If \code{include_het = FALSE}, the mixed alleles will not be considered
+in the MAF calculation.
 }
 \examples{
 \dontrun{
   snpdata <- compute_maf(
-   snpdata,
-   include_het = FALSE,
-   mat_name    = "GT"
- )
- }
+    snpdata,
+    include_het = FALSE,
+    mat_name    = "GT"
+  )
+}
 }
