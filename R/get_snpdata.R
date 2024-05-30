@@ -123,8 +123,9 @@ get_snpdata <- function(vcf_file    = NULL,
   
   # adding the annotation data to the details table to associate each SNPs to
   # its gene of origin together with that gene's function.
-  genomic_coordinates      <- details %>% dplyr::select(Chrom, Pos)
-  details[["gene"]]        <- get_gene_annotation(genomic_coordinates, go, bed)
+  genomic_coordinates <- details %>% dplyr::select(Chrom, Pos)
+  details[["gene"]]   <- get_gene_annotation(genomic_coordinates, go, bed,
+                                             num_cores = num_threads)
   
   # we created the SNPdata class to handle easily the combined set of all the
   # data needed for downstream analyses.
