@@ -7,7 +7,6 @@
 #'
 #' @return an object of class `data.frame` that contains the sample metadata
 #' @keywords internal
-#' @noRd
 #'
 #' @details
 #' In addition to generating the sample metadata file, the function will also
@@ -22,7 +21,7 @@ add_metadata <- function(sample_ids, metadata, output_dir) {
   if (grepl(".RDS", basename(metadata))) {
     meta <- readRDS(metadata)
   } else {
-    data.table::fread(metadata, key = "sample", nThread = 4L)
+    meta <- data.table::fread(metadata, key = "sample", nThread = 4L)
   }
   
   samples <- meta[["sample"]]
