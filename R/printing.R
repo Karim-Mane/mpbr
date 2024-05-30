@@ -14,7 +14,9 @@
 #'
 print.SNPdata <- function(x, ...) {
   checkmate::assert_class(x, "SNPdata", null.ok = FALSE)
+  message("metadata...")
   print(utils::head(x[["meta"]]))
+  message("\ndetails on genomic coordinates...")
   print(utils::head(x[["details"]]))
   message(sprintf("\nData contains: %d samples for %d snp loci",
                   dim(x[["GT"]])[[2L]],
