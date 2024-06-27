@@ -54,7 +54,7 @@ compute_maf <- function(snpdata, include_het = FALSE, mat_name = "GT") {
   res       <- t(apply(tmp_mat, 1L, get_maf))
   if ("MAF" %in% names(snpdata[["details"]])) {
     new_maf <- paste0("MAF_", mat_name)
-    snpdata[["details"]][[new_maf]] <- as.numeric(res[1L, ])
+    snpdata[["details"]][[new_maf]] <- as.numeric(res[, 1L])
   } else {
     snpdata[["details"]][["MAF"]]        <- as.numeric(res[, 1L])
     snpdata[["details"]][["MAF_allele"]] <- as.character(res[, 2L])
