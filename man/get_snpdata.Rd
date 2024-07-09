@@ -47,7 +47,7 @@ the how many times the VCF files has been modified.
 }
 }
 \description{
-This function generate the input data needed for whole genome SNPs data
+The function generate the input data needed for whole genome SNPs data
 genotyped from malaria parasite.
 }
 \examples{

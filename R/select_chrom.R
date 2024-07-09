@@ -56,5 +56,6 @@ select_chrom <- function(snpdata, chrom = "all") {
   res[["vcf"]]        <- chrom_vcf
   res[["meta"]]       <- meta
   class(res)          <- "SNPdata"
+  res                 <- validate_snpdata(res)
   res
 }

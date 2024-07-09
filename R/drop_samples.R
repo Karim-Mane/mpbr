@@ -43,6 +43,7 @@ drop_samples <- function(snpdata, samples_to_be_dropped) {
                                                path = dirname(snpdata[["vcf"]]),
                                                index = index)
   snpdata[["index"]] <- index
+  snpdata            <- validate_snpdata(snpdata)
   snpdata
 }
 

@@ -1,6 +1,6 @@
 #' Create the `SNPdata` object
 #'
-#' This function generate the input data needed for whole genome SNPs data
+#' The function generate the input data needed for whole genome SNPs data
 #' genotyped from malaria parasite.
 #'
 #' @param vcf_file the input VCF file (required)
@@ -137,5 +137,24 @@ get_snpdata <- function(vcf_file    = NULL,
     index   = 0L
   )
   class(snp_table) <- "SNPdata"
+  snp_table        <- validate_snpdata(snp_table)
   snp_table
+}
+
+#' Validate SNPdata object
+#'
+#' @param x An object of class SNPdata
+#'
+#' @return Invisibly returns an object of class SNPdata
+#' @keywords internal
+#'
+validate_snpdata <- function(x) {
+  stopifnot(
+    "SNPdata object must contain 'meta', 'details', 'vcf', and 'index'" =
+      all(c("meta", "details", "vcf", "index") %in% names(x)),
+    "SNPdata object must contain one of the following genotype matrix: 'GT',
+    'Phase', 'Imputed', 'Phased_imputed'" =
+      any(c("GT", "Phased", "Imputed", "Phased_imputed") %in% names(x))
+  )
+  invisible(x)
 }

@@ -95,5 +95,6 @@ filter_snps_samples <- function(snpdata,
   }
   
   snpdata[["index"]] <- snpdata[["index"]] + 1L
+  snpdata            <- validate_snpdata(snpdata)
   snpdata
 }

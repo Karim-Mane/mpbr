@@ -1,17 +1,22 @@
 
 test_that("compute_maf works as expected", {
-  skip_on_ci() 
-  skip_on_covr()
+  skip_on_ci() # skip on github
+  skip_on_covr() # skip when running covr
   # build the SNPdata object
+  
+  # TODO: save a SNPdata object with only 1 chrom as an RDS file in inst/
+  # Use that file as the test object in the test.
   snpdata <- get_snpdata(
     vcf_file   = system.file("extdata", "Input_Data.vcf.gz", package = "mpbr"), 
     meta_file  = system.file("extdata", "SampleMetadata.RDS", package = "mpbr"), 
     output_dir = tempdir(), 
-    gof        = system.file("extdata", "pf_gene_ontology.RDS", package = "mpbr"), 
+    gof        = system.file("extdata", "pf_gene_ontology.RDS",
+                             package = "mpbr"), 
     gff        = system.file("extdata", "PlasmoDB-56_Pfalciparum3D7.RDS",
                              package = "mpbr"),
-    num_threads = 2L
+    num_threads = 4L
   )
+  
   
   # test if compute_maf works fine when include_het = FALSE
   test_maf <- compute_maf(snpdata,

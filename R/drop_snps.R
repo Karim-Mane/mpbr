@@ -119,5 +119,6 @@ remove_region_from_snpdata <- function(snpdata, chrom, start, end) {
   system(sprintf("rm -f %s", tmp_file))
   snpdata[["index"]] <- index
   snpdata[["meta"]]  <- meta
+  snpdata            <- validate_snpdata(snpdata)
   snpdata
 }
