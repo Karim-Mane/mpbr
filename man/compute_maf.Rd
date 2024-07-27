@@ -11,7 +11,7 @@ compute_maf(snpdata, include_het = FALSE, mat_name = "GT")
 
 \item{include_het}{A Boolean that specifies whether to account for the
 heterozygous allele or not. This can only be activated when
-\code{mat_name = "GT"}.}
+\code{mat_name = "GT"} or \code{mat_name = "Imputed"}.}
 
 \item{mat_name}{A string with the name of the matrix to be used. Default is
 "GT". The other possible values are "Phased", "Imputed", "Phased_imputed".}
@@ -23,7 +23,7 @@ The input \code{SNPdata} object with following 2 additional columns in the
 \item MAF: minor allele frequency at every each SNPs
 \item MAF_allele: the code for the minor allele. Possible values are:
 \strong{1}: the alternate allele is the minor allele,
-\strong{0}: the alternate allele is the minor allele,
+\strong{0}: the reference allele is the minor allele,
 \strong{0/1}: the heterozygous allele is the minor allele,
 \strong{0=1}: the reference and alternate alleles have the same frequencies,
 \strong{0=1=2}: the three alleles have the same frequencies.

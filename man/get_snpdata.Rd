@@ -14,41 +14,39 @@ get_snpdata(
 )
 }
 \arguments{
-\item{vcf_file}{the input VCF file (required)}
+\item{vcf_file}{The path to the input VCF file (required)}
 
-\item{meta_file}{the metadata file (required)}
+\item{meta_file}{The path to the sample metadata file (required)}
 
-\item{output_dir}{the path to the folder where the output files will
-be stored (optional)}
+\item{output_dir}{The path to the folder where the output and temporary files
+will be stored (optional)}
 
-\item{gof}{the gene ontology annotation file (optional). If not provided, the
+\item{gof}{The gene ontology annotation file (optional). If not provided, the
 default file obtained from the \href{https://plasmodb.org/plasmo/app/downloads/Current_Release/Pfalciparum3D7/gaf/}{PlasmoDB} # nolint: line_length_linter
 will be used}
 
-\item{gff}{the gene annotation file (optional). If not provided, the default
+\item{gff}{The gene annotation file (optional). If not provided, the default
 file obtained from the \href{https://plasmodb.org/plasmo/app/downloads/Current_Release/Pfalciparum3D7/gff/}{PlasmoDB} # nolint: line_length_linter
 will be used}
 
-\item{num_threads}{the number of threads to be used when reading in the data
+\item{num_threads}{The number of threads to be used when reading in the data
 from the VCF file. default is 4}
 }
 \value{
-an object of class \code{SNPdata} with 5 elements
+An object of class \code{SNPdata} with the following 4 elements:
 \enumerate{
-\item meta: a \code{data.frame} that contains the sample's metadata
-\item details: a \code{data.frame} with SNPs genomic coordinates, the fraction
-of missing data per SNP and the names and descriptions of the gene on
-which they are located.
-\item GT: an integer \code{matrix} with the genotype data. 0='reference allele',
+\item meta: A \code{data.frame} that contains the sample's metadata
+\item details: A \code{data.frame} with the SNPs genomic coordinates, the
+fraction of missing data per SNP and the names and descriptions of the
+gene on which they are located.
+\item GT: An integer \code{matrix} with the genotype data. 0='reference allele',
 1='alternate allele', 2='mixed allele', NA='missing allele'
-\item vcf: the full path to the VCF file from which the data is generated
-\item index: an integer. this is used as some kind of label that can tell
-the how many times the VCF files has been modified.
+\item vcf: the full path to the VCF file from which the data is generated.
 }
 }
 \description{
-This function generate the input data needed for whole genome SNPs data
-genotyped from malaria parasite.
+The function generates the input data needed for population genetics
+analyses using whole genome SNPs data genotyped from the malaria parasite.
 }
 \examples{
 \dontrun{

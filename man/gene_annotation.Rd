@@ -7,12 +7,12 @@
 gene_annotation(target_gtf, genomic_coordinates)
 }
 \arguments{
-\item{target_gtf}{a \code{data.frame} with the gene annotation}
+\item{target_gtf}{A data frame with the gene annotation}
 
-\item{genomic_coordinates}{a \code{data.frame} with the SNPs genomic coordinates}
+\item{genomic_coordinates}{A data frame with the SNPs genomic coordinates}
 }
 \value{
-a \code{vector} with gene annotation. This should be of the same length as
+A vector with gene annotation. This should be of the same length as
 the number of SNPs.
 }
 \description{

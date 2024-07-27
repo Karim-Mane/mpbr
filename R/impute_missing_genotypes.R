@@ -39,7 +39,7 @@ impute_missing_genotypes <- function(snpdata, genotype = "Phased",
   message("The missing genotypes will be imputed from ", genotype, " table.\n")
   field <- genotype
   path  <- file.path(dirname(snpdata[["vcf"]]), "imputing")
-  system(sprintf("mkdir -p %s", path))
+  dir.create(path)
   correlations <- numeric(length = nsim)
   pb           <- utils::txtProgressBar(min = 0L, max = nsim, initial = 0L,
                                         style = 3L, char = "*")
@@ -58,6 +58,7 @@ impute_missing_genotypes <- function(snpdata, genotype = "Phased",
   idx <- which(correlations == max(correlations, na.rm = TRUE))
   snpdata[["Imputed"]] <- readRDS(file.path(path,
                                             paste0("sim", idx[[1L]], ".RDS")))
+  
   system(sprintf("rm -rf %s", path))
   snpdata
 }

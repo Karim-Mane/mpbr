@@ -18,7 +18,7 @@ test_that("compute_maf works as expected", {
                           include_het = FALSE,
                           mat_name    = "GT")
   expect_true(inherits(test_maf, "SNPdata"))
-  expect_identical(names(test_maf), c("meta", "details", "GT", "vcf", "index"))
+  expect_identical(names(test_maf), c("meta", "details", "GT", "vcf"))
   expect_identical(test_maf[["meta"]], snpdata[["meta"]])
   expect_true(ncol(test_maf[["details"]]) > ncol(snpdata[["details"]]))
   expect_true(all(c("MAF", "MAF_allele") %in% names(test_maf[["details"]])))
@@ -33,7 +33,7 @@ test_that("compute_maf works as expected", {
                           include_het = TRUE,
                           mat_name    = "GT")
   expect_true(inherits(test_maf, "SNPdata"))
-  expect_identical(names(test_maf), c("meta", "details", "GT", "vcf", "index"))
+  expect_identical(names(test_maf), c("meta", "details", "GT", "vcf"))
   expect_identical(test_maf[["meta"]], snpdata[["meta"]])
   expect_true(ncol(test_maf[["details"]]) > ncol(snpdata[["details"]]))
   expect_true(all(c("MAF", "MAF_allele") %in% names(test_maf[["details"]])))

@@ -1,9 +1,9 @@
 #' Associate each SNPs to a gene name on which it belongs
 #'
-#' @param target_gtf a `data.frame` with the gene annotation
-#' @param genomic_coordinates a `data.frame` with the SNPs genomic coordinates
+#' @param target_gtf A data frame with the gene annotation
+#' @param genomic_coordinates A data frame with the SNPs genomic coordinates
 #'
-#' @return a `vector` with gene annotation. This should be of the same length as
+#' @return A vector with gene annotation. This should be of the same length as
 #'    the number of SNPs.
 #' @keywords internal
 #'
@@ -37,11 +37,11 @@ gene_annotation <- function(target_gtf, genomic_coordinates) {
   genomic_coordinates[["gene"]]
 }
 
-#' clean gene names
+#' Clean gene names
 #'
-#' @param y the gene name
+#' @param y The gene name
 #'
-#' @return a string with the cleaned gene name
+#' @return A string with the cleaned gene name
 #' @keywords internal
 #'
 get_clean_name <- function(y) {
@@ -54,12 +54,12 @@ get_clean_name <- function(y) {
 #' Add gene ontology and names annotation details to every SNPs in the table
 #' that contains their genomic coordinates
 #'
-#' @param genomic_coordinates the table with SNPs genomic coordinates
-#' @param go a `data.frame` with the gene ontology annotation details
-#' @param bed a `data.frame` with the gene name annotation
-#' @param num_cores the number of cores to be used
+#' @param genomic_coordinates The table with SNPs genomic coordinates
+#' @param go A data frame with the gene ontology annotation details
+#' @param bed A data frame with the gene name annotation
+#' @param num_cores The number of cores to be used
 #'
-#' @return an object of type `data.frame` with the SNPs genomic coordinates and
+#' @return An object of type `data.frame` with the SNPs genomic coordinates and
 #'    their corresponding annotation details
 #' @keywords internal
 #'
@@ -93,7 +93,9 @@ get_gene_annotation <- function(genomic_coordinates, go, bed, num_cores = 4L) {
   test         <- genes %>% dplyr::left_join(go, by = "gene_id",
                                              relationship = "many-to-many")
   test         <- dplyr::distinct(test, chrom, start, end, gene_id, gene_name)
-  resultat     <- gene_annotation(test, genomic_coordinates)
+  genomic_coordinates[["Pos"]] <- as.numeric(genomic_coordinates[["Pos"]])
+  resultat     <- gene_annotation(target_gtf = test,
+                                  genomic_coordinates = genomic_coordinates)
   resultat     <- gsub("NA:", "", resultat, fixed = TRUE)
   resultat
 }

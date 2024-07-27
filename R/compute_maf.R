@@ -5,7 +5,7 @@
 #'    "GT". The other possible values are "Phased", "Imputed", "Phased_imputed".
 #' @param include_het A Boolean that specifies whether to account for the
 #'    heterozygous allele or not. This can only be activated when
-#'    `mat_name = "GT"`.
+#'    `mat_name = "GT"` or `mat_name = "Imputed"`.
 #'
 #' @return The input `SNPdata` object with following 2 additional columns in the
 #'    **details** table:
@@ -13,7 +13,7 @@
 #'   \item MAF: minor allele frequency at every each SNPs
 #'   \item MAF_allele: the code for the minor allele. Possible values are:
 #'      **1**: the alternate allele is the minor allele,
-#'      **0**: the alternate allele is the minor allele,
+#'      **0**: the reference allele is the minor allele,
 #'      **0/1**: the heterozygous allele is the minor allele,
 #'      **0=1**: the reference and alternate alleles have the same frequencies,
 #'      **0=1=2**: the three alleles have the same frequencies.
@@ -42,6 +42,11 @@ compute_maf <- function(snpdata, include_het = FALSE, mat_name = "GT") {
     mat_name,
     choices = c("GT", "Phased", "Imputed", "Phased_imputed")
   )
+  if (include_het) {
+    stopifnot("'include_het = TRUE' is only valid for the raw genotype data in
+              the 'GT' matrix or the imputed (non-phased) data in the 'Imputed'
+              matrix" = any(mat_name %in% c("GT", "Imputed")))
+  }
   x   <- snpdata[[mat_name]]
   ref <- rowSums(x == 0L, na.rm = TRUE)
   alt <- rowSums(x == 1L, na.rm = TRUE)

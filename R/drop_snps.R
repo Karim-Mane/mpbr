@@ -75,7 +75,7 @@ drop_snps_using_gc <- function(snpdata, snp_to_be_dropped) {
                                            "tmp.txt",
                                            path  = dirname(snpdata[["vcf"]]),
                                            index = index)
-  system(sprintf("rm -f %s", tmp_file))
+  file.remove(tmp_file)
   snpdata[["index"]] <- index
   snpdata[["meta"]]  <- meta
   snpdata
@@ -116,7 +116,7 @@ remove_region_from_snpdata <- function(snpdata, chrom, start, end) {
                                            "tmp.txt",
                                            path  = dirname(snpdata[["vcf"]]),
                                            index = index)
-  system(sprintf("rm -f %s", tmp_file))
+  file.remove(tmp_file)
   snpdata[["index"]] <- index
   snpdata[["meta"]]  <- meta
   snpdata

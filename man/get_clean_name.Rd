@@ -2,17 +2,17 @@
 % Please edit documentation in R/annotation.R
 \name{get_clean_name}
 \alias{get_clean_name}
-\title{clean gene names}
+\title{Clean gene names}
 \usage{
 get_clean_name(y)
 }
 \arguments{
-\item{y}{the gene name}
+\item{y}{The gene name}
 }
 \value{
-a string with the cleaned gene name
+A string with the cleaned gene name
 }
 \description{
-clean gene names
+Clean gene names
 }
 \keyword{internal}
