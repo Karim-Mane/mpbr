@@ -6,6 +6,8 @@
 #' @param include_het A Boolean that specifies whether to account for the
 #'    heterozygous allele or not. This can only be activated when
 #'    `mat_name = "GT"` or `mat_name = "Imputed"`.
+#' @param name A character with the name of the new column that will created to
+#'    store the MAF values.
 #'
 #' @return The input `SNPdata` object with following 2 additional columns in the
 #'    **details** table:
@@ -32,12 +34,15 @@
 #' }
 #' @export
 #'
-compute_maf <- function(snpdata, include_het = FALSE, mat_name = "GT") {
+compute_maf <- function(snpdata, include_het = FALSE, mat_name = "GT",
+                        name = NULL) {
   checkmate::assert_class(snpdata, "SNPdata", null.ok = FALSE)
   checkmate::assert_logical(include_het, any.missing = FALSE, len = 1L,
                             null.ok = FALSE)
   checkmate::assert_character(mat_name, any.missing = FALSE, null.ok = FALSE,
                               len = 1L)
+  checkmate::assert_character(name, null.ok = TRUE, len = 1L,
+                              any.missing = FALSE)
   mat_name <- match.arg(
     mat_name,
     choices = c("GT", "Phased", "Imputed", "Phased_imputed")
@@ -57,13 +62,12 @@ compute_maf <- function(snpdata, include_het = FALSE, mat_name = "GT") {
     tmp_mat <- cbind(ref, alt)
   }
   res       <- t(apply(tmp_mat, 1L, get_maf))
-  if ("MAF" %in% names(snpdata[["details"]])) {
-    new_maf <- paste0("MAF_", mat_name)
-    snpdata[["details"]][[new_maf]] <- as.numeric(res[, 1L])
-  } else {
-    snpdata[["details"]][["MAF"]]        <- as.numeric(res[, 1L])
-    snpdata[["details"]][["MAF_allele"]] <- as.character(res[, 2L])
+  
+  if (is.null(name)) {
+    name <- "MAF"
   }
+  snpdata[["details"]][[name]]        <- as.numeric(res[, 1L])
+  snpdata[["details"]][["MAF_allele"]] <- as.character(res[, 2L])
   
   snpdata
 }

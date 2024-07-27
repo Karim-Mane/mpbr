@@ -41,6 +41,10 @@ drop_snps <- function(snpdata, snp_to_be_dropped = NULL,
     snpdata <- remove_region_from_snpdata(snpdata, chrom, start, end)
   }
   snpdata[["index"]] <- snpdata[["index"]] + 1L
+  
+  # make sure to recalculate the percent of missing snps for every sample after
+  # dropping the SNPs
+  #
   snpdata
 }
 
@@ -119,5 +123,7 @@ remove_region_from_snpdata <- function(snpdata, chrom, start, end) {
   file.remove(tmp_file)
   snpdata[["index"]] <- index
   snpdata[["meta"]]  <- meta
+  
+  
   snpdata
 }
