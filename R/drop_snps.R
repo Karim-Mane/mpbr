@@ -1,12 +1,12 @@
 #' Drop a of set SNPs from a `SNPdata` object
 #'
-#' @param snpdata a `SNPdata` object
-#' @param snp_to_be_dropped a `data.frame` with 2 columns" "Chrom" and "Pos"
-#' @param chrom the chromosome from which loci should be dropped
-#' @param start the starting position of the region to be discarded
-#' @param end the end position of the region to be discarded
+#' @param snpdata The input `SNPdata` object
+#' @param snp_to_be_dropped A data frame with 2 columns: "Chrom" and "Pos".
+#' @param chrom The chromosome from which loci should be dropped
+#' @param start The starting position of the region to be discarded
+#' @param end The end position of the region to be discarded
 #'
-#' @return a `SNPdata` object where the specified SNPs have been removed
+#' @return A `SNPdata` object where the specified SNPs have been removed.
 #'
 #' @examples
 #' \dontrun{
@@ -18,7 +18,7 @@
 #'     end               = 500
 #'   )
 #'  }
-#' @details when snp_to_be_dropped is not NULL (i.e. the genomic
+#' @details When 'snp_to_be_dropped' is not NULL (i.e. the genomic
 #'     coordinates of snps to be removed are in a data frame), then the rest of
 #'     the arguments can be ignored or set to NULL (chrom = NULL,
 #'     start = NULL, end = NULL)
@@ -40,11 +40,12 @@ drop_snps <- function(snpdata, snp_to_be_dropped = NULL,
   } else {
     snpdata <- remove_region_from_snpdata(snpdata, chrom, start, end)
   }
-  snpdata[["index"]] <- snpdata[["index"]] + 1L
   
-  # make sure to recalculate the percent of missing snps for every sample after
-  # dropping the SNPs
-  #
+  message("Re-calculating the percent of missing SNPs for every sample from ", 
+          "the 'GT' matrix ...")
+  snpdata[["meta"]][["percentage_missing_sites"]] <-
+    colSums(is.na(snpdata[["GT"]])) / nrow(snpdata[["GT"]])
+  
   snpdata
 }
 
@@ -55,32 +56,16 @@ drop_snps <- function(snpdata, snp_to_be_dropped = NULL,
 #' @keywords internal
 #'
 drop_snps_using_gc <- function(snpdata, snp_to_be_dropped) {
-  idx <- which(snpdata[["details"]][["Chrom"]] %in%
-                 snp_to_be_dropped[["Chrom"]] &
-                 snpdata[["details"]][["Pos"]] %in%
-                 snp_to_be_dropped[["Pos"]])
+  idx <- which(
+    snpdata[["details"]][["Chrom"]] %in% snp_to_be_dropped[["Chrom"]] &
+      snpdata[["details"]][["Pos"]] %in% snp_to_be_dropped[["Pos"]]
+  )
   meta   <- snpdata[["meta"]]
-  m      <- which(names(snpdata) %in% c("meta", "vcf", "index"))
+  m      <- which(names(snpdata) %in% c("meta", "vcf"))
   fields <- names(snpdata)[-m]
   for (field in fields) {
-    tmp              <- snpdata[[field]][-idx, ]
-    snpdata[[field]] <- tmp
+    snpdata[[field]] <- snpdata[[field]][-idx, ]
   }
-  Chrom    <- Pos <- NULL # nolint: object_name_linter
-  f2c      <- snpdata[["details"]] %>%
-    dplyr::select(Chrom, Pos)
-  tmp_file <- file.path(dirname(snpdata[["vcf"]]), "tmp.txt")
-  data.table::fwrite(f2c, tmp_file, col.names = FALSE, row.names = FALSE,
-                     quote = FALSE, sep = "\t", nThread = 4L)
-  index    <- ifelse("index" %in% names(snpdata),
-                     snpdata[["index"]] + 1L,
-                     0L)
-  snpdata[["vcf"]] <- remove_snps_from_vcf(snpdata[["vcf"]],
-                                           "tmp.txt",
-                                           path  = dirname(snpdata[["vcf"]]),
-                                           index = index)
-  file.remove(tmp_file)
-  snpdata[["index"]] <- index
   snpdata[["meta"]]  <- meta
   snpdata
 }
@@ -94,36 +79,20 @@ drop_snps_using_gc <- function(snpdata, snp_to_be_dropped) {
 remove_region_from_snpdata <- function(snpdata, chrom, start, end) {
   stopifnot("Please provide the 'chrom', 'start', 'end' of the region to drop" =
               !is.null(chrom), !is.null(start), !is.null(end))
-  idx <- which(snpdata[["details"]][["Chrom"]] == chrom &
-                 (snpdata[["details"]][["Pos"]] >= start &
-                    snpdata[["details"]][["Pos"]] <= end))
+  idx <- which(
+    snpdata[["details"]][["Chrom"]] == chrom &
+      (snpdata[["details"]][["Pos"]] >= start &
+         snpdata[["details"]][["Pos"]] <= end)
+  )
   stopifnot("There is no loci overlapping the specified region." =
               length(idx) > 0L)
   meta   <- snpdata[["meta"]]
-  m      <- which(names(snpdata) %in% c("meta", "vcf", "index"))
+  m      <- which(names(snpdata) %in% c("meta", "vcf"))
   fields <- names(snpdata)[-m]
   for (field in fields) {
-    tmp              <- snpdata[[field]][-idx, ]
-    snpdata[[field]] <- tmp
+    snpdata[[field]] <- snpdata[[field]][-idx, ]
   }
-  Chrom    <- Pos <- NULL # nolint: object_name_linter
-  f2c      <- snpdata[["details"]] %>%
-    dplyr::select(Chrom, Pos)  # nolint: object_name_linter
-  tmp_file <- file.path(dirname(snpdata[["vcf"]]), "tmp.txt")
-  data.table::fwrite(f2c, tmp_file, col.names = FALSE,
-                     row.names = FALSE, quote = FALSE,
-                     sep = "\t", nThread = 4L)
-  index    <- ifelse("index" %in% names(snpdata),
-                     snpdata[["index"]] + 1L,
-                     0L)
-  snpdata[["vcf"]] <- remove_snps_from_vcf(snpdata[["vcf"]],
-                                           "tmp.txt",
-                                           path  = dirname(snpdata[["vcf"]]),
-                                           index = index)
-  file.remove(tmp_file)
-  snpdata[["index"]] <- index
   snpdata[["meta"]]  <- meta
-  
   
   snpdata
 }
