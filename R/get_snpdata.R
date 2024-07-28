@@ -98,6 +98,7 @@ get_snpdata <- function(vcf_file    = NULL,
   
   # the genotype data will be used to create the genotype matrix and the details
   # table
+  message("Extacting the genotype data...")
   genotype_data <- extract_genotype(vcf_file)
   names(genotype_data) <- c("Chrom", "Pos", "Ref", "Alt", "Qual", sample_ids)
   
@@ -115,6 +116,7 @@ get_snpdata <- function(vcf_file    = NULL,
   
   # adding the annotation data to the details table to associate each SNPs to
   # its gene of origin together with that gene's function.
+  message("Adding the annotation data...")
   details[["gene"]] <- get_gene_annotation(
     genomic_coordinates = details[, c("Chrom", "Pos")],
     go = go,

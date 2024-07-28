@@ -73,7 +73,7 @@ head(snpdata$details)
 
 ## Filter the SNPdata object  
 
-Use the `filter_snps_samples()` function to remove the SNPs and samples that do not satisfy the user criteria.
+Use the `filter()` function to remove the SNPs and samples that do not satisfy the user criteria.
 In the example below, we intend to discard SNPs and samples where the number of missing genotypes represent 20% or more the total number of observations. SNPs with MAF < 1% or a quality score < 10 will also be removed.
 
 ```{r eval=FALSE}
@@ -115,8 +115,7 @@ head(snpdata$Phased[, 1:5])
 
 ## Impute the missing data  
 
-Some population genetics methods require genotype data with no missing allele. In {mpbr}, missing genotypes can be imputed using the `impute_missing_genotypes()`
-use the `impute_missing_genotypes` function to impute the missing genotypes. The `genotype` argument determines which genotype table should be used when imputing the missing data (**"GT"** to impute from raw data, **"Phased"** to impute from the phased data).
+Some population genetics methods require genotype data with no missing allele. In {mpbr}, missing genotypes can be imputed using the `impute()` function. The `genotype` argument determines which genotype table should be used when imputing the missing data (**"GT"** to impute from raw data, **"Phased"** to impute from the phased data).
 
 For every missing allele, we compute the reference and alternate allele frequencies at the given locus and identify the minor allele frequency (MAF). The missing allele will be replaced based on a Bernoulli simulation with a probability that is set at the resulting MAF value.
 
@@ -124,7 +123,7 @@ This process is repeated `nsim` times and a new genotype file is generated and s
 We recommend `nsim = 50` at least to maximize the change of getting the highest MAF correlation.
 
 ```{r eval=FALSE}
-snpdata <- impute_missing_genotypes(snpdata, genotype = "GT", nsim = 100)
+snpdata <- impute(snpdata, genotype = "GT", nsim = 100)
 head(snpdata$Imputed[, 1:5])
 ```
 

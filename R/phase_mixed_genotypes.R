@@ -29,14 +29,15 @@ phase_mixed_genotypes <- function(snpdata, nsim = 100L) {
   checkmate::assert_class(snpdata, "SNPdata", null.ok = FALSE)
   checkmate::assert_numeric(nsim, lower = 1L, any.missing = FALSE,
                             null.ok = FALSE, len = 1L)
-  vcf          <- snpdata[["vcf"]]
-  expression   <- "%CHROM\t%POS[\t%AD]\n"
-  tmp          <- file.path(dirname(vcf), "tmp")
-  system(sprintf("mkdir -p %s", tmp))
-  ad           <- file.path(tmp, "AllelicDepth.txt")
-  system(sprintf("bcftools query -f'%s' %s > %s", expression, vcf, ad))
-  depth        <- data.table::fread(ad, nThread = 4L)
-  depth        <- as.matrix(subset(depth, select = -(1L:2L)))
+  # vcf          <- snpdata[["vcf"]]
+  # expression   <- "%CHROM\t%POS[\t%AD]\n"
+  # tmp          <- file.path(dirname(vcf), "tmp")
+  # system(sprintf("mkdir -p %s", tmp))
+  # ad           <- file.path(tmp, "AllelicDepth.txt")
+  # system(sprintf("bcftools query -f'%s' %s > %s", expression, vcf, ad))
+  # depth        <- data.table::fread(ad, nThread = 4L)
+  # depth        <- as.matrix(subset(depth, select = -(1L:2L)))
+  depth <- extract_allelic_depth(snpdata[["vcf"]])
   path         <- file.path(dirname(vcf), "phasing")
   system(sprintf("mkdir -p %s", path))
   correlations <- numeric(length = nsim)

@@ -30,3 +30,36 @@ extract_genotype <- function(file) {
   }), .SDcols = cols]
   vcf
 }
+
+
+#' Extract the allelic depth from a variant call file (VCF)
+#'
+#' @param file A character with the path to the input VCF file.
+#'
+#' @return A data frame with the allelic depth supporting each of the two
+#'    alleles at any given locus across all samples.
+#' @keywords internal
+#' @importFrom data.table %like%
+extract_allelic_depth <- function(file) {
+  vcf <- data.table::fread(
+    cmd     = sprintf("pigz -dc < %s", file),
+    nThread = (parallel::detectCores() - 2),
+    sep     = NULL, # line is column
+    header  = FALSE # 1st line is data
+  )
+  
+  # DT name for unnamed col
+  V1 <- NULL # nolint: object_name_linter.
+  row_id <- vcf[V1 %like% "^#CHROM", which = TRUE] + 1 # + 1 skip header
+  
+  vcf <- vcf[row_id:.N, data.table::tstrsplit(V1, "\t", fixed = TRUE)][
+    , -c(1:9) # only keep the columns of the genotype field
+  ]
+  
+  cols <- names(vcf)
+  
+  vcf[, (cols) := lapply(.SD, function(g) {
+    unlist(strsplit(g, ":", fixed = TRUE))[[2L]]
+  }), .SDcols = cols]
+  vcf
+}

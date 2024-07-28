@@ -5,13 +5,13 @@
 #' correlation between MAF from raw data and MAF from imputed data will be
 #' retained
 #'
-#' @param snpdata a `SNPdata` object
-#' @param genotype the genotype table from which the missing data will
-#'    be imputed. This can be either the raw genotype matrix (`GT`) or the
-#'    phased genotype matrix (`Phased`)
-#' @param nsim an integer that represents the number of simulations
+#' @param snpdata The input `SNPdata` object.
+#' @param genotype The name of the genotype table from which the missing data
+#'    will be imputed. This can be either the raw genotype matrix (`GT`) or the
+#'    phased genotype matrix (`Phased`).
+#' @param nsim An integer that represents the number of simulations.
 #'
-#' @return a `SNPdata` object with an additional table named as:
+#' @return A `SNPdata` object with an additional table named as:
 #'    "Phased_Imputed" if the phased data was used for imputation or "Imputed"
 #'    if the imputation was done on the raw genotypes.
 #'
@@ -29,8 +29,7 @@
 #'
 #' @export
 #'
-impute_missing_genotypes <- function(snpdata, genotype = "Phased",
-                                     nsim = 100L) {
+impute <- function(snpdata, genotype = "Phased", nsim = 100L) {
   checkmate::assert_class(snpdata, "SNPdata", null.ok = FALSE)
   checkmate::assert_character(genotype, any.missing = FALSE, len = 1L,
                               null.ok = FALSE)
@@ -49,15 +48,17 @@ impute_missing_genotypes <- function(snpdata, genotype = "Phased",
     tmp_snpdata[["Imputed"]] <- t(mat)
     saveRDS(t(mat), file.path(path, paste0("sim", i, ".RDS")))
     res_snpdata <- compute_maf(tmp_snpdata, include_het = FALSE,
-                               mat_name = "Imputed")
+                               mat_name = "Imputed",
+                               name = "MAF_Imputed")
     correlations[i] <- stats::cor(res_snpdata[["details"]][["MAF_Imputed"]],
                                   res_snpdata[["details"]][["MAF"]])
     utils::setTxtProgressBar(pb, i)
   }
   close(pb)
   idx <- which(correlations == max(correlations, na.rm = TRUE))
-  snpdata[["Imputed"]] <- readRDS(file.path(path,
-                                            paste0("sim", idx[[1L]], ".RDS")))
+  snpdata[["Imputed"]] <- readRDS(
+    file.path(path, paste0("sim", idx[[1L]], ".RDS"))
+  )
   
   system(sprintf("rm -rf %s", path))
   snpdata
@@ -65,12 +66,13 @@ impute_missing_genotypes <- function(snpdata, genotype = "Phased",
 
 #' Impute missing genotypes for 1 SNP across all samples
 #'
-#' @param genotype a vector of intergers
+#' @param genotype A vector of integers representing the alleles across all
+#'    samples at a given locus.
 #'
-#' @return the input vector where all missing alleles have been imputed.
+#' @return The input vector where all missing alleles have been imputed.
 #' @keywords internal
 #'
-impute <- function(genotype) {
+impute_one_allele <- function(genotype) {
   checkmate::assert_vector(genotype, min.len = 1L, null.ok = FALSE)
   idx <- as.numeric(which(is.na(genotype)))
   for (j in idx) {

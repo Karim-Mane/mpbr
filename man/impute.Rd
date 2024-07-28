@@ -2,17 +2,41 @@
 % Please edit documentation in R/impute_missing_genotypes.R
 \name{impute}
 \alias{impute}
-\title{Impute missing genotypes for 1 SNP across all samples}
+\title{Impute missing genotypes}
 \usage{
-impute(genotype)
+impute(snpdata, genotype = "Phased", nsim = 100L)
 }
 \arguments{
-\item{genotype}{a vector of intergers}
+\item{snpdata}{The input \code{SNPdata} object.}
+
+\item{genotype}{The name of the genotype table from which the missing data
+will be imputed. This can be either the raw genotype matrix (\code{GT}) or the
+phased genotype matrix (\code{Phased}).}
+
+\item{nsim}{An integer that represents the number of simulations.}
 }
 \value{
-the input vector where all missing alleles have been imputed.
+A \code{SNPdata} object with an additional table named as:
+"Phased_Imputed" if the phased data was used for imputation or "Imputed"
+if the imputation was done on the raw genotypes.
 }
 \description{
-Impute missing genotypes for 1 SNP across all samples
+Missing genotype imputation is performed based on the MAF at any given locus.
+Imputation will be done \code{nsim} times and imputed data with highest
+correlation between MAF from raw data and MAF from imputed data will be
+retained
 }
-\keyword{internal}
+\details{
+When both alleles are not supported by any read or the total number
+of reads supporting both alleles at a given site is < 5, the genotype will
+be phased based on a Bernoulli distribution using the MAF as a parameter.
+Similarly, when the total number of reads is > 5 and the number of reads
+supporting one of the allele is not 2 times the number of the other
+allele, the genotype is phased using a Bernoulli distribution.
+}
+\examples{
+\dontrun{
+  snpdata <- impute_missing_genotypes(snpdata)
+ }
+
+}
