@@ -8,16 +8,16 @@ that contains their genomic coordinates}
 get_gene_annotation(genomic_coordinates, go, bed, num_cores = 4L)
 }
 \arguments{
-\item{genomic_coordinates}{the table with SNPs genomic coordinates}
+\item{genomic_coordinates}{The table with SNPs genomic coordinates}
 
-\item{go}{a \code{data.frame} with the gene ontology annotation details}
+\item{go}{A data frame with the gene ontology annotation details}
 
-\item{bed}{a \code{data.frame} with the gene name annotation}
+\item{bed}{A data frame with the gene name annotation}
 
-\item{num_cores}{the number of cores to be used}
+\item{num_cores}{The number of cores to be used}
 }
 \value{
-an object of type \code{data.frame} with the SNPs genomic coordinates and
+An object of type \code{data.frame} with the SNPs genomic coordinates and
 their corresponding annotation details
 }
 \description{
