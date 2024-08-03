@@ -2,7 +2,7 @@
 % Please edit documentation in R/impute_missing_genotypes.R
 \name{impute_one_allele}
 \alias{impute_one_allele}
-\title{Impute missing genotypes for 1 SNP across all samples}
+\title{Impute missing genotypes for one SNP across all samples}
 \usage{
 impute_one_allele(genotype)
 }
@@ -14,6 +14,6 @@ samples at a given locus.}
 The input vector where all missing alleles have been imputed.
 }
 \description{
-Impute missing genotypes for 1 SNP across all samples
+Impute missing genotypes for one SNP across all samples
 }
 \keyword{internal}

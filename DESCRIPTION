@@ -15,7 +15,8 @@ License: MIT + file LICENSE
 URL: https://Karim-Mane.github.io/mpbr/,
     https://github.com/Karim-Mane/mpbr/
 BugReports: https://github.com/Karim-Mane/mpbr/issues
-Imports: 
+Imports:
+    cli,
     data.table,
     dplyr,
     GenomicRanges,

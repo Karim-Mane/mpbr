@@ -1,11 +1,11 @@
 #' Calculate minor allele frequency (MAF) at every loci
 #'
 #' @param snpdata An object of class `SNPdata`
-#' @param mat_name A string with the name of the matrix to be used. Default is
+#' @param genotype A string with the name of the matrix to be used. Default is
 #'    "GT". The other possible values are "Phased", "Imputed", "Phased_imputed".
 #' @param include_het A Boolean that specifies whether to account for the
 #'    heterozygous allele or not. This can only be activated when
-#'    `mat_name = "GT"` or `mat_name = "Imputed"`.
+#'    `genotype = "GT"` or `genotype = "Imputed"`.
 #' @param name A character with the name of the new column that will created to
 #'    store the MAF values.
 #'
@@ -29,30 +29,30 @@
 #'   snpdata <- compute_maf(
 #'     snpdata,
 #'     include_het = FALSE,
-#'     mat_name    = "GT"
+#'     genotype    = "GT"
 #'   )
 #' }
 #' @export
 #'
-compute_maf <- function(snpdata, include_het = FALSE, mat_name = "GT",
+compute_maf <- function(snpdata, include_het = FALSE, genotype = "GT",
                         name = NULL) {
   checkmate::assert_class(snpdata, "SNPdata", null.ok = FALSE)
   checkmate::assert_logical(include_het, any.missing = FALSE, len = 1L,
                             null.ok = FALSE)
-  checkmate::assert_character(mat_name, any.missing = FALSE, null.ok = FALSE,
+  checkmate::assert_character(genotype, any.missing = FALSE, null.ok = FALSE,
                               len = 1L)
   checkmate::assert_character(name, null.ok = TRUE, len = 1L,
                               any.missing = FALSE)
-  mat_name <- match.arg(
-    mat_name,
+  genotype <- match.arg(
+    genotype,
     choices = c("GT", "Phased", "Imputed", "Phased_imputed")
   )
   if (include_het) {
     stopifnot("'include_het = TRUE' is only valid for the raw genotype data in
               the 'GT' matrix or the imputed (non-phased) data in the 'Imputed'
-              matrix" = any(mat_name %in% c("GT", "Imputed")))
+              matrix" = any(genotype %in% c("GT", "Imputed")))
   }
-  x   <- snpdata[[mat_name]]
+  x   <- snpdata[[genotype]]
   ref <- rowSums(x == 0L, na.rm = TRUE)
   alt <- rowSums(x == 1L, na.rm = TRUE)
   het <- rowSums(x == 2L, na.rm = TRUE)
@@ -62,13 +62,13 @@ compute_maf <- function(snpdata, include_het = FALSE, mat_name = "GT",
     tmp_mat <- cbind(ref, alt)
   }
   res       <- t(apply(tmp_mat, 1L, get_maf))
-  
+
   if (is.null(name)) {
     name <- "MAF"
   }
   snpdata[["details"]][[name]]        <- as.numeric(res[, 1L])
   snpdata[["details"]][["MAF_allele"]] <- as.character(res[, 2L])
-  
+
   snpdata
 }
 

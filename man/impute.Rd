@@ -4,7 +4,7 @@
 \alias{impute}
 \title{Impute missing genotypes}
 \usage{
-impute(snpdata, genotype = "Phased", nsim = 100L)
+impute(snpdata, genotype = "GT", nsim = 100L, maf_col_name = "MAF")
 }
 \arguments{
 \item{snpdata}{The input \code{SNPdata} object.}
@@ -14,6 +14,9 @@ will be imputed. This can be either the raw genotype matrix (\code{GT}) or the
 phased genotype matrix (\code{Phased}).}
 
 \item{nsim}{An integer that represents the number of simulations.}
+
+\item{maf_col_name}{A character with the name of the column with the MAF in
+the 'details' table. Default is 'MAF'.}
 }
 \value{
 A \code{SNPdata} object with an additional table named as:
@@ -36,7 +39,12 @@ allele, the genotype is phased using a Bernoulli distribution.
 }
 \examples{
 \dontrun{
-  snpdata <- impute_missing_genotypes(snpdata)
+   snpdata <- impute(
+     snpdata,
+     genotype = "GT",
+     nsim = 10L,
+     maf_col_name = "MAF"
+   )
  }
 
 }

@@ -97,5 +97,6 @@ get_gene_annotation <- function(genomic_coordinates, go, bed, num_cores = 4L) {
   resultat     <- gene_annotation(target_gtf = test,
                                   genomic_coordinates = genomic_coordinates)
   resultat     <- gsub("NA:", "", resultat, fixed = TRUE)
+  cli::cli_alert_success("\nThe SNPs have been successfully annotated.")
   resultat
 }
