@@ -5,10 +5,6 @@
 #'
 #' @return a `SNPdata` object with only the data from the specified chromosomes
 #'
-#' @examples
-#' \dontrun{
-#'   chrom_snpdata <- select_chrom(snpdata, chrom = "Pf3D7_07_v3")
-#'  }
 #' @export
 #'
 select_chrom <- function(snpdata, chrom = "all") {

@@ -16,14 +16,6 @@ coordinates and their associated calling quality
 \description{
 Extract the genotypes from a variant call file (VCF)
 }
-\examples{
-\dontrun{
-  extract_genotype <- extract_allelic_depth(
-    file = system.file("extdata", "Input_Data.vcf.gz", package = "mpbr")
-  )
-}
-
-}
 \author{
 Banky
 }

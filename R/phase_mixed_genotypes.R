@@ -23,13 +23,6 @@
 #'    supporting one of the allele is not 2 times the number of the other,
 #'    the genotype is phased using a Bernoulli distribution.
 #'
-#' @examples
-#' \dontrun{
-#'   snpdata <- phase(
-#'     snpdata,
-#'     genotype = "GT"
-#'   )
-#'  }
 #'
 #' @export
 phase <- function(snpdata, genotype = "GT", nsim = 100L) {
@@ -213,4 +206,75 @@ phase_missing_ref_or_alt <- function(genotype) {
     res <- statip::rbern(1L, alt_count / (ref_count + alt_count))
   }
   res
+}
+
+
+new_phase <- function(snpdata, genotype = "GT", nsim = 100L) {
+  checkmate::assert_class(snpdata, "SNPdata", null.ok = FALSE)
+  checkmate::assert_numeric(nsim, lower = 1L, any.missing = FALSE,
+                            null.ok = FALSE, len = 1L)
+  checkmate::assert_character(genotype, any.missing = FALSE, len = 1L,
+                              null.ok = FALSE)
+  
+  # Do not proceed if the specified genotype matrix does not exist
+  if (!(genotype %in% names(snpdata))) {
+    current_gt_matrices <- names(snpdata)[!(names(snpdata) %in% # nolint: object_usage_linter
+                                              c("meta", "details", "vcf"))]
+    cli::cli_abort(
+      c("x" = "The specified genotype matrix {.code genotype} does not exist",
+        "i" = "Current genotype matrices are: {.code {current_gt_matrices}}")
+    )
+  }
+  
+  # Do not proceed if the chosen genotype matrix does not contain any mixed
+  # allele.
+  if (sum(snpdata[[genotype]] == 2L, na.rm = TRUE) == 0L) {
+    cli::cli_abort(
+      c("x" = "No mixed genotypes found in the specified genotype matrix: 
+        {genotype}",
+        "i" = "")
+    )
+  }
+  
+  # here, we assume that the allelic depth matrix is part of the input object
+  # get the indexes of the mixed alleles
+  tmp <- t(snpdata[[genotype]])
+  tmp_ad <- t(snpdata[["allelic_depth"]])
+  x <- seq(1, length(tmp), by = dim(tmp)[[1L]])
+  idx <- which(tmp == 2L)
+  intervals <- findInterval(idx, x)
+  xx <- data.frame(idx = idx,
+                   col = intervals,
+                   ad = tmp_ad[idx])
+  split_and_extract <- function(x, sep, part) {
+    unlist(strsplit(x, split = sep, fixed = TRUE))[[part]]
+  }
+  xx[["ref_count"]] <- as.numeric(
+    unlist(
+      parallel::mclapply(
+        xx[["ad"]],
+        split_and_extract,
+        sep = ",",
+        part = 1L,
+        mc.cores = 4L
+      )
+    )
+  )
+    
+  xx[["alt_count"]] <- as.numeric(
+    unlist(
+      parallel::mclapply(
+        xx[["ad"]],
+        split_and_extract,
+        sep = ",",
+        part = 2L,
+        mc.cores = 4L
+      )
+    )
+  )
+  
+  
+  # create a temporary directory to store temporary files
+  path  <- file.path(tempdir(), "phasing")
+  dir.create(path)
 }

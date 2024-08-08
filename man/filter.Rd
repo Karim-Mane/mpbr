@@ -36,14 +36,3 @@ SNPs and samples are filtered based on the user-specified thresholds. Both
 the \code{meta}, \code{details} and the different genotype tables will be affected
 depending on the filtration conditions.
 }
-\examples{
-\dontrun{
- snpdata <- filter(
-  snpdata,
-  min_qual            = 1000,
-  max_missing_sites   = 0.2,
-  max_missing_samples = 0.2,
-  maf_cutoff          = 0.01
- )
- }
-}

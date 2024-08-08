@@ -16,11 +16,3 @@ alleles at any given locus across all samples.
 \description{
 Extract the allelic depth from a variant call file (VCF)
 }
-\examples{
-\dontrun{
-  allelic_depth <- extract_allelic_depth(
-    file = system.file("extdata", "Input_Data.vcf.gz", package = "mpbr")
-  )
-}
-
-}

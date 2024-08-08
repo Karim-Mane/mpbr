@@ -1,9 +1,11 @@
-url: ~
-# template:
-#   package: epiversetheme
+url: https://karim-mane.github.io/mpbr/
+template:
+  bootstrap: 5
+  package: epiversetheme
+  
 
 reference:
 - title: Exported functions
-  desc: "`{mpbr}` functions available to end-users"
-- contents:
-  - lacks_concept("internal")
+  desc: '`{mpbr}` functions available to end-users'
+- contents: lacks_concept("internal")
+

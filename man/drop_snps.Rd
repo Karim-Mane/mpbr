@@ -35,14 +35,3 @@ coordinates of snps to be removed are in a data frame), then the rest of
 the arguments can be ignored or set to NULL (chrom = NULL,
 start = NULL, end = NULL)
 }
-\examples{
-\dontrun{
-  snpdata <- drop_snps(
-    snpdata,
-    snp_to_be_dropped = NULL,
-    chrom             = "Pf3D7_05_v3",
-    start             = 100,
-    end               = 500
-  )
- }
-}

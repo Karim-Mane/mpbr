@@ -17,11 +17,3 @@ A \code{SNPdata} object where the specified samples have been removed
 \description{
 Drop a specific set of samples from the \code{SNPdata} object
 }
-\examples{
-\dontrun{
-  samples_to_be_dropped <- sample(snpdata[["meta"]][["sample"]], 20,
-                                  replace = FALSE)
-  snpdata <- drop_samples(snpdata, samples_to_be_dropped)
- }
-
-}

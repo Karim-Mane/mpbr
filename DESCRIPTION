@@ -12,8 +12,7 @@ Description: provides functions to perform population genomics analyses
     using genome-wide Single Nucleotide Polymorphisms (SNPs) from the
     malaria parasite Plasmodium falciparum.
 License: MIT + file LICENSE
-URL: https://Karim-Mane.github.io/mpbr/,
-    https://github.com/Karim-Mane/mpbr/
+URL: https://Karim-Mane.github.io/mpbr/, https://github.com/Karim-Mane/mpbr/, https://karim-mane.github.io/mpbr/
 BugReports: https://github.com/Karim-Mane/mpbr/issues
 Imports:
     cli,

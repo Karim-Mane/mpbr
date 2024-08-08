@@ -1,0 +1,27 @@
+---
+title: "design-decision"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{design-decision}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(mpbr)
+```
+
+## Mixed genotypes Phasing
+
+when AD is:
+
+* 0/0, ./., 3/1 (supported by no reads or total number of reads < 5): use MAF in Bernoulli simulation
+* 4/3 (#reads > 5 but 4 is not double of 3): use MAF in Bernoulli simulation
+* 30/10, 12/25 (#reads > 5 and one is double of the other): use the most supported allele

@@ -4,12 +4,6 @@
 #' @param samples_to_be_dropped A vector of samples to be dropped
 #'
 #' @return A `SNPdata` object where the specified samples have been removed
-#' @examples
-#' \dontrun{
-#'   samples_to_be_dropped <- sample(snpdata[["meta"]][["sample"]], 20,
-#'                                   replace = FALSE)
-#'   snpdata <- drop_samples(snpdata, samples_to_be_dropped)
-#'  }
 #'
 #' @export
 drop_samples <- function(snpdata, samples_to_be_dropped) {
@@ -39,8 +33,8 @@ drop_samples <- function(snpdata, samples_to_be_dropped) {
   message("Re-calculating the MAF from the 'GT' matrix...")
   snpdata <- compute_maf(
     snpdata     = snpdata,
-    include_het = FALSE,
-    mat_name    = "GT"
+    genotype    = "GT",
+    include_het = FALSE
   )
   message("Re-calculating the percent of missing samples for every SNPs from",
           "the 'GT' matrix...")

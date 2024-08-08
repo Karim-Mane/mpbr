@@ -16,16 +16,6 @@
 #'    Loci with a `MAF < maf_cutoff` will be discarded.
 #'
 #' @return a filtered `SNPdata` object
-#' @examples
-#' \dontrun{
-#'  snpdata <- filter(
-#'   snpdata,
-#'   min_qual            = 1000,
-#'   max_missing_sites   = 0.2,
-#'   max_missing_samples = 0.2,
-#'   maf_cutoff          = 0.01
-#'  )
-#'  }
 #' @export
 #'
 filter <- function(snpdata,

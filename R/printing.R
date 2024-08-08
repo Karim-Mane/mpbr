@@ -5,11 +5,6 @@
 #'
 #' @returns prints the structure of the `SNPdata` object
 #'
-#' @examples
-#' \dontrun{
-#'   print(snpdata)
-#' }
-#'
 #' @export
 #'
 print.SNPdata <- function(x, ...) {

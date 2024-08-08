@@ -24,16 +24,6 @@
 #'    supporting one of the allele is not 2 times the number of the other
 #'    allele, the genotype is phased using a Bernoulli distribution.
 #'
-#' @examples
-#' \dontrun{
-#'    snpdata <- impute(
-#'      snpdata,
-#'      genotype = "GT",
-#'      nsim = 10L,
-#'      maf_col_name = "MAF"
-#'    )
-#'  }
-#'
 #' @export
 #'
 impute <- function(snpdata, genotype = "GT", nsim = 100L,

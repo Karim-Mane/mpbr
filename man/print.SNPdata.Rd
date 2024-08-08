@@ -17,9 +17,3 @@ prints the structure of the \code{SNPdata} object
 \description{
 Print the \code{SNPdata} object
 }
-\examples{
-\dontrun{
-  print(snpdata)
-}
-
-}

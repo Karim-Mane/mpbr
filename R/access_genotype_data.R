@@ -8,13 +8,6 @@
 #' @importFrom data.table %like%
 #' @author Banky
 #'
-#' @examples
-#' \dontrun{
-#'   extract_genotype <- extract_allelic_depth(
-#'     file = system.file("extdata", "Input_Data.vcf.gz", package = "mpbr")
-#'   )
-#' }
-#'
 extract_genotype <- function(file) {
   vcf <- data.table::fread(
     cmd     = sprintf("pigz -dc < %s", file),
@@ -49,13 +42,6 @@ extract_genotype <- function(file) {
 #'    alleles at any given locus across all samples.
 #' @export
 #' @importFrom data.table %like%
-#'
-#' @examples
-#' \dontrun{
-#'   allelic_depth <- extract_allelic_depth(
-#'     file = system.file("extdata", "Input_Data.vcf.gz", package = "mpbr")
-#'   )
-#' }
 #'
 extract_allelic_depth <- function(file) {
   vcf <- data.table::fread(

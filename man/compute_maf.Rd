@@ -4,17 +4,17 @@
 \alias{compute_maf}
 \title{Calculate minor allele frequency (MAF) at every loci}
 \usage{
-compute_maf(snpdata, include_het = FALSE, genotype = "GT", name = NULL)
+compute_maf(snpdata, genotype = "GT", include_het = FALSE, name = NULL)
 }
 \arguments{
 \item{snpdata}{An object of class \code{SNPdata}}
 
+\item{genotype}{A string with the name of the matrix to be used. Default is
+"GT". The other possible values are "Phased", "Imputed", "Phased_imputed".}
+
 \item{include_het}{A Boolean that specifies whether to account for the
 heterozygous allele or not. This can only be activated when
 \code{genotype = "GT"} or \code{genotype = "Imputed"}.}
-
-\item{genotype}{A string with the name of the matrix to be used. Default is
-"GT". The other possible values are "Phased", "Imputed", "Phased_imputed".}
 
 \item{name}{A character with the name of the new column that will created to
 store the MAF values.}
@@ -38,13 +38,4 @@ Calculate minor allele frequency (MAF) at every loci
 \details{
 If \code{include_het = FALSE}, the mixed alleles will not be considered
 in the MAF calculation.
-}
-\examples{
-\dontrun{
-  snpdata <- compute_maf(
-    snpdata,
-    include_het = FALSE,
-    genotype    = "GT"
-  )
-}
 }

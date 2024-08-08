@@ -24,17 +24,9 @@
 #' @details If `include_het = FALSE`, the mixed alleles will not be considered
 #'    in the MAF calculation.
 #'
-#' @examples
-#' \dontrun{
-#'   snpdata <- compute_maf(
-#'     snpdata,
-#'     include_het = FALSE,
-#'     genotype    = "GT"
-#'   )
-#' }
 #' @export
 #'
-compute_maf <- function(snpdata, include_het = FALSE, genotype = "GT",
+compute_maf <- function(snpdata, genotype = "GT", include_het = FALSE,
                         name = NULL) {
   checkmate::assert_class(snpdata, "SNPdata", null.ok = FALSE)
   checkmate::assert_logical(include_het, any.missing = FALSE, len = 1L,

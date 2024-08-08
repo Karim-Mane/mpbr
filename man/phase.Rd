@@ -35,12 +35,3 @@ Similarly, when the total number of reads is > 5 and the number of reads
 supporting one of the allele is not 2 times the number of the other,
 the genotype is phased using a Bernoulli distribution.
 }
-\examples{
-\dontrun{
-  snpdata <- phase(
-    snpdata,
-    genotype = "GT"
-  )
- }
-
-}

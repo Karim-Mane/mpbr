@@ -29,16 +29,6 @@
 #'   \item vcf: the full path to the VCF file from which the data is generated.
 #'   }
 #'
-#' @examples
-#' \dontrun{
-#'   snpdata <- get_snpdata(
-#'     vcf_file   = system.file("extdata", "Input_Data.vcf.gz",
-#'                              package = "mpbr"),
-#'     meta_file  = system.file("extdata", "SampleMetadata.RDS",
-#'                              package = "mpbr"),
-#'     output_dir = tempdir()
-#'  )
-#' }
 #' @export
 #' @importFrom magrittr %>%
 #'
