@@ -6,6 +6,7 @@
 \usage{
 filter_snps_samples(
   snpdata,
+  soft = FALSE,
   min_qual = 10L,
   max_missing_sites = 0.2,
   max_missing_samples = 0.2,
@@ -13,7 +14,7 @@ filter_snps_samples(
 )
 }
 \arguments{
-\item{snpdata}{a \code{SNPdata} object}
+\item{snpdata}{An object of class \code{SNPdata}}
 
 \item{min_qual}{the minimum call quality score below which a loci will be
 discarded. default = 10}
@@ -22,7 +23,11 @@ discarded. default = 10}
 a sample should be discarded. default = 0.2}
 
 \item{max_missing_samples}{the maximum fraction of missing samples above
-which a loci should be discarded. default = 0.2}
+which a loci should be discarded. default = 0.2
+@param soft A boolean that specify whether to perform iterative filtering
+or not. Iterative filtering consists in soft filtering the input object by
+varying the missingness cut-off from 0.8 to 0.1, and the MAF cut-off from
+0.4 to 0.1. Default is \code{FALSE}.}
 
 \item{maf_cutoff}{the MAF cut-off. loci with a MAF < maf_cutoff will be
 discarded}
@@ -37,6 +42,7 @@ This function filters the SNPs and samples based on the specified conditions
 \dontrun{
  snpdata <- filter_snps_samples(
   snpdata,
+  soft                = FALSE,
   min_qual            = 10,
   max_missing_sites   = 0.2,
   max_missing_samples = 0.2,
