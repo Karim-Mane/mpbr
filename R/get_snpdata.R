@@ -80,15 +80,11 @@ get_snpdata <- function(vcf_file    = NULL,
   }
   
   # the sample IDs will be used to create the sample metadata file.
-  sample_ids <- as.character(data.table::fread(
-    cmd     = sprintf("gzcat %s | grep '^#CHROM' | cut -d$'\t' -f 10-",
-                      vcf_file),
-    header  = FALSE # 1st line is data
-  ))
+  sample_ids <- get_sample_ids(vcf_file)
   
   # the genotype data will be used to create the genotype matrix and the details
   # table
-  genotype_data <- extract_genotype(vcf_file)
+  genotype_data <- extract_genotype(vcf_file, which = "GT")
   names(genotype_data) <- c("Chrom", "Pos", "Ref", "Alt", "Qual", sample_ids)
   
   # the details is needed to store the genomic coordinates of the variants

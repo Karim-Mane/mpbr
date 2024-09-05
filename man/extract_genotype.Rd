@@ -2,19 +2,29 @@
 % Please edit documentation in R/access_genotype_data.R
 \name{extract_genotype}
 \alias{extract_genotype}
-\title{Extract the genotypes from a variant call file (VCF)}
+\title{Extract either the genotypes (GT) or the allelic depth (AD) from a variant
+call file (VCF).}
 \usage{
-extract_genotype(file)
+extract_genotype(file, which = "GT")
 }
 \arguments{
 \item{file}{A character with the path to the input VCF file.}
+
+\item{which}{A character that denotes the data of interest. The possible
+values are:
+\enumerate{
+\item GT: to extract the genotype data
+\item AD: to extract the allelic depth
+}}
 }
 \value{
-A data frame with the genotype data together with the SNPs genomic
-coordinates and their associated calling quality
+A data frame with the genotype data of interest, together with the
+SNPs genomic coordinates and their associated alleles and calling quality
+(if which = "GT").
 }
 \description{
-Extract the genotypes from a variant call file (VCF)
+Extract either the genotypes (GT) or the allelic depth (AD) from a variant
+call file (VCF).
 }
 \author{
 Banky

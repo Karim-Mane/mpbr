@@ -1,3 +1,19 @@
+
+#' Extract the sample ids from a VCF file
+#'
+#' @param vcf_file The path to the input VCF file
+#'
+#' @return A vector with the sample ids
+#' @keywords internal
+#'
+get_sample_ids <- function(vcf_file) {
+  as.character(data.table::fread(
+    cmd     = sprintf("gzcat %s | grep '^#CHROM' | cut -d$'\t' -f 10-",
+                      vcf_file),
+    header  = FALSE # 1st line is data
+  ))
+}
+
 #' remove the "exon_" prefix from character string
 #'
 #' @param x the input character string

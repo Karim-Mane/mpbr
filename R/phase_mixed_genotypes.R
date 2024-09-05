@@ -54,11 +54,64 @@ phase <- function(snpdata, genotype = "GT", nsim = 100L) {
 
   # extract the allelic depth per sample per SNP. This will be use to choose the
   # most represented allele on a given position for a given sample.
-  depth <- extract_allelic_depth(snpdata[["vcf"]])
-
+  depth <- extract_genotype(snpdata[["vcf"]], which = "AD")
+  
+  # get the sample ids. This is repeated here to anticipate on the effect of the
+  # filtration process. If the phasing is performed after filtration, the
+  # remaining samples might not be the same as from the vcf file where the
+  # allelic depth is extracted.
+  sample_ids <- get_sample_ids(vcf_file = snpdata[["vcf"]])
+  
+  # The genotype matrix might have undergone some filtration (removal of poor
+  # quality samples and SNPs). We filter the allelic depth matrix to only keep
+  # the samples and SNPs that are currently in the genotype matrix
+  names(depth) <- c("Chrom", "Pos", sample_ids)
+  ad_chrom_pos <- paste(depth[["Chrom"]], "_", depth[["Pos"]])
+  gt_chrom_pos <- paste(snpdata[["details"]][["Chrom"]], "_",
+                        snpdata[["details"]][["Pos"]])
+  row_matches <- ad_chrom_pos %in% gt_chrom_pos
+  depth <- depth[row_matches, ]
+  col_matches <- which(sample_ids %in% colnames(snpdata[[genotype]]))
+  depth <- subset(depth, select = col_matches)
+  if (any(dim(depth) != dim(snpdata[[genotype]]))) {
+    cli::cli_abort(c(
+      x = "The genotype and allelic depth matrices have different dimensions."
+    ))
+  }
+    
   # create a temporary directory to store temporary files
-  path  <- file.path(tempdir(), "phasing")
+  path <- file.path(tempdir(), "phasing")
   dir.create(path)
+  
+  # Phasing algorithm:
+  # 1. the difference between the allelic depth of the reference and alternative
+  # alleles ('delta_alleles') is calculated.
+  # when 'delta_alleles' > (2 * sd(delta_alleles)), the mixed allele is replaced
+  # by the most represented allele.
+  # 2. The remaining alleles will be replaced based on:
+  #   a) the MAF at the corresponding locus
+  #   b) SNPs LD: look into the LD distribution to define the window size. A
+  #   mixed allele that fall within a specific window will be replaced based
+  #   on the allele composition in that window.
+  #   NOTE: look into this and discuss it with Alfred and David
+  #   c) the method used by Brezesky
+  genotype_data <- snpdata[[genotype]]
+  transposed_genotype <- t(genotype_data)
+  transposed_depth <- t(depth[, -c(1:2)])
+  x <- seq(1, length(transposed_genotype), by = dim(transposed_genotype)[[1L]])
+  idx_mixed_alleles <- which(transposed_genotype == 2L)
+  
+  # The data has been transposed. now we have the SNPs in column. we now know
+  # that snps on the first column ([line 1 to the end]) belong to first locus.
+  # indexes that fall within this interval will be associated to 1 from the
+  # findInterval function. that way, we easily pick the MAF of the first snp and
+  # perform the phasing of all mixed alleles in that interval. the same
+  # procedure is applied across the rest of the columns. 
+  intervals <- findInterval(idx_mixed_alleles, x)
+  mixed_allele_data <- data.frame(idx = idx_mixed_alleles,
+                                  col = intervals,
+                                  ad = transposed_depth[idx_mixed_alleles])
+  pased_data <- phase_genotypes(mixed_allele_data, nsim)
 
   # The correlations vector will store the correlation coefficient between the
   # initial MAF and the MAF after every simulation.
@@ -86,6 +139,78 @@ phase <- function(snpdata, genotype = "GT", nsim = 100L) {
   unlink(path, recursive = TRUE)
   snpdata
 }
+
+
+phase_genotypes <- function(mixed_allele_data, nsim) {
+  checkmate::assert_data_frame(mixed_allele_data, min.rows = 1L, ncols = 3L,
+                               null.ok = FALSE)
+  # function to split allelic depth on ","
+  split_and_extract <- function(x, sep, part) {
+    if (is.na(x)) {
+      return(NA)
+    }
+    unlist(strsplit(x, split = sep, fixed = TRUE))[[part]]
+  }
+  
+  # extract the reference allele count from the allelic depth
+  mixed_allele_data[["ref_count"]] <- as.numeric(
+    unlist(
+      parallel::mclapply(
+        mixed_allele_data[["ad"]],
+        split_and_extract,
+        sep = ",",
+        part = 1L,
+        mc.cores = 4L
+      )
+    )
+  )
+  
+  # extract the alternate allele count from the allelic depth
+  mixed_allele_data[["alt_count"]] <- as.numeric(
+    unlist(
+      parallel::mclapply(
+        mixed_allele_data[["ad"]],
+        split_and_extract,
+        sep = ",",
+        part = 2L,
+        mc.cores = 4L
+      )
+    )
+  )
+  
+  # calculate the difference in allele count between reference and alternate
+  # allele
+  mixed_allele_data[["diff"]] <- mixed_allele_data[["ref_count"]] -
+    mixed_allele_data[["alt_count"]]
+  
+  # position where the difference > 1 standard deviation of the difference will
+  # be considered as reference. The ones < -1 standard deviation of the
+  # difference will be considered as alternate.
+  idx <- mixed_allele_data[["diff"]] > sd(mixed_allele_data[["diff"]]) &
+    mixed_allele_data[["diff"]]
+  
+  
+  # create a temporary directory to store temporary files
+  path  <- file.path(tempdir(), "phasing")
+  dir.create(path)
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 #' Phase the mixed genotypes for one SNP across all samples
@@ -209,72 +334,3 @@ phase_missing_ref_or_alt <- function(genotype) {
 }
 
 
-new_phase <- function(snpdata, genotype = "GT", nsim = 100L) {
-  checkmate::assert_class(snpdata, "SNPdata", null.ok = FALSE)
-  checkmate::assert_numeric(nsim, lower = 1L, any.missing = FALSE,
-                            null.ok = FALSE, len = 1L)
-  checkmate::assert_character(genotype, any.missing = FALSE, len = 1L,
-                              null.ok = FALSE)
-  
-  # Do not proceed if the specified genotype matrix does not exist
-  if (!(genotype %in% names(snpdata))) {
-    current_gt_matrices <- names(snpdata)[!(names(snpdata) %in% # nolint: object_usage_linter
-                                              c("meta", "details", "vcf"))]
-    cli::cli_abort(
-      c("x" = "The specified genotype matrix {.code genotype} does not exist",
-        "i" = "Current genotype matrices are: {.code {current_gt_matrices}}")
-    )
-  }
-  
-  # Do not proceed if the chosen genotype matrix does not contain any mixed
-  # allele.
-  if (sum(snpdata[[genotype]] == 2L, na.rm = TRUE) == 0L) {
-    cli::cli_abort(
-      c("x" = "No mixed genotypes found in the specified genotype matrix: 
-        {genotype}",
-        "i" = "")
-    )
-  }
-  
-  # here, we assume that the allelic depth matrix is part of the input object
-  # get the indexes of the mixed alleles
-  tmp <- t(snpdata[[genotype]])
-  tmp_ad <- t(snpdata[["allelic_depth"]])
-  x <- seq(1, length(tmp), by = dim(tmp)[[1L]])
-  idx <- which(tmp == 2L)
-  intervals <- findInterval(idx, x)
-  xx <- data.frame(idx = idx,
-                   col = intervals,
-                   ad = tmp_ad[idx])
-  split_and_extract <- function(x, sep, part) {
-    unlist(strsplit(x, split = sep, fixed = TRUE))[[part]]
-  }
-  xx[["ref_count"]] <- as.numeric(
-    unlist(
-      parallel::mclapply(
-        xx[["ad"]],
-        split_and_extract,
-        sep = ",",
-        part = 1L,
-        mc.cores = 4L
-      )
-    )
-  )
-    
-  xx[["alt_count"]] <- as.numeric(
-    unlist(
-      parallel::mclapply(
-        xx[["ad"]],
-        split_and_extract,
-        sep = ",",
-        part = 2L,
-        mc.cores = 4L
-      )
-    )
-  )
-  
-  
-  # create a temporary directory to store temporary files
-  path  <- file.path(tempdir(), "phasing")
-  dir.create(path)
-}

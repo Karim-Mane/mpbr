@@ -1,14 +1,30 @@
-#' Extract the genotypes from a variant call file (VCF)
+#' Extract either the genotypes (GT) or the allelic depth (AD) from a variant
+#' call file (VCF).
 #'
 #' @param file A character with the path to the input VCF file.
+#' @param which A character that denotes the data of interest. The possible
+#'    values are:
+#'   \enumerate{
+#'      \item GT: to extract the genotype data
+#'      \item AD: to extract the allelic depth
+#'   }
 #'
-#' @return A data frame with the genotype data together with the SNPs genomic
-#'    coordinates and their associated calling quality
+#' @return A data frame with the genotype data of interest, together with the
+#'    SNPs genomic coordinates and their associated alleles and calling quality
+#'    (if which = "GT").
 #' @export
 #' @importFrom data.table %like%
 #' @author Banky
 #'
-extract_genotype <- function(file) {
+extract_genotype <- function(file, which = "GT") {
+  checkmate::assert_file_exists(file)
+  checkmate::assert_character(which, n.chars = 2L, len = 1L, null.ok = FALSE,
+                              any.missing = FALSE)
+  which <- match.arg(which, choices = c("GT", "AD"))
+
+  # import the VCF file using the {data.table} package and pigz.
+  # users who have enabled openmp. will benefit from {data.table} multithreaded
+  # data import 
   vcf <- data.table::fread(
     cmd     = sprintf("pigz -dc < %s", file),
     nThread = (parallel::detectCores() - 2),
@@ -16,54 +32,40 @@ extract_genotype <- function(file) {
     header  = FALSE # 1st line is data
   )
 
-  # DT name for unnamed col
+  # there are 2 parts in the vcf file: the header (rows with '##' or '#') and
+  # the genotype (rows after the headers). The below extract the row number
+  # (row_id) from where the genotype section starts. The data of interest is
+  # located between that row and the last row in the file.
   V1 <- NULL # nolint: object_name_linter.
   row_id <- vcf[V1 %like% "^#CHROM", which = TRUE] + 1 # + 1 skip header
 
-  vcf <- vcf[row_id:.N, data.table::tstrsplit(V1, "\t", fixed = TRUE)][
-    , -c(3, 7, 8, 9) # remove unwanted columns ID, FILTER, INFO, FORMAT
-  ]
+  # removing the unnecessary columns. When 'which = "GT"', we don't want to keep
+  # the ID, FILTER, INFO, and FORMAT columns. For "AD", only the CHROM, POS, and
+  # ADs across every sample will be returned. This avoids extracting redundant
+  # information which would have already been collected in the GT data.
+  idx <- c(3, 7, 8, 9)
+  idx_genotype_data <- 6
+  idx_extraction <- 1
+  genotype <- "genotypes"
+  if (which == "AD") {
+    idx <- 3:9
+    idx_genotype_data <- 3
+    idx_extraction <- 2
+    genotype <- "allelic depths"
+  }
+  vcf <- vcf[row_id:.N, data.table::tstrsplit(V1, "\t", fixed = TRUE)]
+  vcf <- subset(vcf, select = -idx)
 
-  cols <- names(vcf)[6:length(vcf)] # first 6 don't need processing
-
+  # The GT data is located from the 6th column of the data, while the AD is
+  # found from column 3. See the section above for the reasoning.
+  cols <- names(vcf)[idx_genotype_data:length(vcf)]
+  
+  # the genotype field is split based on ':' as a pattern. The genotypes data
+  # is the first element, but the allelic depth is the second element
   vcf[, (cols) := lapply(.SD, function(g) {
-    substring(g, 1, regexpr(":", g, fixed = TRUE) - 1) # 1st position only
+    unlist(strsplit(g, ":", fixed = TRUE))[[idx_extraction]]
   }), .SDcols = cols]
-  cli::cli_alert_success("\nThe sample genotypes were successfully extracted.")
-  vcf
-}
-
-
-#' Extract the allelic depth from a variant call file (VCF)
-#'
-#' @param file A character with the path to the input VCF file.
-#'
-#' @return A data frame with the allelic depth supporting each of the two
-#'    alleles at any given locus across all samples.
-#' @export
-#' @importFrom data.table %like%
-#'
-extract_allelic_depth <- function(file) {
-  vcf <- data.table::fread(
-    cmd     = sprintf("pigz -dc < %s", file),
-    nThread = (parallel::detectCores() - 2),
-    sep     = NULL, # line is column
-    header  = FALSE # 1st line is data
-  )
-  
-  # DT name for unnamed col
-  V1 <- NULL # nolint: object_name_linter.
-  row_id <- vcf[V1 %like% "^#CHROM", which = TRUE] + 1 # + 1 skip header
-  
-  vcf <- vcf[row_id:.N, data.table::tstrsplit(V1, "\t", fixed = TRUE)][
-    , -c(1:9) # only keep the columns of the genotype field
-  ]
-  
-  cols <- names(vcf)
-  
-  vcf[, (cols) := lapply(.SD, function(g) {
-    unlist(strsplit(g, ":", fixed = TRUE))[[2L]]
-  }), .SDcols = cols]
-  cli::cli_alert_success("\nThe allelic depth were successfully extracted.")
+  cli::cli_alert_success(sprintf("\nThe sample %s were successfully extracted.",
+                                 genotype))
   vcf
 }
