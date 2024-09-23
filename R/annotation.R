@@ -71,33 +71,18 @@ get_gene_annotation <- function(genomic_coordinates, go, bed, num_cores = 4L) {
   checkmate::assert_data_frame(bed, min.rows = 1L,
                                min.cols = 1L, null.ok = FALSE)
   
-  ## check operating system
-  os_type <- Sys.info()["sysname"]
-  
-  if (os_type == "Windows") {
-    
-    # Create a cluster of worker processes
-    cl <- parallel::makeCluster(num_cores)  # Leave 1 core free
-    
-    genes <- bed[["V10"]] %>%
-      parallel::parLapply(cl, ., get_clean_name) %>%
-      parallel::parLapply(cl, ., rm_prf1) %>%
-      parallel::parLapply(cl, ., rm_prf2) %>%
-      parallel::parLapply(cl, ., rm_suf) %>%
-      as.character()
-    
-    # Stop the cluster after use
-    parallel::stopCluster(cl)
-    
-  } else {
-    genes <- bed[["V10"]] %>%
-      parallel::mclapply(get_clean_name, mc.cores = num_cores) %>%
-      parallel::mclapply(rm_prf1, mc.cores = num_cores) %>%
-      parallel::mclapply(rm_prf2, mc.cores = num_cores) %>%
-      parallel::mclapply(rm_suf, mc.cores = num_cores) %>%
-      as.character()
-  }
-  
+  genes        <- as.character(parallel::mclapply(bed[["V10"]],
+                                                  get_clean_name,
+                                                  mc.cores = num_cores))
+  genes        <- as.character(parallel::mclapply(genes,
+                                                  rm_prf1,
+                                                  mc.cores = num_cores))
+  genes        <- as.character(parallel::mclapply(genes,
+                                                  rm_prf2,
+                                                  mc.cores = num_cores))
+  genes        <- as.character(parallel::mclapply(genes,
+                                                  rm_suf,
+                                                  mc.cores = num_cores))
   genes        <- data.table::data.table(genes)
   genes        <- cbind(bed[["V1"]], bed[["V2"]], bed[["V3"]], genes)
   names(genes) <- c("chrom", "start", "end", "gene_id")
