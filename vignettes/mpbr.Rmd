@@ -77,11 +77,11 @@ Use the `filter_snps_samples()` function to remove the SNPs and samples that do 
 In the example below, we intend to discard SNPs and samples where the number of missing genotypes represent 20% or more the total number of observations. SNPs with MAF < 1% or a quality score < 10 will also be removed.
 
 ```{r eval=FALSE}
-snpdata <- filter_snps_samples(snpdata,
-                               min_qual            = 10,
-                               max_missing_sites   = 0.2,
-                               max_missing_samples = 0.2,
-                               maf_cutoff          = 0.01)
+snpdata <- filter(snpdata,
+                  min_qual            = 10,
+                  max_missing_sites   = 0.2,
+                  max_missing_samples = 0.2,
+                  maf_cutoff          = 0.01)
 ```
 
 All loci and samples that do not satisfy the defined conditions will be dropped from the input `SNPdata` object. Details about the filtered object can be viewed using:

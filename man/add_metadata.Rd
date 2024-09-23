@@ -4,18 +4,16 @@
 \alias{add_metadata}
 \title{Build the sample metadata table}
 \usage{
-add_metadata(sample_ids, metadata, output_dir)
+add_metadata(sample_ids, metadata)
 }
 \arguments{
-\item{sample_ids}{a \code{vector} of sample IDs. This should be in the same order
+\item{sample_ids}{A vector of sample IDs. This should be in the same order
 as they appear in the input VCF file.}
 
-\item{metadata}{the path to the sample metadata file}
-
-\item{output_dir}{the path to the output directory}
+\item{metadata}{The path to the sample metadata file}
 }
 \value{
-an object of class \code{data.frame} that contains the sample metadata
+An object of class \code{data.frame} that contains the sample metadata
 }
 \description{
 Build the sample metadata table
