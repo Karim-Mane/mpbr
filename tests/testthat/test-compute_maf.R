@@ -3,21 +3,10 @@ test_that("compute_maf works as expected", {
   skip_on_ci() 
   skip_on_covr()
   # build the SNPdata object
-  
-  # Get system information to detect the OS type
-  os_type <- Sys.info()["sysname"]
-  
-  # Add condition to normalize path only for Windows
-  if (os_type == "Windows") {
-    outputDir <- normalizePath(tempdir(), winslash = "/")
-  } else {
-    outputDir <- tempdir()
-  }
-  
   snpdata <- get_snpdata(
     vcf_file   = system.file("extdata", "Input_Data.vcf.gz", package = "mpbr"), 
     meta_file  = system.file("extdata", "SampleMetadata.RDS", package = "mpbr"), 
-    output_dir = outputDir,  
+    output_dir = tempdir(), 
     gof        = system.file("extdata", "pf_gene_ontology.RDS", package = "mpbr"), 
     gff        = system.file("extdata", "PlasmoDB-56_Pfalciparum3D7.RDS",
                              package = "mpbr"),
