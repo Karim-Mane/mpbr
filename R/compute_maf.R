@@ -47,11 +47,13 @@ compute_maf <- function(snpdata, include_het = FALSE, mat_name = "GT",
     mat_name,
     choices = c("GT", "Phased", "Imputed", "Phased_imputed")
   )
+  
   if (include_het) {
-    stopifnot("'include_het = TRUE' is only valid for the raw genotype data in
-              the 'GT' matrix or the imputed (non-phased) data in the 'Imputed'
-              matrix" = any(mat_name %in% c("GT", "Imputed")))
+    if (!any(mat_name %in% c("GT", "Imputed"))) {
+      stop("'include_het = TRUE' is only valid for 'GT' or 'Imputed' matrices")
+    }
   }
+  
   x   <- snpdata[[mat_name]]
   ref <- rowSums(x == 0L, na.rm = TRUE)
   alt <- rowSums(x == 1L, na.rm = TRUE)
