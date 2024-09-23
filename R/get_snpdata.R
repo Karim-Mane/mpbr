@@ -90,11 +90,22 @@ get_snpdata <- function(vcf_file    = NULL,
   }
   
   # the sample IDs will be used to create the sample metadata file.
-  sample_ids <- as.character(data.table::fread(
-    cmd     = sprintf("gzcat %s | grep '^#CHROM' | cut -d$'\t' -f 10-",
-                      vcf_file),
-    header  = FALSE # 1st line is data
-  ))
+  ## check your operating system type
+  os_type <- Sys.info()["sysname"]
+  
+  if (os_type == "Windows") {
+    # Use gzip -dc for Windows
+    sample_ids <- as.character(data.table::fread(
+      cmd     = sprintf("gzip -dc %s | grep '^#CHROM' | cut -f 10-", vcf_file),
+      header  = FALSE # 1st line is data
+    ))
+  } else {
+    # Use gzcat for Unix-like systems (macOS, Linux)
+    sample_ids <- as.character(data.table::fread(
+      cmd     = sprintf("gzcat %s | grep '^#CHROM' | cut -d$'\t' -f 10-", vcf_file),
+      header  = FALSE # 1st line is data
+    ))
+  }
   
   # the genotype data will be used to create the genotype matrix and the details
   # table
