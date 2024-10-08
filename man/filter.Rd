@@ -9,7 +9,9 @@ filter(
   min_qual = 1000L,
   max_missing_sites = 0.2,
   max_missing_samples = 0.2,
-  maf_cutoff = 0.01
+  maf_cutoff = 0.01,
+  hard = FALSE,
+  soft = FALSE
 )
 }
 \arguments{
@@ -43,7 +45,9 @@ depending on the filtration conditions.
   min_qual            = 1000,
   max_missing_sites   = 0.2,
   max_missing_samples = 0.2,
-  maf_cutoff          = 0.01
+  maf_cutoff = 0.01,
+  hard = FALSE,
+  soft = FALSE
  )
  }
 }

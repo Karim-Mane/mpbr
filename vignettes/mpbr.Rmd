@@ -89,7 +89,8 @@ snpdata <- filter_snps_samples(snpdata,
                   max_missing_sites   = 0.2,
                   max_missing_samples = 0.2,
                   maf_cutoff          = 0.01,
-                  hard                = TRUE)
+                  hard                = FALSE,
+                  soft                = TRUE)
 ```
 
 All loci and samples that do not satisfy the defined conditions will be dropped from the input `SNPdata` object. Details about the filtered object can be viewed using:
