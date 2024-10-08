@@ -72,15 +72,21 @@ get_snpdata <- function(vcf_file    = NULL,
   # The user needs to provide the GFF file from which the gene names will be
   # extracted. This is converted into BED format because the `GenomicRange`
   # package requires that file type.
+  file_extension <- unlist(strsplit(basename(gff), split = "\\."))
+  ##*****Change done to look at the extension of a file instead
   if (!is.null(gff) && file.exists(gff)) {
-    if (grepl(".RDS", basename(gff))) {
+   # if (grepl(".RDS", basename(gff))) {
+    if(tolower(tail(file_extension, n=1)) == "rds"){
       # read annotation from existing file
       bed <- readRDS(gff)
     }
-    if (grepl(".gz", basename(gff))) {
+    #if (grepl(".gz", basename(gff))) {
+    if (tolower(tail(file_extension, n=1)) == "gff") {
       # create bed file from downloaded annotation file
       bed <- file.path(output_dir, "file.bed")
-      system(sprintf("gff2bed < %s > %s", gff, bed))
+      #system(sprintf("gff2bed < %s > %s", gff, bed))
+      #Sys.setenv(PATH = paste(Sys.getenv("PATH"), "//opt/homebrew/bin/:", sep = ":"))
+      system(sprintf("gff2bed --max-mem 10G --do-not-sort < %s > %s", gff, bed))
       bed <- data.table::fread(bed, nThread = num_threads, sep = "\t")
     }
   } else {
