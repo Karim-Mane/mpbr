@@ -230,7 +230,7 @@ plot_snpDistribution = function(details){
   library(ggplot2)
   details[["Pos"]] = as.numeric(details[["Pos"]])
   # Define window size (10Kb)
-  window_size <- 1000
+  window_size <- 100
   # Count SNPs per window for each chromosome
   snp_density <- details %>%
     mutate(Window = cut(Pos, breaks = seq(0, max(Pos), by = window_size), include.lowest = TRUE)) %>%
