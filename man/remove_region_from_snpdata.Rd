@@ -7,13 +7,13 @@
 remove_region_from_snpdata(snpdata, chrom, start, end)
 }
 \arguments{
-\item{snpdata}{a \code{SNPdata} object}
+\item{snpdata}{The input \code{SNPdata} object}
 
-\item{chrom}{the chromosome from which loci should be dropped}
+\item{chrom}{The chromosome from which loci should be dropped}
 
-\item{start}{the starting position of the region to be discarded}
+\item{start}{The starting position of the region to be discarded}
 
-\item{end}{the end position of the region to be discarded}
+\item{end}{The end position of the region to be discarded}
 }
 \description{
 Remove SNPs with a specified region of the genome.

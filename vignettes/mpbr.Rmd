@@ -11,12 +11,15 @@ vignette: >
 
 ```{r, include = FALSE}
 knitr::opts_chunk[["set"]](collapse = TRUE, comment = "#>")
-vcf        <- system.file("extdata", "Input_Data.vcf.gz", package = "mpbr")
-meta_file  <- system.file("extdata", "SampleMetadata.RDS", package = "mpbr")
+vcf <- system.file("extdata", "Input_Data.vcf.gz", package = "mpbr")
+meta_file <- system.file("extdata", "SampleMetadata.RDS", package = "mpbr")
 output_dir <- tempdir()
-gff        <- system.file("extdata", "PlasmoDB-56_Pfalciparum3D7.gff",
-                          package = "mpbr")
-gof        <- system.file("extdata", "pf_gene_ontology.RDS", package = "mpbr")
+gff <- system.file(
+  "extdata",
+  "PlasmoDB-56_Pfalciparum3D7.gff",
+  package = "mpbr"
+)
+gof <- system.file("extdata", "pf_gene_ontology.RDS", package = "mpbr")
 ```
 
 ```{r setup}
@@ -38,11 +41,13 @@ The functions in this package require a `SNPdata` object. Objects of this class 
 Type `?get_snpdata` for more details.
 
 ```{r eval=FALSE}
-snpdata <- get_snpdata(vcf_file   = vcf,
-                       meta_file  = meta_file,
-                       output_dir = output_dir,
-                       gof        = gof,
-                       gff        = gff)
+snpdata <- get_snpdata(
+  vcf_file = vcf,
+  meta_file = meta_file,
+  output_dir = output_dir,
+  gof = gof,
+  gff = gff
+)
 ```
 
 ## print the `SNPdata` object 
@@ -65,9 +70,11 @@ The function returns a `SNPdata` object with the following 2 extra columns in th
 type `?compute_MAF` for more details. 
 
 ```{r, eval=FALSE}
-snpdata <- compute_maf(snpdata,
-                       include_het = FALSE,
-                       mat_name    = "GT")
+snpdata <- compute_maf(
+  snpdata,
+  include_het = FALSE,
+  mat_name = "GT"
+)
 head(snpdata$details)
 ```
 
@@ -77,11 +84,11 @@ Use the `filter_snps_samples()` function to remove the SNPs and samples that do 
 In the example below, we intend to discard SNPs and samples where the number of missing genotypes represent 20% or more the total number of observations. SNPs with MAF < 1% or a quality score < 10 will also be removed.
 
 ```{r eval=FALSE}
-snpdata <- filter_snps_samples(snpdata,
-                               min_qual            = 10,
-                               max_missing_sites   = 0.2,
-                               max_missing_samples = 0.2,
-                               maf_cutoff          = 0.01)
+snpdata <- filter(snpdata,
+                  min_qual            = 10,
+                  max_missing_sites   = 0.2,
+                  max_missing_samples = 0.2,
+                  maf_cutoff          = 0.01)
 ```
 
 All loci and samples that do not satisfy the defined conditions will be dropped from the input `SNPdata` object. Details about the filtered object can be viewed using:

@@ -19,6 +19,6 @@ Select data from specified chromosomes
 }
 \examples{
 \dontrun{
-  chrom_snpdata <- select_chrom(snpdata, chrom = "Pf3D7_07_v3")
+  chrom7 <- select_chrom(snpdata, chrom = "Pf3D7_07_v3")
  }
 }

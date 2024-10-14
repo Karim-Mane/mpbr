@@ -13,24 +13,24 @@ drop_snps(
 )
 }
 \arguments{
-\item{snpdata}{a \code{SNPdata} object}
+\item{snpdata}{The input \code{SNPdata} object}
 
-\item{snp_to_be_dropped}{a \code{data.frame} with 2 columns" "Chrom" and "Pos"}
+\item{snp_to_be_dropped}{A data frame with 2 columns: "Chrom" and "Pos".}
 
-\item{chrom}{the chromosome from which loci should be dropped}
+\item{chrom}{The chromosome from which loci should be dropped}
 
-\item{start}{the starting position of the region to be discarded}
+\item{start}{The starting position of the region to be discarded}
 
-\item{end}{the end position of the region to be discarded}
+\item{end}{The end position of the region to be discarded}
 }
 \value{
-a \code{SNPdata} object where the specified SNPs have been removed
+A \code{SNPdata} object where the specified SNPs have been removed.
 }
 \description{
 Drop a of set SNPs from a \code{SNPdata} object
 }
 \details{
-when snp_to_be_dropped is not NULL (i.e. the genomic
+When 'snp_to_be_dropped' is not NULL (i.e. the genomic
 coordinates of snps to be removed are in a data frame), then the rest of
 the arguments can be ignored or set to NULL (chrom = NULL,
 start = NULL, end = NULL)
