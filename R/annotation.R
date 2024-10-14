@@ -10,7 +10,6 @@
 gene_annotation <- function(target_gtf, genomic_coordinates) {
   checkmate::assert_data_frame(target_gtf, min.rows = 1L, min.cols = 1L,
                                null.ok = FALSE)
-  
   names(genomic_coordinates) <- c("chrom", "start")
   genomic_coordinates[["end"]] <- genomic_coordinates[["start"]]
   subject <- IRanges::IRanges(target_gtf[["start"]], target_gtf[["end"]])
@@ -37,7 +36,7 @@ gene_annotation <- function(target_gtf, genomic_coordinates) {
     dplyr::summarize(gene = glue::glue_collapse(gene, sep = ":"))
   genomic_coordinates[["gene"]]    <- NA
   genomic_coordinates[["gene"]][the_genes[["queryHits"]]] <- the_genes[["gene"]]
-  
+
   genomic_coordinates[["gene"]]
 }
 
@@ -75,20 +74,20 @@ get_gene_annotation <- function(genomic_coordinates, go, bed, num_cores = 4L) {
                                min.cols = 1L, null.ok = FALSE)
   checkmate::assert_data_frame(bed, min.rows = 1L,
                                min.cols = 1L, null.ok = FALSE)
-  
+
   # get the user's operating system
   os_type <- Sys.info()["sysname"]
-  
+
   if (os_type == "Windows") {
     # Create a cluster of worker processes
-    cl <- parallel::makeCluster(num_cores)  # Leave 1 core free
+    cl <- parallel::makeCluster(num_cores)
     genes <- bed[["V10"]] %>%
-      parallel::parLapply(cl, ., get_clean_name) %>%
-      parallel::parLapply(cl, ., rm_prf1) %>%
-      parallel::parLapply(cl, ., rm_prf2) %>%
-      parallel::parLapply(cl, ., rm_suf) %>%
+      parallel::parLapply(cl, ., get_clean_name) %>% # nolint: object_usage_linter
+      parallel::parLapply(cl, ., rm_prf1) %>% # nolint: object_usage_linter
+      parallel::parLapply(cl, ., rm_prf2) %>% # nolint: object_usage_linter
+      parallel::parLapply(cl, ., rm_suf) %>% # nolint: object_usage_linter
       as.character()
-    
+
     # Stop the cluster after use
     parallel::stopCluster(cl)
   } else {
@@ -99,13 +98,13 @@ get_gene_annotation <- function(genomic_coordinates, go, bed, num_cores = 4L) {
       parallel::mclapply(rm_suf, mc.cores = num_cores) %>%
       as.character()
   }
-  
+
   genes <- data.table::data.table(genes)
   genes <- cbind(bed[["V1"]], bed[["V2"]], bed[["V3"]], genes)
   names(genes) <- c("chrom", "start", "end", "gene_id")
   go <- subset(go, select = c(2, 10))
   names(go) <- c("gene_id", "gene_name")
-  
+
   chrom <- gene_id <- gene_name <- start <- end <- NULL # nolint: object_name_linter
   test <- genes %>%
     dplyr::left_join(go, by = "gene_id", relationship = "many-to-many")

@@ -6,12 +6,13 @@
 #'    coordinates and their associated calling quality
 #' @keywords internal
 #' @importFrom data.table %like%
+#' @importFrom data.table .N
+#' @importFrom data.table :=
+#' @importFrom data.table .SD
 #' @author Banky
 extract_genotype <- function(file) {
-  
   # check the user's operating system type
   os_type <- Sys.info()["sysname"]
-  
   if (os_type == "Windows") {
     command <- sprintf("gzip -dc < %s", file)
   } else {
@@ -23,22 +24,23 @@ extract_genotype <- function(file) {
     sep = NULL, # line is column
     header = FALSE # 1st line is data
   )
-  
+
   # find the row number where the header #CHROM Starts.
-  row_id <- which(grepl("^#CHROM", vcf[["V1"]])) + 1
-  
-  # splot the single column V1 into multiple columns then later delet unwanted columns
-  vcf <- vcf[row_id:.N, data.table::tstrsplit(V1, "\t", fixed = TRUE)][
+  row_id <- which(startsWith(vcf[["V1"]], "#CHROM")) + 1
+
+  # splot the single column V1 into multiple columns then later delet unwanted
+  # columns
+  vcf <- vcf[row_id:.N, data.table::tstrsplit(V1, "\t", fixed = TRUE)][ # nolint: object_usage_linter
     , -c(3, 7, 8, 9) # remove unwanted columns ID, FILTER, INFO, FORMAT
   ]
-  
+
   # select the columns that contain the genotype info
   cols <- names(vcf)[6:length(vcf)] # first 5 don't need processing
-  
+
   # extract the genotype info from th slected columns
   vcf[, (cols) := lapply(.SD, function(g) {
     substring(g, 1, regexpr(":", g, fixed = TRUE) - 1) # 1st position only
   }), .SDcols = cols]
-  
+
   return(vcf)
 }

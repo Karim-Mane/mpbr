@@ -62,13 +62,12 @@ compute_maf <- function(snpdata, include_het = FALSE, mat_name = "GT",
     tmp_mat <- cbind(ref, alt)
   }
   res <- t(apply(tmp_mat, 1L, get_maf))
-  
   if (is.null(name)) {
     name <- "MAF"
   }
   snpdata[["details"]][[name]] <- as.numeric(res[, 1L])
   snpdata[["details"]][["MAF_allele"]] <- as.character(res[, 2L])
-  
+
   snpdata
 }
 
@@ -103,10 +102,9 @@ get_maf <- function(mat) {
       minor <- mat[[2L]]
       allele <- "0=1"
     }
-    
+
     if (minor < mat[[3L]]) {
       maf <- minor / sum(mat[[1L]], mat[[2L]], mat[[3L]])
-      # allele <- 3L
     } else if (minor > mat[[3L]]) {
       maf <- mat[[3L]] / sum(mat[[1L]], mat[[2L]], mat[[3L]])
       allele <- "0/1"
@@ -115,6 +113,6 @@ get_maf <- function(mat) {
       allele <- "0=1=2"
     }
   }
-  
+
   return(c(maf, allele))
 }

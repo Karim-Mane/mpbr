@@ -68,7 +68,7 @@ get_snpdata <- function(vcf_file    = NULL,
     go <- readRDS(system.file("extdata", "pf_gene_ontology.RDS",
                               package = "mpbr"))
   }
-  
+
   # The user needs to provide the GFF file from which the gene names will be
   # extracted. This is converted into BED format because the `GenomicRange`
   # package requires that file type.
@@ -85,15 +85,20 @@ get_snpdata <- function(vcf_file    = NULL,
     }
   } else {
     # read annotation from existing file
-    bed <- readRDS(system.file("extdata", "PlasmoDB-56_Pfalciparum3D7.RDS",
-                               package = "mpbr"))
+    bed <- readRDS(
+      system.file(
+        "extdata",
+        "PlasmoDB-56_Pfalciparum3D7.RDS",
+        package = "mpbr"
+      )
+    )
   }
-  
+
   # the sample IDs will be used to create the sample metadata file.
   # the linux commands are different from the windows commands
   # some part of the script will be tailored to the user's operating system
   os_type <- Sys.info()["sysname"]
-  
+
   if (os_type == "Windows") {
     # use gzip -dc for Windows
     command <- sprintf("gzip -dc %s | grep '^#CHROM' | cut -f 10-", vcf_file)
@@ -108,12 +113,12 @@ get_snpdata <- function(vcf_file    = NULL,
     cmd = command,
     header = FALSE
   ))
-  
+
   # the genotype data will be used to create the genotype matrix and the details
   # table
   genotype_data <- extract_genotype(vcf_file)
   names(genotype_data) <- c("Chrom", "Pos", "Ref", "Alt", "Qual", sample_ids)
-  
+
   # the details is needed to store the genomic coordinates of the variants
   details <- genotype_data[, c("Chrom", "Pos", "Ref", "Alt", "Qual")]
   snps <- as.matrix(subset(genotype_data, select = -(1L:5L)))
@@ -125,7 +130,7 @@ get_snpdata <- function(vcf_file    = NULL,
   meta <- add_metadata(sample_ids, meta_file)
   meta[["percentage_missing_sites"]] <- colSums(is.na(snps)) / nrow(snps)
   details[["percentage_missing_samples"]] <- rowSums(is.na(snps)) / ncol(snps)
-  
+
   # adding the annotation data to the details table to associate each SNPs to
   # its gene of origin together with that gene's function.
   details[["gene"]] <- get_gene_annotation(
@@ -134,7 +139,7 @@ get_snpdata <- function(vcf_file    = NULL,
     bed = bed,
     num_cores = num_threads
   )
-  
+
   # we created the SNPdata class to handle easily the combined set of all the
   # data needed for downstream analyses.
   snp_table <- list(

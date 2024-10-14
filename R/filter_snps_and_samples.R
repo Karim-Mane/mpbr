@@ -62,7 +62,7 @@ filter <- function(snpdata,
   } else if (sum(idx) == nrow(snpdata[["details"]])) {
     message("All loci have satisfied the specified QC metrics.")
   }
-  
+
   # filter the meta table
   idx <- snpdata[["meta"]][["percentage_missing_sites"]] <= max_missing_sites
   stopifnot("\nNo sample in VCF file has satisfied the specified QC metrics." =
@@ -70,12 +70,12 @@ filter <- function(snpdata,
   if (sum(idx) < nrow(snpdata[["meta"]])) {
     samples_to_be_dropped <- snpdata[["meta"]][["sample"]][!idx]
     message("\nThe following samples will be removed:\n",
-            paste(samples_to_be_dropped, collapse = ", "))
+            toString(samples_to_be_dropped))
     snpdata[["meta"]] <- snpdata[["meta"]][idx, ]
   } else if (sum(idx) == nrow(snpdata[["meta"]])) {
     message("\nAll samples have satisfied the specified QC metrics.")
   }
-  
+
   # remove bad quality samples from genotype matrices and recalculate both SNPs
   # and sample missingness and MAF
 
@@ -89,7 +89,7 @@ filter <- function(snpdata,
     # recalculate the percent of missing data for every SNP
     snpdata[["details"]][["percentage_missing_samples"]] <-
       rowSums(is.na(snpdata[["GT"]])) / ncol(snpdata[["GT"]])
-    
+
     # recalculate the MAF
     snpdata <- compute_maf(
       snpdata,
@@ -97,10 +97,10 @@ filter <- function(snpdata,
       mat_name    = "GT"
     )
   }
-  
+
   # recalculate the percent of missing data per sample
   snpdata[["meta"]][["percentage_missing_sites"]] <-
     colSums(is.na(snpdata[["GT"]])) / nrow(snpdata[["GT"]])
-  
+
   snpdata
 }

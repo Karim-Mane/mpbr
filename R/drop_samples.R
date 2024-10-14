@@ -36,7 +36,6 @@ drop_samples <- function(snpdata, samples_to_be_dropped) {
       snpdata[[field]] <- tmp
     }
   }
-  
   message("Re-calculating the MAF from the 'GT' matrix...")
   snpdata <- compute_maf(
     snpdata = snpdata,

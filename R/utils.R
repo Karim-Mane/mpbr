@@ -57,9 +57,9 @@ remove_snps_from_vcf <- function(vcf, loci_to_be_retained, path, index = 1L) {
   checkmate::assert_directory_exists(path)
   checkmate::assert_numeric(index, lower = 0L, len = 1L, null.ok = FALSE,
                             any.missing = FALSE)
-  target_loci  <- file.path(path, loci_to_be_retained)
-  header       <- file.path(path, "Header.txt")
-  body         <- file.path(path, "Body.txt")
+  target_loci <- file.path(path, loci_to_be_retained)
+  header <- file.path(path, "Header.txt")
+  body <- file.path(path, "Body.txt")
   correct_rows <- file.path(path, "Good_snps.txt")
   filtered_vcf <- file.path(path, paste0("Filtered_snps_", index, ".vcf"))
   system(sprintf("bcftools view -h %s > %s", vcf, header))
@@ -70,6 +70,6 @@ remove_snps_from_vcf <- function(vcf, loci_to_be_retained, path, index = 1L) {
   system(sprintf("bgzip %s", filtered_vcf))
   system(sprintf("rm -f %s %s %s", header, body, correct_rows))
   filtered_vcf <- file.path(path, paste0("Filtered_snps_", index, ".vcf.gz"))
-  
+
   as.character(filtered_vcf)
 }

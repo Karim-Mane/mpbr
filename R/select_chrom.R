@@ -20,28 +20,28 @@ select_chrom <- function(snpdata, chrom = "all") {
   percentage_missing_sites <- Fws <- COI <- NULL
   meta   <- snpdata[["meta"]] %>%
     dplyr::select(-c(percentage_missing_sites, Fws, COI)) # nolint: object_name_linter
-  
+
   # return the input object if no chromosome is specified
   if (chrom == "all") {
     return(snpdata)
   }
-  
+
   # subset if a chromosome name is specified
   stopifnot("Specified chromosome name not found in the input SNPdata object"
             = chrom %in% unique(snpdata[["details"]][["Chrom"]]))
-  res    <- list()
-  m      <- which(names(snpdata) %in% c("vcf", "index", "meta"))
+  res <- list()
+  m <- which(names(snpdata) %in% c("vcf", "index", "meta"))
   fields <- names(snpdata)[-m]
   for (chr in chrom) {
     chrom_snpdata <- snpdata
-    idx           <- which(chrom_snpdata[["details"]][["Chrom"]] == chr)
+    idx <- which(chrom_snpdata[["details"]][["Chrom"]] == chr)
     for (field in fields) {
       res[[field]] <- rbind(res[[field]], chrom_snpdata[[field]][idx, ])
     }
   }
   chrom_vcf <- file.path(dirname(chrom_snpdata[["vcf"]]), "target_chrom_vcf.gz")
   if (file.exists(chrom_vcf)) {
-    system(sprintf("rm -f %s", chrom_vcf))
+    unlink(chrom_vcf)
   }
   if (length(chrom) > 1L) {
     tmp_xme <- file.path(dirname(chrom_snpdata[["vcf"]]), "target_chrom.txt")
@@ -53,8 +53,8 @@ select_chrom <- function(snpdata, chrom = "all") {
     system(sprintf("bcftools view -r\"%s\" %s -o %s -O z",
                    chrom, chrom_snpdata[["vcf"]], chrom_vcf))
   }
-  res[["vcf"]]        <- chrom_vcf
-  res[["meta"]]       <- meta
-  class(res)          <- "SNPdata"
+  res[["vcf"]] <- chrom_vcf
+  res[["meta"]] <- meta
+  class(res) <- "SNPdata"
   res
 }

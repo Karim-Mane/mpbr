@@ -20,32 +20,33 @@ add_metadata <- function(sample_ids, metadata) {
   } else {
     meta <- data.table::fread(metadata, key = "sample", nThread = 4L)
   }
-  
   samples <- meta[["sample"]]
-  
+
   # sample from the VCF file must match with those in the metadata file
   are_in_meta_file <- sample_ids %in% samples
   if (!all(are_in_meta_file)) {
     warning("Incomplete metadata - the following samples in the VCF",
             " file are not found in metadata file:\n",
-            paste(sample_ids[!are_in_meta_file], collapse = ", "),
+            toString(sample_ids[!are_in_meta_file]),
             call. = FALSE)
   }
-  
+
   # samples from the metadata file should also match with the ones from
   # the input VCF file
   are_in_vcf_file <- samples %in% sample_ids
   if (!all(are_in_vcf_file)) {
-    warning(sprintf("The following samples are removed from metadata file as",
-                    " as they are not found in the VCF file: %s",
-                    paste(samples[!are_in_vcf_file], collaspe = ", ")),
-            call. = FALSE)
+    warning(
+      "The following samples are removed from metadata file as ",
+      "they are not found in the VCF file: ",
+      toString(samples[!are_in_vcf_file]),
+      call. = FALSE
+    )
     meta <- meta[-(!are_in_vcf_file), ]
   }
-  
+
   # joining the samples IDs from the VCF file with the sample metadata
   meta <- data.frame(sample = samples) %>%
     dplyr::left_join(meta, by = "sample")
-  
+
   meta
 }

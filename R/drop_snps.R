@@ -34,18 +34,17 @@ drop_snps <- function(snpdata, snp_to_be_dropped = NULL,
                            null.ok = TRUE)
   checkmate::assert_vector(end, min.len = 1L, any.missing = FALSE,
                            null.ok = TRUE)
-  
   if (!is.null(snp_to_be_dropped)) {
     snpdata <- drop_snps_using_gc(snpdata, snp_to_be_dropped)
   } else {
     snpdata <- remove_region_from_snpdata(snpdata, chrom, start, end)
   }
-  
-  message("Re-calculating the percent of missing SNPs for every sample from ", 
+
+  message("Re-calculating the percent of missing SNPs for every sample from ",
           "the 'GT' matrix ...")
   snpdata[["meta"]][["percentage_missing_sites"]] <-
     colSums(is.na(snpdata[["GT"]])) / nrow(snpdata[["GT"]])
-  
+
   snpdata
 }
 
@@ -60,13 +59,13 @@ drop_snps_using_gc <- function(snpdata, snp_to_be_dropped) {
     snpdata[["details"]][["Chrom"]] %in% snp_to_be_dropped[["Chrom"]] &
       snpdata[["details"]][["Pos"]] %in% snp_to_be_dropped[["Pos"]]
   )
-  meta   <- snpdata[["meta"]]
-  m      <- which(names(snpdata) %in% c("meta", "vcf"))
+  meta <- snpdata[["meta"]]
+  m <- which(names(snpdata) %in% c("meta", "vcf"))
   fields <- names(snpdata)[-m]
   for (field in fields) {
     snpdata[[field]] <- snpdata[[field]][-idx, ]
   }
-  snpdata[["meta"]]  <- meta
+  snpdata[["meta"]] <- meta
   snpdata
 }
 
@@ -86,13 +85,13 @@ remove_region_from_snpdata <- function(snpdata, chrom, start, end) {
   )
   stopifnot("There is no loci overlapping the specified region." =
               length(idx) > 0L)
-  meta   <- snpdata[["meta"]]
-  m      <- which(names(snpdata) %in% c("meta", "vcf"))
+  meta <- snpdata[["meta"]]
+  m <- which(names(snpdata) %in% c("meta", "vcf"))
   fields <- names(snpdata)[-m]
   for (field in fields) {
     snpdata[[field]] <- snpdata[[field]][-idx, ]
   }
-  snpdata[["meta"]]  <- meta
-  
+  snpdata[["meta"]] <- meta
+
   snpdata
 }
