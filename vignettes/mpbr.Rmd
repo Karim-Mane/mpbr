@@ -11,12 +11,15 @@ vignette: >
 
 ```{r, include = FALSE}
 knitr::opts_chunk[["set"]](collapse = TRUE, comment = "#>")
-vcf        <- system.file("extdata", "Input_Data.vcf.gz", package = "mpbr")
-meta_file  <- system.file("extdata", "SampleMetadata.RDS", package = "mpbr")
+vcf <- system.file("extdata", "Input_Data.vcf.gz", package = "mpbr")
+meta_file <- system.file("extdata", "SampleMetadata.RDS", package = "mpbr")
 output_dir <- tempdir()
-gff        <- system.file("extdata", "PlasmoDB-56_Pfalciparum3D7.gff",
-                          package = "mpbr")
-gof        <- system.file("extdata", "pf_gene_ontology.RDS", package = "mpbr")
+gff <- system.file(
+  "extdata",
+  "PlasmoDB-56_Pfalciparum3D7.gff",
+  package = "mpbr"
+)
+gof <- system.file("extdata", "pf_gene_ontology.RDS", package = "mpbr")
 ```
 
 ```{r setup}
@@ -38,11 +41,13 @@ The functions in this package require a `SNPdata` object. Objects of this class 
 Type `?get_snpdata` for more details.
 
 ```{r eval=FALSE}
-snpdata <- get_snpdata(vcf_file   = vcf,
-                       meta_file  = meta_file,
-                       output_dir = output_dir,
-                       gof        = gof,
-                       gff        = gff)
+snpdata <- get_snpdata(
+  vcf_file = vcf,
+  meta_file = meta_file,
+  output_dir = output_dir,
+  gof = gof,
+  gff = gff
+)
 ```
 
 ## print the `SNPdata` object 
@@ -65,9 +70,11 @@ The function returns a `SNPdata` object with the following 2 extra columns in th
 type `?compute_MAF` for more details. 
 
 ```{r, eval=FALSE}
-snpdata <- compute_maf(snpdata,
-                       include_het = FALSE,
-                       mat_name    = "GT")
+snpdata <- compute_maf(
+  snpdata,
+  include_het = FALSE,
+  mat_name = "GT"
+)
 head(snpdata$details)
 ```
 

@@ -58,8 +58,7 @@ impute_missing_genotypes <- function(snpdata, genotype = "Phased",
   idx <- which(correlations == max(correlations, na.rm = TRUE))
   snpdata[["Imputed"]] <- readRDS(file.path(path,
                                             paste0("sim", idx[[1L]], ".RDS")))
-  
-  system(sprintf("rm -rf %s", path))
+  unlink(path, recursive = TRUE)
   snpdata
 }
 

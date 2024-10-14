@@ -9,27 +9,23 @@
 #' @author Banky
 extract_genotype <- function(file) {
   
-  ## check your operating system type
+  # check the user's operating system type
   os_type <- Sys.info()["sysname"]
   
   if (os_type == "Windows") {
-    vcf <- data.table::fread(
-      cmd     = sprintf("gzip -dc < %s", file),
-      nThread = (parallel::detectCores() - 2),
-      sep     = NULL, # line is column
-      header  = FALSE # 1st line is data
-    )
+    command <- sprintf("gzip -dc < %s", file)
   } else {
-    vcf <- data.table::fread(
-      cmd     = sprintf("pigz -dc < %s", file),
-      nThread = (parallel::detectCores() - 2),
-      sep     = NULL, # line is column
-      header  = FALSE # 1st line is data
-    )
+    command <- sprintf("pigz -dc < %s", file)
   }
+  vcf <- data.table::fread(
+    cmd = command,
+    nThread = (parallel::detectCores() - 2),
+    sep = NULL, # line is column
+    header = FALSE # 1st line is data
+  )
   
   # find the row number where the header #CHROM Starts.
-  row_id <- which(grepl("^#CHROM", vcf$V1)) + 1
+  row_id <- which(grepl("^#CHROM", vcf[["V1"]])) + 1
   
   # splot the single column V1 into multiple columns then later delet unwanted columns
   vcf <- vcf[row_id:.N, data.table::tstrsplit(V1, "\t", fixed = TRUE)][
@@ -43,5 +39,6 @@ extract_genotype <- function(file) {
   vcf[, (cols) := lapply(.SD, function(g) {
     substring(g, 1, regexpr(":", g, fixed = TRUE) - 1) # 1st position only
   }), .SDcols = cols]
-  vcf
+  
+  return(vcf)
 }

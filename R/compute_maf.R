@@ -52,7 +52,7 @@ compute_maf <- function(snpdata, include_het = FALSE, mat_name = "GT",
               the 'GT' matrix or the imputed (non-phased) data in the 'Imputed'
               matrix" = any(mat_name %in% c("GT", "Imputed")))
   }
-  x   <- snpdata[[mat_name]]
+  x <- snpdata[[mat_name]]
   ref <- rowSums(x == 0L, na.rm = TRUE)
   alt <- rowSums(x == 1L, na.rm = TRUE)
   het <- rowSums(x == 2L, na.rm = TRUE)
@@ -61,12 +61,12 @@ compute_maf <- function(snpdata, include_het = FALSE, mat_name = "GT",
   } else {
     tmp_mat <- cbind(ref, alt)
   }
-  res       <- t(apply(tmp_mat, 1L, get_maf))
+  res <- t(apply(tmp_mat, 1L, get_maf))
   
   if (is.null(name)) {
     name <- "MAF"
   }
-  snpdata[["details"]][[name]]        <- as.numeric(res[, 1L])
+  snpdata[["details"]][[name]] <- as.numeric(res[, 1L])
   snpdata[["details"]][["MAF_allele"]] <- as.character(res[, 2L])
   
   snpdata
@@ -83,35 +83,35 @@ compute_maf <- function(snpdata, include_het = FALSE, mat_name = "GT",
 get_maf <- function(mat) {
   if (length(mat) == 2L) {
     if (mat[[1L]] < mat[[2L]]) {
-      maf    <- mat[[1L]] / sum(mat[[1L]], mat[[2L]])
+      maf <- mat[[1L]] / sum(mat[[1L]], mat[[2L]])
       allele <- "0"
     } else if (mat[[1L]] > mat[[2L]]) {
-      maf    <- mat[[2L]] / sum(mat[[1L]], mat[[2L]])
+      maf <- mat[[2L]] / sum(mat[[1L]], mat[[2L]])
       allele <- "1"
     } else {
-      maf    <- mat[[2L]] / sum(mat[[1L]], mat[[2L]])
+      maf <- mat[[2L]] / sum(mat[[1L]], mat[[2L]])
       allele <- "0=1"
     }
   } else {
     if (mat[[1L]] < mat[[2L]]) {
-      minor  <- mat[[1L]]
+      minor <- mat[[1L]]
       allele <- "0"
     } else if (mat[[1L]] > mat[[2L]]) {
-      minor  <- mat[[2L]]
+      minor <- mat[[2L]]
       allele <- "1"
     } else {
-      minor  <- mat[[2L]]
+      minor <- mat[[2L]]
       allele <- "0=1"
     }
     
     if (minor < mat[[3L]]) {
-      maf    <- minor / sum(mat[[1L]], mat[[2L]], mat[[3L]])
+      maf <- minor / sum(mat[[1L]], mat[[2L]], mat[[3L]])
       # allele <- 3L
     } else if (minor > mat[[3L]]) {
-      maf    <- mat[[3L]] / sum(mat[[1L]], mat[[2L]], mat[[3L]])
+      maf <- mat[[3L]] / sum(mat[[1L]], mat[[2L]], mat[[3L]])
       allele <- "0/1"
     } else {
-      maf    <- mat[[3L]] / sum(mat[[1L]], mat[[2L]], mat[[3L]])
+      maf <- mat[[3L]] / sum(mat[[1L]], mat[[2L]], mat[[3L]])
       allele <- "0=1=2"
     }
   }

@@ -90,22 +90,24 @@ get_snpdata <- function(vcf_file    = NULL,
   }
   
   # the sample IDs will be used to create the sample metadata file.
-  ## check your operating system type
+  # the linux commands are different from the windows commands
+  # some part of the script will be tailored to the user's operating system
   os_type <- Sys.info()["sysname"]
   
   if (os_type == "Windows") {
-    # Use gzip -dc for Windows
-    sample_ids <- as.character(data.table::fread(
-      cmd     = sprintf("gzip -dc %s | grep '^#CHROM' | cut -f 10-", vcf_file),
-      header  = FALSE # 1st line is data
-    ))
+    # use gzip -dc for Windows
+    command <- sprintf("gzip -dc %s | grep '^#CHROM' | cut -f 10-", vcf_file)
   } else {
-    # Use gzcat for Unix-like systems (macOS, Linux)
-    sample_ids <- as.character(data.table::fread(
-      cmd     = sprintf("gzcat %s | grep '^#CHROM' | cut -d$'\t' -f 10-", vcf_file),
-      header  = FALSE # 1st line is data
-    ))
+    # use gzcat for Unix-like systems (macOS, Linux)
+    command <- sprintf(
+      "gzcat %s | grep '^#CHROM' | cut -d$'\t' -f 10-",
+      vcf_file
+    )
   }
+  sample_ids <- as.character(data.table::fread(
+    cmd = command,
+    header = FALSE
+  ))
   
   # the genotype data will be used to create the genotype matrix and the details
   # table
@@ -136,10 +138,10 @@ get_snpdata <- function(vcf_file    = NULL,
   # we created the SNPdata class to handle easily the combined set of all the
   # data needed for downstream analyses.
   snp_table <- list(
-    meta    = meta,
+    meta = meta,
     details = details,
-    GT      = snps,
-    vcf     = vcf_file
+    GT = snps,
+    vcf = vcf_file
   )
   class(snp_table) <- "SNPdata"
   snp_table
