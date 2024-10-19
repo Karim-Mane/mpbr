@@ -1,66 +1,74 @@
-#' Filter loci and samples (requires **bcftools** and **tabix** to be installed)
+#' Filter loci and samples
 #'
-#' This function filters the SNPs and samples based on the specified conditions
+#' This function filters the SNPs and samples based on the user-specified
+#' conditions. It performs a soft filtering by default i.e. it allows users to
+#' get the proportion of remaining SNPs and samples across different cut-offs.
+#' Users can activate hard filtering by setting \code{soft = FALSE}.
 #'
 #' @param snpdata An object of class \code{SNPdata}
-#' @param min_qual the minimum call quality score below which a loci will be
-#'    discarded. default = 10
-#' @param max_missing_sites the maximum fraction of missing sites above which
-#'    a sample should be discarded. default = 0.2
-#' @param max_missing_samples the maximum fraction of missing samples above
-#'    which a loci should be discarded. default = 0.2
-#'  @param soft A boolean that specify whether to perform iterative filtering
+#' @param soft A boolean that specifies whether to perform iterative filtering
 #'    or not. Iterative filtering consists in soft filtering the input object by
-#'    varying the missingness cut-off from 0.8 to 0.1, and the MAF cut-off from
-#'    0.4 to 0.1. Default is \code{FALSE}.
-#'    @param hard A boolean that specify whether to perform hard iterative filtering
-#'    or not. The hard Iterative filtering is done by filtering the input object by
-#'    varying the missingness cut-off from 0.8 to 0.1, and filters out the inputted MAF and min_qual.
-#'     Default is \code{FALSE}.
-#' @param maf_cutoff the MAF cut-off. loci with a MAF < maf_cutoff will be
-#'    discarded. default = 0.01
+#'    varying the missingness cut-off from 0.9 to 0.1, and the MAF cut-off from
+#'    0.4 to 0.1. Default is \code{TRUE}.
+#' @param min_qual A numeric value representing the minimum call quality score
+#'    below which a loci will be discarded. Default is 1000.
+#' @param max_missing_sites A numeric value between `0` and `1` representing the
+#'    maximum fraction of missing sites above which a sample should be
+#'    discarded. Default is 0.2.
+#' @param max_missing_samples A numeric value between `0` and `1` representing
+#'    the maximum fraction of missing samples above which a loci should be
+#'    discarded. Default is 0.2.
+#' @param maf_cutoff A numeric value between `0` and `1` representing the MAF
+#'    cut-off. Loci with \code{MAF < maf_cutoff} will be discarded.
+#'    Default is 0.01.
 #'
-#' @return a filtered SNPdata object
+#' @return A subset of the input \code{SNPdata} object, where loci and samples
+#'    that do not meet the specified criteria have been removed, if
+#'    \code{soft = FALSE}. The input object otherwise.
 #' @examples
 #' \dontrun{
-#'  snpdata <- filter_snps_samples(
+#'  # perform hard filtering
+#'  snpdata <- filter(
 #'   snpdata,
-#'   soft                = FALSE,
-#'   hard                = FALSE,
-#'   min_qual            = 10,
-#'   max_missing_sites   = 0.2,
+#'   soft = FALSE,
+#'   min_qual = 10,
+#'   max_missing_sites = 0.2,
 #'   max_missing_samples = 0.2,
-#'   maf_cutoff          = 0.01
+#'   maf_cutoff = 0.01
+#'  )
+#'  
+#'  # perform soft filtering
+#'  snpdata <- filter(
+#'   snpdata,
+#'   soft = FALSE
 #'  )
 #'  }
 #' @export
 #'
 filter_snps_samples <- function(snpdata,
-                                soft                = FALSE,
-                                hard                = FALSE,
-                                min_qual            = 10L,
-                                max_missing_sites   = 0.2,
+                                soft = TRUE,
+                                min_qual = 10L,
+                                max_missing_sites = 0.2,
                                 max_missing_samples = 0.2,
-                                maf_cutoff          = 0.01) {
+                                maf_cutoff = 0.01) {
   checkmate::assert_class(snpdata, "SNPdata", null.ok = FALSE)
   checkmate::assert_numeric(min_qual, lower = 10L, any.missing = FALSE,
-                            null.ok = FALSE)
+                            null.ok = TRUE)
   checkmate::assert_numeric(max_missing_sites, lower = 0L, upper = 1L,
-                            finite = TRUE, any.missing = FALSE, null.ok = FALSE,
+                            finite = TRUE, any.missing = FALSE, null.ok = TRUE,
                             len = 1L)
   checkmate::assert_numeric(max_missing_samples, lower = 0L, upper = 1L,
-                            finite = TRUE, any.missing = FALSE, null.ok = FALSE,
+                            finite = TRUE, any.missing = FALSE, null.ok = TRUE,
                             len = 1L)
   checkmate::assert_logical(soft, any.missing = FALSE, null.ok = FALSE)
   checkmate::assert_numeric(maf_cutoff, lower = 0L, upper = 1L,
-                            finite = TRUE, any.missing = FALSE, null.ok = FALSE,
+                            finite = TRUE, any.missing = FALSE, null.ok = TRUE,
                             len = 1L)
   
   # allow for recursive filtering
   if (soft) {
     filter_soft(snpdata[["details"]], snpdata[["meta"]])
-  }else if (hard){
-    message("Conducting hard filteration")
+  } else {
     filter_hard(snpdata, min_qual, maf_cutoff)
   } else {
     x      <- snpdata[["details"]]
@@ -127,29 +135,46 @@ filter_snps_samples <- function(snpdata,
 
 #' Soft filter on SNPs and samples
 #'
-#' @param details The \code{SNPdata} object \code{details} data frame.
-#' @param meta The \code{SNPdata} object \code{meta} data frame.
-#'
+#' @inheritParams filter
+#' 
 #' @return Displays the number of SNPs and samples that will be left after
-#'    applying the different cut-offs (from 0.8 to 0.1 for missingness, and
-#'    0.4 to 0.1 for MAF).
+#'    varying the filtration cut-offs from `0.9` to `0.1` for missingness, and
+#'    `0.4` to `0.1` for MAF.
+#'
 #' @keywords internal
 #'
-filter_soft <- function(details, meta) {
+filter_soft <- function(snpdata) {
   # soft filtering snps and samples by varying their missingness cut-off from
-  # 0.8 until 0.1 by a step of 0.1
-  num_sampleLoci =data.frame(matrix(rbind(c(nrow(meta), "samples", 1), c(nrow(details), "loci", 1)), ncol = 3))
-  colnames(num_sampleLoci) = c("length", "variable", "missingness")
-  missingness_cutoff <- seq(0.8, 0.1, -0.1)
-  message("soft filter on missingness")
- 
-  for (c in missingness_cutoff) {
-    idx_snps <- length(which(details[["percentage_missing_samples"]] <= c))
-    idx_sample <- length(which(meta[["percentage_missing_sites"]] <= c))
-    num_sampleLoci = rbind.data.frame(num_sampleLoci, c(idx_sample, "samples", c), c(idx_snps, "loci", c))
-    cli::cli_alert_info("cut-off = {c}: remaining {idx_snps} SNPs and \\
-                        {idx_sample} samples.")
-    
+  # 0.9 until 0.1 by a step of 0.1
+  details <- snpdata[["details"]]
+  meta <- snpdata[["meta"]]
+  
+  # create the table where to store the filtration outcome at every cut-off
+  # we fill the first row with the number of samples and loci before filtration
+  # starts
+  filtration_res <- data.frame(
+    cut_off = 1,
+    remaining_loci = nrow(details),
+    remaining_samples = nrow(meta)
+  )
+  
+  # we set the filtration cut-offs from 0.9 to 0.1
+  missingness_cutoff <- seq(0.9, 0.1, -0.1)
+
+  # apply soft filtering
+  for (cut_off in missingness_cutoff) {
+    remaining_snps <- length(
+      which(details[["percentage_missing_samples"]] >= cut_off)
+    )
+    remaining_samples <- length(
+      which(meta[["percentage_missing_sites"]] >= cut_off)
+    )
+    temp_res <- data.frame(
+      cut_off = cut_off,
+      remaining_loci = remaining_snps,
+      remaining_samples = remaining_samples
+    )
+    filtration_res <- rbind(filtration_res, temp_res)
   }
   
   # Change the colors manually

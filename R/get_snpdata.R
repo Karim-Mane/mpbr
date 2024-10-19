@@ -32,10 +32,10 @@
 #' @examples
 #' \dontrun{
 #'   snpdata <- get_snpdata(
-#'     vcf_file   = system.file("extdata", "Input_Data.vcf.gz",
-#'                              package = "mpbr"),
-#'     meta_file  = system.file("extdata", "SampleMetadata.RDS",
-#'                              package = "mpbr"),
+#'     vcf_file = system.file("extdata", "Input_Data.vcf.gz", package = "mpbr"),
+#'     meta_file = system.file(
+#'       "extdata", "SampleMetadata.RDS", package = "mpbr"
+#'     ),
 #'     output_dir = tempdir()
 #'  )
 #' }
@@ -76,12 +76,12 @@ get_snpdata <- function(vcf_file    = NULL,
   ##*****Change done to look at the extension of a file instead
   if (!is.null(gff) && file.exists(gff)) {
    # if (grepl(".RDS", basename(gff))) {
-    if(tolower(tail(file_extension, n=1)) == "rds"){
+    if (tolower(tail(file_extension, n = 1)) == "rds") {
       # read annotation from existing file
       bed <- readRDS(gff)
     }
     #if (grepl(".gz", basename(gff))) {
-    if (tolower(tail(file_extension, n=1)) == "gff") {
+    if (tolower(tail(file_extension, n = 1)) == "gff") {
       # create bed file from downloaded annotation file
       bed <- file.path(output_dir, "file.bed")
       #system(sprintf("gff2bed < %s > %s", gff, bed))
