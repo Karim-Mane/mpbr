@@ -7,18 +7,23 @@
 drop_samples(snpdata, samples_to_be_dropped)
 }
 \arguments{
-\item{snpdata}{a \code{SNPdata} object}
+\item{snpdata}{The input \code{SNPdata} object}
 
-\item{samples_to_be_dropped}{a vector of samples to be dropped}
+\item{samples_to_be_dropped}{A vector of samples to be dropped}
 }
 \value{
-a \code{SNPdata} object where the specified samples have been removed
+A \code{SNPdata} object where the specified samples have been removed
 }
 \description{
 Drop a specific set of samples from the \code{SNPdata} object
 }
 \examples{
 \dontrun{
+  samples_to_be_dropped <- sample(
+    snpdata[["meta"]][["sample"]],
+    20,
+    replace = FALSE
+  )
   snpdata <- drop_samples(snpdata, samples_to_be_dropped)
  }
 

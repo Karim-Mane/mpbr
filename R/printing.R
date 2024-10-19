@@ -18,8 +18,12 @@ print.SNPdata <- function(x, ...) {
   print(utils::head(x[["meta"]]))
   message("\ndetails on genomic coordinates...")
   print(utils::head(x[["details"]]))
-  message(sprintf("\nData contains: %d samples for %d snp loci",
-                  dim(x[["GT"]])[[2L]],
-                  dim(x[["GT"]])[[1L]]))
+  message(
+    sprintf(
+      "\nData contains: %d samples for %d snp loci",
+      dim(x[["GT"]])[[2L]],
+      dim(x[["GT"]])[[1L]]
+    )
+  )
   message(sprintf("\nData is generated from: %s", x[["vcf"]]))
 }

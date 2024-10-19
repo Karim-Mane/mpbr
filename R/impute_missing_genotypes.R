@@ -38,27 +38,32 @@ impute_missing_genotypes <- function(snpdata, genotype = "Phased",
                             null.ok = FALSE, len = 1L)
   message("The missing genotypes will be imputed from ", genotype, " table.\n")
   field <- genotype
-  path  <- file.path(dirname(snpdata[["vcf"]]), "imputing")
-  system(sprintf("mkdir -p %s", path))
+  path <- file.path(dirname(snpdata[["vcf"]]), "imputing")
+  dir.create(path)
   correlations <- numeric(length = nsim)
-  pb           <- utils::txtProgressBar(min = 0L, max = nsim, initial = 0L,
-                                        style = 3L, char = "*")
+  pb <- utils::txtProgressBar(
+    min = 0L, max = nsim, initial = 0L, style = 3L, char = "*"
+  )
   for (i in seq_len(nsim)) {
     tmp_snpdata <- snpdata
-    mat         <- apply(tmp_snpdata[[field]], 1L, impute)
+    mat <- apply(tmp_snpdata[[field]], 1L, impute)
     tmp_snpdata[["Imputed"]] <- t(mat)
     saveRDS(t(mat), file.path(path, paste0("sim", i, ".RDS")))
-    res_snpdata <- compute_maf(tmp_snpdata, include_het = FALSE,
-                               mat_name = "Imputed")
+    res_snpdata <- compute_maf(
+      tmp_snpdata,
+      include_het = FALSE,
+      mat_name = "Imputed"
+    )
     correlations[i] <- stats::cor(res_snpdata[["details"]][["MAF_Imputed"]],
                                   res_snpdata[["details"]][["MAF"]])
     utils::setTxtProgressBar(pb, i)
   }
   close(pb)
   idx <- which(correlations == max(correlations, na.rm = TRUE))
-  snpdata[["Imputed"]] <- readRDS(file.path(path,
-                                            paste0("sim", idx[[1L]], ".RDS")))
-  system(sprintf("rm -rf %s", path))
+  snpdata[["Imputed"]] <- readRDS(
+    file.path(path, paste0("sim", idx[[1L]], ".RDS"))
+  )
+  unlink(path, recursive = TRUE)
   snpdata
 }
 
@@ -73,9 +78,9 @@ impute <- function(genotype) {
   checkmate::assert_vector(genotype, min.len = 1L, null.ok = FALSE)
   idx <- as.numeric(which(is.na(genotype)))
   for (j in idx) {
-    ref         <- length(which(genotype == 0L))
-    alt         <- length(which(genotype == 1L))
-    maf         <- ifelse(ref < alt, ref / (ref + alt), alt / (ref + alt))
+    ref <- length(which(genotype == 0L))
+    alt <- length(which(genotype == 1L))
+    maf <- ifelse(ref < alt, ref / (ref + alt), alt / (ref + alt))
     genotype[j] <- statip::rbern(1L, maf)
   }
   genotype

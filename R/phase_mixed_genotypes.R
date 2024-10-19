@@ -144,13 +144,13 @@ phase_data <- function(genotype, depth) {
   checkmate::assert_vector(genotype, min.len = 1L, null.ok = FALSE)
   checkmate::assert_vector(depth, min.len = 1L, null.ok = FALSE)
   idx <- as.numeric(which(genotype == 2L))
-  
+
   for (j in idx) {
     ref <- as.numeric(unlist(strsplit(depth[j], ",", fixed = TRUE))[[1L]])
     alt <- as.numeric(unlist(strsplit(depth[j], ",", fixed = TRUE))[[2L]])
     if (ref == 0L && alt == 0L) {
-      ref_count   <- sum(genotype == 0L, na.rm = TRUE)
-      alt_count   <- sum(genotype == 1L, na.rm = TRUE)
+      ref_count <- sum(genotype == 0L, na.rm = TRUE)
+      alt_count <- sum(genotype == 1L, na.rm = TRUE)
       genotype[j] <- phase_ref_alt_0(ref_count, alt_count)
     } else if (ref != 0L && alt != 0L) {
       genotype[j] <- phase_ref_alt_non_0(genotype, ref, alt)

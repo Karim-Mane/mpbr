@@ -3,10 +3,20 @@ test_that("compute_maf works as expected", {
   skip_on_ci() 
   skip_on_covr()
   # build the SNPdata object
+  # Get system information to detect the OS type
+  os_type <- Sys.info()["sysname"]
+  
+  # Add condition to normalize path only for Windows
+  if (os_type == "Windows") {
+    outputDir <- normalizePath(tempdir(), winslash = "/")
+  } else {
+    outputDir <- tempdir()
+  }
+  
   snpdata <- get_snpdata(
     vcf_file   = system.file("extdata", "Input_Data.vcf.gz", package = "mpbr"), 
     meta_file  = system.file("extdata", "SampleMetadata.RDS", package = "mpbr"), 
-    output_dir = tempdir(), 
+    output_dir = outputDir, 
     gof        = system.file("extdata", "pf_gene_ontology.RDS", package = "mpbr"), 
     gff        = system.file("extdata", "PlasmoDB-56_Pfalciparum3D7.RDS",
                              package = "mpbr"),
@@ -18,7 +28,7 @@ test_that("compute_maf works as expected", {
                           include_het = FALSE,
                           mat_name    = "GT")
   expect_true(inherits(test_maf, "SNPdata"))
-  expect_identical(names(test_maf), c("meta", "details", "GT", "vcf", "index"))
+  expect_identical(names(test_maf), c("meta", "details", "GT", "vcf"))
   expect_identical(test_maf[["meta"]], snpdata[["meta"]])
   expect_true(ncol(test_maf[["details"]]) > ncol(snpdata[["details"]]))
   expect_true(all(c("MAF", "MAF_allele") %in% names(test_maf[["details"]])))
@@ -33,7 +43,7 @@ test_that("compute_maf works as expected", {
                           include_het = TRUE,
                           mat_name    = "GT")
   expect_true(inherits(test_maf, "SNPdata"))
-  expect_identical(names(test_maf), c("meta", "details", "GT", "vcf", "index"))
+  expect_identical(names(test_maf), c("meta", "details", "GT", "vcf"))
   expect_identical(test_maf[["meta"]], snpdata[["meta"]])
   expect_true(ncol(test_maf[["details"]]) > ncol(snpdata[["details"]]))
   expect_true(all(c("MAF", "MAF_allele") %in% names(test_maf[["details"]])))

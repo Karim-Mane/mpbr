@@ -5,7 +5,8 @@ Authors@R: c(
     person("Karim", "Mané", , "karimanee@outlook.com", role = c("aut", "cre"),
            comment = c(ORCID = "https://orcid.org/0000-0002-9892-2999")),
     person("Alfred Amambua", "Ngwa", , "Alfred.Ngwa@lshtm.ac.uk", role = "aut"),
-    person("David", "Jeffries", , "djeffries@mrc.gm", role = "aut")
+    person("David", "Jeffries", , "djeffries@mrc.gm", role = "aut"),
+    person("Bankolé", "Ahadzie", , "bahadzie@mrc.gm", role = "ctb")
   )
 Description: provides functions to perform population genomics analyses
     using genome-wide Single Nucleotide Polymorphisms (SNPs) from the
@@ -41,4 +42,4 @@ Config/testthat/edition: 3
 Encoding: UTF-8
 Language: en-US
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.1
+RoxygenNote: 7.3.2.9000
