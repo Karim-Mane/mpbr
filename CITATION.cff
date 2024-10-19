@@ -69,6 +69,7 @@ references:
   - family-names: Barrett
     given-names: Tyson
     email: t.barrett88@gmail.com
+    orcid: https://orcid.org/0000-0002-2137-1391
   - family-names: Dowle
     given-names: Matt
     email: mattjdowle@gmail.com
@@ -79,9 +80,13 @@ references:
     given-names: Jan
   - family-names: Chirico
     given-names: Michael
+    orcid: https://orcid.org/0000-0003-0787-087X
   - family-names: Hocking
     given-names: Toby
     orcid: https://orcid.org/0000-0002-3146-0865
+  - family-names: Schwendinger
+    given-names: Benjamin
+    orcid: https://orcid.org/0000-0003-3315-8114
   year: '2024'
   doi: 10.32614/CRAN.package.data.table
 - type: software
@@ -124,7 +129,7 @@ references:
   - family-names: Lawrence
     given-names: Michael
   year: '2024'
-  doi: 10.32614/CRAN.package.GenomicRanges
+  doi: 10.18129/B9.bioc.GenomicRanges
 - type: software
   title: glue
   abstract: 'glue: Interpreted String Literals'
@@ -156,7 +161,7 @@ references:
   - family-names: Lawrence
     given-names: Michael
   year: '2024'
-  doi: 10.32614/CRAN.package.IRanges
+  doi: 10.18129/B9.bioc.IRanges
 - type: software
   title: magrittr
   abstract: 'magrittr: A Forward-Pipe Operator for R'
@@ -182,7 +187,6 @@ references:
     name: R Foundation for Statistical Computing
     address: Vienna, Austria
   year: '2024'
-  doi: 10.32614/CRAN.package.parallel
 - type: software
   title: statip
   abstract: 'statip: Statistical Functions for Probability Distributions and Regression'
@@ -206,7 +210,6 @@ references:
     name: R Foundation for Statistical Computing
     address: Vienna, Austria
   year: '2024'
-  doi: 10.32614/CRAN.package.stats
 - type: software
   title: utils
   abstract: 'R: A Language and Environment for Statistical Computing'
@@ -217,7 +220,6 @@ references:
     name: R Foundation for Statistical Computing
     address: Vienna, Austria
   year: '2024'
-  doi: 10.32614/CRAN.package.utils
 - type: software
   title: checkmate
   abstract: 'checkmate: Fast and Versatile Argument Checks'
@@ -297,7 +299,7 @@ references:
   authors:
   - family-names: Ooms
     given-names: Jeroen
-    email: jeroen@berkeley.edu
+    email: jeroenooms@gmail.com
     orcid: https://orcid.org/0000-0002-4035-0289
   - family-names: Hester
     given-names: Jim
