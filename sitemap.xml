@@ -11,7 +11,8 @@
 <url><loc>/reference/drop_samples.html</loc></url>
 <url><loc>/reference/drop_snps.html</loc></url>
 <url><loc>/reference/drop_snps_using_gc.html</loc></url>
-<url><loc>/reference/filter_snps_samples.html</loc></url>
+<url><loc>/reference/extract_genotype.html</loc></url>
+<url><loc>/reference/filter.html</loc></url>
 <url><loc>/reference/gene_annotation.html</loc></url>
 <url><loc>/reference/get_clean_name.html</loc></url>
 <url><loc>/reference/get_gene_annotation.html</loc></url>
@@ -27,8 +28,6 @@
 <url><loc>/reference/phase_ref_or_alt_0.html</loc></url>
 <url><loc>/reference/print.SNPdata.html</loc></url>
 <url><loc>/reference/remove_region_from_snpdata.html</loc></url>
-<url><loc>/reference/remove_samples_from_vcf.html</loc></url>
-<url><loc>/reference/remove_snps_from_vcf.html</loc></url>
 <url><loc>/reference/select_chrom.html</loc></url>
 </urlset>
 

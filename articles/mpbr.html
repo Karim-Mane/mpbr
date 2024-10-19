@@ -18,14 +18,14 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous">
 <!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- pkgdown --><link href="../pkgdown.css" rel="stylesheet">
 <script src="../pkgdown.js"></script><meta property="og:title" content="mpbr: Summary statistics">
-<meta property="og:description" content="mpbr">
-<meta property="og:image" content="/logo.svg">
 <!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha256-nvJJv9wWKEm88qvoQl9ekL2J+k/RWIsaSScxxlsrv8k=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/config/TeX-AMS-MML_HTMLorMML.js" integrity="sha256-84DKXVJXs0/F8OTMzX4UR909+jtl4G7SPypPavF+GfA=" crossorigin="anonymous"></script><!--[if lt IE 9]>
 <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
 <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
 <![endif]-->
 </head>
 <body data-spy="scroll" data-target="#toc">
+
+
     <div class="container template-article">
       <header><div class="navbar navbar-default navbar-fixed-top" role="navigation">
   <div class="container">
@@ -41,6 +41,7 @@
         <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.0.1</span>
       </span>
     </div>
+
     <div id="navbar" class="navbar-collapse collapse">
       <ul class="nav navbar-nav">
 <li>
@@ -54,6 +55,7 @@
 <li>
   <a href="https://github.com/Karim-Mane/mpbr/" class="external-link">
     <span class="fab fa-github fa-lg"></span>
+
   </a>
 </li>
       </ul>
@@ -63,15 +65,29 @@
 <!--/.container -->
 </div>
 <!--/.navbar -->
+
+
+
       </header><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header toc-ignore">
       <h1 data-toc-skip>mpbr: Summary statistics</h1>
-                        <small class="dont-index">Source: <a href="https://github.com/Karim-Mane/mpbr/blob/HEAD/vignettes/mpbr.Rmd" class="external-link"><code>vignettes/mpbr.Rmd</code></a></small>
+            
+      
+      <small class="dont-index">Source: <a href="https://github.com/Karim-Mane/mpbr/blob/main/vignettes/mpbr.Rmd" class="external-link"><code>vignettes/mpbr.Rmd</code></a></small>
       <div class="hidden name"><code>mpbr.Rmd</code></div>
+
     </div>
-        <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://Karim-Mane.github.io/mpbr/" class="external-link">mpbr</a></span><span class="op">)</span></span></code></pre></div>
+
+    
+    
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://Karim-Mane.github.io/mpbr/" class="external-link">mpbr</a></span><span class="op">)</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Attaching package: 'mpbr'</span></span>
+<span><span class="co">#&gt; The following object is masked from 'package:stats':</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;     filter</span></span></code></pre></div>
 <div class="section level2">
 <h2 id="construct-the-snpdata-object">Construct the <code>SNPdata</code> object<a class="anchor" aria-label="anchor" href="#construct-the-snpdata-object"></a>
 </h2>
@@ -106,11 +122,13 @@ importing the input data.</li>
 </ol>
 <p>Type <code><a href="../reference/get_snpdata.html">?get_snpdata</a></code> for more details.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">snpdata</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_snpdata.html">get_snpdata</a></span><span class="op">(</span>vcf_file   <span class="op">=</span> <span class="va">vcf</span>,</span>
-<span>                       meta_file  <span class="op">=</span> <span class="va">meta_file</span>,</span>
-<span>                       output_dir <span class="op">=</span> <span class="va">output_dir</span>,</span>
-<span>                       gof        <span class="op">=</span> <span class="va">gof</span>,</span>
-<span>                       gff        <span class="op">=</span> <span class="va">gff</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">snpdata</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_snpdata.html">get_snpdata</a></span><span class="op">(</span></span>
+<span>  vcf_file <span class="op">=</span> <span class="va">vcf</span>,</span>
+<span>  meta_file <span class="op">=</span> <span class="va">meta_file</span>,</span>
+<span>  output_dir <span class="op">=</span> <span class="va">output_dir</span>,</span>
+<span>  gof <span class="op">=</span> <span class="va">gof</span>,</span>
+<span>  gff <span class="op">=</span> <span class="va">gff</span></span>
+<span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="print-the-snpdata-object">print the <code>SNPdata</code> object<a class="anchor" aria-label="anchor" href="#print-the-snpdata-object"></a>
@@ -144,25 +162,27 @@ site.</li>
 </ul>
 <p>type <code>?compute_MAF</code> for more details.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">snpdata</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compute_maf.html">compute_maf</a></span><span class="op">(</span><span class="va">snpdata</span>,</span>
-<span>                       include_het <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>                       mat_name    <span class="op">=</span> <span class="st">"GT"</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">snpdata</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compute_maf.html">compute_maf</a></span><span class="op">(</span></span>
+<span>  <span class="va">snpdata</span>,</span>
+<span>  include_het <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  mat_name <span class="op">=</span> <span class="st">"GT"</span></span>
+<span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">snpdata</span><span class="op">$</span><span class="va">details</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="filter-the-snpdata-object">Filter the SNPdata object<a class="anchor" aria-label="anchor" href="#filter-the-snpdata-object"></a>
 </h2>
-<p>Use the <code><a href="../reference/filter_snps_samples.html">filter_snps_samples()</a></code> function to remove the
+<p>Use the <code>filter_snps_samples()</code> function to remove the
 SNPs and samples that do not satisfy the user criteria. In the example
 below, we intend to discard SNPs and samples where the number of missing
 genotypes represent 20% or more the total number of observations. SNPs
 with MAF &lt; 1% or a quality score &lt; 10 will also be removed.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">snpdata</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/filter_snps_samples.html">filter_snps_samples</a></span><span class="op">(</span><span class="va">snpdata</span>,</span>
-<span>                               min_qual            <span class="op">=</span> <span class="fl">10</span>,</span>
-<span>                               max_missing_sites   <span class="op">=</span> <span class="fl">0.2</span>,</span>
-<span>                               max_missing_samples <span class="op">=</span> <span class="fl">0.2</span>,</span>
-<span>                               maf_cutoff          <span class="op">=</span> <span class="fl">0.01</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">snpdata</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/filter.html">filter</a></span><span class="op">(</span><span class="va">snpdata</span>,</span>
+<span>                  min_qual            <span class="op">=</span> <span class="fl">10</span>,</span>
+<span>                  max_missing_sites   <span class="op">=</span> <span class="fl">0.2</span>,</span>
+<span>                  max_missing_samples <span class="op">=</span> <span class="fl">0.2</span>,</span>
+<span>                  maf_cutoff          <span class="op">=</span> <span class="fl">0.01</span><span class="op">)</span></span></code></pre></div>
 <p>All loci and samples that do not satisfy the defined conditions will
 be dropped from the input <code>SNPdata</code> object. Details about the
 filtered object can be viewed using:</p>
@@ -187,8 +207,8 @@ on the specific locus through the following procedure:</p>
 <li>When there is no read supporting both alleles, the mixed genotype is
 replaced by the less common allele in the locus. If both alleles are
 equally represented in the population, it is replaced based on a
-Bernoulli simulation with a probability defined as <span class="math inline">\(\frac{reference_allele_count}{reference_allele_count
-+ alternate_allele_count}\)</span>
+Bernoulli simulation with a probability defined as
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mfrac><mrow><mi>r</mi><mi>e</mi><mi>f</mi><mi>e</mi><mi>r</mi><mi>e</mi><mi>n</mi><mi>c</mi><msub><mi>e</mi><mi>a</mi></msub><mi>l</mi><mi>l</mi><mi>e</mi><mi>l</mi><msub><mi>e</mi><mi>c</mi></msub><mi>o</mi><mi>u</mi><mi>n</mi><mi>t</mi></mrow><mrow><mi>r</mi><mi>e</mi><mi>f</mi><mi>e</mi><mi>r</mi><mi>e</mi><mi>n</mi><mi>c</mi><msub><mi>e</mi><mi>a</mi></msub><mi>l</mi><mi>l</mi><mi>e</mi><mi>l</mi><msub><mi>e</mi><mi>c</mi></msub><mi>o</mi><mi>u</mi><mi>n</mi><mi>t</mi><mo>+</mo><mi>a</mi><mi>l</mi><mi>t</mi><mi>e</mi><mi>r</mi><mi>n</mi><mi>a</mi><mi>t</mi><msub><mi>e</mi><mi>a</mi></msub><mi>l</mi><mi>l</mi><mi>e</mi><mi>l</mi><msub><mi>e</mi><mi>c</mi></msub><mi>o</mi><mi>u</mi><mi>n</mi><mi>t</mi></mrow></mfrac><annotation encoding="application/x-tex">\frac{reference_allele_count}{reference_allele_count + alternate_allele_count}</annotation></semantics></math>
 </li>
 <li>When both allele of the mixed genotype are supported by more than 5
 reads and the number of reads supporting either the reference or or
@@ -299,20 +319,32 @@ a vector of sample IDs to drop.</p>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">reduced_snpdata</span><span class="op">)</span></span></code></pre></div>
 </div>
   </div>
+
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
-        <nav id="toc" data-toggle="toc"><h2 data-toc-skip>Contents</h2>
-    </nav>
+
+      </div>
+
 </div>
-</div>
+
+
+
       <footer><div class="copyright">
   <p></p>
 <p>Developed by Karim Mané, Alfred Amambua Ngwa, David Jeffries.</p>
 </div>
+
 <div class="pkgdown">
   <p></p>
-<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.9.9000.</p>
+<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
 </div>
+
       </footer>
 </div>
+
+
+
+
+
+
   </body>
 </html>
