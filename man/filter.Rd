@@ -2,52 +2,92 @@
 % Please edit documentation in R/filter_snps_and_samples.R
 \name{filter}
 \alias{filter}
-\title{Filter a \code{SNPdata} object}
+\title{Filter loci and samples}
 \usage{
 filter(
   snpdata,
+  soft = TRUE,
+  missingness = c(from = 0.1, to = 0.9, by = 0.1),
+  maf = c(from = 0.01, to = 0.5, by = 0.01),
   min_qual = 1000L,
   max_missing_sites = 0.2,
   max_missing_samples = 0.2,
-  maf_cutoff = 0.01,
-  hard = FALSE,
-  soft = FALSE
+  maf_cutoff = 0.01
 )
 }
 \arguments{
 \item{snpdata}{An object of class \code{SNPdata}}
 
-\item{min_qual}{An integer that represents the The minimum call quality
-score. Loci with a quality score below this will be discarded.
-Default is 1000.}
+\item{soft}{A boolean that specifies whether to perform iterative filtering
+or not. Iterative filtering consists in soft filtering the input object by
+varying the missingness cut-off within the specified range of the
+\code{cut_off} argument, and the MAF cut-off from 0.1 to 0.4.
+Default is \code{TRUE}.}
 
-\item{max_missing_sites}{A numeric representing the maximum fraction of
-missing sites above which a sample should be dropped. Default is 0.2.}
+\item{missingness}{A numeric vector of three elements that specifies the
+cut-off range to use for the soft filtration. When provided, SNPs and
+samples will be filtered across this range. Default is
+\code{missingness = c(from = 0.1, to = 0.9, by = 0.1)}.}
 
-\item{max_missing_samples}{A numeric representing the maximum fraction of
-missing samples above which a loci should be discarded. Default is 0.2.}
+\item{maf}{A numeric vector of three elements that specifies the
+cut-offs to use for the soft filtration on MAF. When provided, SNPs will
+be filtered across this range. Default is
+\code{maf = c(from = 0.01, to = 0.5, by = 0.01)}.}
 
-\item{maf_cutoff}{A numeric representing the minor allele frequency cut-off.
-Loci with a \code{MAF < maf_cutoff} will be discarded.}
+\item{min_qual}{A numeric value representing the minimum call quality score
+below which a loci will be discarded. Default is 1000.}
+
+\item{max_missing_sites}{A numeric value between \code{0} and \code{1} representing the
+maximum fraction of missing sites above which a sample should be
+discarded. Default is 0.2.}
+
+\item{max_missing_samples}{A numeric value between \code{0} and \code{1} representing
+the maximum fraction of missing samples above which a loci should be
+discarded. Default is 0.2.}
+
+\item{maf_cutoff}{A numeric value between \code{0} and \code{1} representing the MAF
+cut-off. Loci with \code{MAF < maf_cutoff} will be discarded.
+Default is 0.01.}
 }
 \value{
-a filtered \code{SNPdata} object
+When \code{soft = TRUE}, the function returns a list with the
+following two elements of type data frame:
+\describe{
+\item{\code{missingness}}{A data frame with three columns showing the
+remaining proportion of samples and loci after every missingness
+cut-off.}
+\item{\code{maf}}{A data frame with two columns representing the remaining
+proportion of loci at every MAF cut-off}
+}
+
+When \code{soft = FALSE}, the function returns a subset of the input
+\code{SNPdata} object, where loci and samples that do not meet the
+specified criteria have been removed.
 }
 \description{
-SNPs and samples are filtered based on the user-specified thresholds. Both
-the \code{meta}, \code{details} and the different genotype tables will be affected
-depending on the filtration conditions.
+This function filters the SNPs and samples based on the user-specified
+conditions. It performs a soft filtering by default i.e. it allows users to
+get the proportion of remaining SNPs and samples across different cut-offs.
+Users can activate hard filtering by setting \code{soft = FALSE}.
 }
 \examples{
 \dontrun{
- snpdata <- filter(
-  snpdata,
-  min_qual            = 1000,
-  max_missing_sites   = 0.2,
-  max_missing_samples = 0.2,
-  maf_cutoff = 0.01,
-  hard = FALSE,
-  soft = FALSE
- )
- }
+  # perform hard filtering
+  snpdata <- filter(
+    snpdata,
+    soft = FALSE,
+    min_qual = 10,
+    max_missing_sites = 0.2,
+    max_missing_samples = 0.2,
+    maf_cutoff = 0.01
+  )
+ 
+  # perform soft filtering
+  snpdata <- filter(
+    snpdata,
+    soft = TRUE,
+    missingness = c(from = 0.1, to = 0.9, by = 0.1),
+    maf = c(from = 0.01, to = 0.5, by = 0.01)
+  )
+}
 }
