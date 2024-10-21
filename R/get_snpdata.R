@@ -32,10 +32,10 @@
 #' @examples
 #' \dontrun{
 #'   snpdata <- get_snpdata(
-#'     vcf_file   = system.file("extdata", "Input_Data.vcf.gz",
-#'                              package = "mpbr"),
-#'     meta_file  = system.file("extdata", "SampleMetadata.RDS",
-#'                              package = "mpbr"),
+#'     vcf_file = system.file("extdata", "Input_Data.vcf.gz", package = "mpbr"),
+#'     meta_file = system.file(
+#'       "extdata", "SampleMetadata.RDS", package = "mpbr"
+#'     ),
 #'     output_dir = tempdir()
 #'  )
 #' }
@@ -73,18 +73,19 @@ get_snpdata <- function(vcf_file    = NULL,
   # extracted. This is converted into BED format because the `GenomicRange`
   # package requires that file type.
   if (!is.null(gff) && file.exists(gff)) {
-    if (grepl(".RDS", basename(gff))) {
-      # read annotation from existing file
+    file_extension <- unlist(strsplit(basename(gff), split = "\\."))
+    if (tolower(tail(file_extension, n = 1)) == "rds") {
+      # get annotation from RDS file
       bed <- readRDS(gff)
     }
-    if (grepl(".gz", basename(gff))) {
+    if (tolower(tail(file_extension, n = 1)) == "gff") {
       # create bed file from downloaded annotation file
       bed <- file.path(output_dir, "file.bed")
-      system(sprintf("gff2bed < %s > %s", gff, bed))
+      system(sprintf("gff2bed --max-mem 10G --do-not-sort < %s > %s", gff, bed))
       bed <- data.table::fread(bed, nThread = num_threads, sep = "\t")
     }
   } else {
-    # read annotation from existing file
+    # read annotation from pre-existing RDS file
     bed <- readRDS(
       system.file(
         "extdata",
@@ -122,8 +123,8 @@ get_snpdata <- function(vcf_file    = NULL,
   # the details is needed to store the genomic coordinates of the variants
   details <- genotype_data[, c("Chrom", "Pos", "Ref", "Alt", "Qual")]
   snps <- as.matrix(subset(genotype_data, select = -(1L:5L)))
-  snps[snps == "0/0"]                 <- "0"
-  snps[snps == "1/1"]                 <- "1"
+  snps[snps == "0/0"] <- "0"
+  snps[snps == "1/1"] <- "1"
   snps[snps == "0/1" | snps == "1/0"] <- "2"
   snps[snps == "./." | snps == ".|."] <- NA
   snps <- apply(snps, 2L, as.integer)
