@@ -13,7 +13,11 @@ identifiers:
 - type: url
   value: https://github.com/Karim-Mane/mpbr/
 - type: url
+  value: https://karim-mane.github.io/mpbr/
+- type: url
   value: https://github.com/Karim-Mane/mpbr/
+- type: url
+  value: https://karim-mane.github.io/mpbr/
 abstract: provides functions to perform population genomics analyses using genome-wide
   Single Nucleotide Polymorphisms (SNPs) from the malaria parasite Plasmodium falciparum.
 authors:
@@ -41,11 +45,13 @@ preferred-citation:
   - family-names: Jeffries
     given-names: David
     email: djeffries@mrc.gm
-  year: '2024'
+  year: '2025'
   url: https://Karim-Mane.github.io/mpbr/
   identifiers:
   - type: url
     value: https://github.com/Karim-Mane/mpbr/
+  - type: url
+    value: https://karim-mane.github.io/mpbr/
 repository-code: https://github.com/Karim-Mane/mpbr
 url: https://Karim-Mane.github.io/mpbr/
 contact:
@@ -60,6 +66,18 @@ keywords:
 - population-genomics
 references:
 - type: software
+  title: cli
+  abstract: 'cli: Helpers for Developing Command Line Interfaces'
+  notes: Imports
+  url: https://cli.r-lib.org
+  repository: https://CRAN.R-project.org/package=cli
+  authors:
+  - family-names: Csárdi
+    given-names: Gábor
+    email: gabor@posit.co
+  year: '2025'
+  doi: 10.32614/CRAN.package.cli
+- type: software
   title: data.table
   abstract: 'data.table: Extension of `data.frame`'
   notes: Imports
@@ -69,6 +87,7 @@ references:
   - family-names: Barrett
     given-names: Tyson
     email: t.barrett88@gmail.com
+    orcid: https://orcid.org/0000-0002-2137-1391
   - family-names: Dowle
     given-names: Matt
     email: mattjdowle@gmail.com
@@ -79,10 +98,18 @@ references:
     given-names: Jan
   - family-names: Chirico
     given-names: Michael
+    orcid: https://orcid.org/0000-0003-0787-087X
   - family-names: Hocking
     given-names: Toby
     orcid: https://orcid.org/0000-0002-3146-0865
-  year: '2024'
+  - family-names: Schwendinger
+    given-names: Benjamin
+    orcid: https://orcid.org/0000-0003-3315-8114
+  - family-names: Krylov
+    given-names: Ivan
+    email: ikrylov@disroot.org
+    orcid: https://orcid.org/0000-0002-0172-3812
+  year: '2025'
   doi: 10.32614/CRAN.package.data.table
 - type: software
   title: dplyr
@@ -107,7 +134,7 @@ references:
     given-names: Davis
     email: davis@posit.co
     orcid: https://orcid.org/0000-0003-4777-038X
-  year: '2024'
+  year: '2025'
   doi: 10.32614/CRAN.package.dplyr
 - type: software
   title: GenomicRanges
@@ -123,8 +150,8 @@ references:
     email: hpages.on.github@gmail.com
   - family-names: Lawrence
     given-names: Michael
-  year: '2024'
-  doi: 10.32614/CRAN.package.GenomicRanges
+  year: '2025'
+  doi: 10.18129/B9.bioc.GenomicRanges
 - type: software
   title: glue
   abstract: 'glue: Interpreted String Literals'
@@ -139,7 +166,7 @@ references:
     given-names: Jennifer
     email: jenny@posit.co
     orcid: https://orcid.org/0000-0002-6983-2759
-  year: '2024'
+  year: '2025'
   doi: 10.32614/CRAN.package.glue
 - type: software
   title: IRanges
@@ -155,8 +182,8 @@ references:
     given-names: Patrick
   - family-names: Lawrence
     given-names: Michael
-  year: '2024'
-  doi: 10.32614/CRAN.package.IRanges
+  year: '2025'
+  doi: 10.18129/B9.bioc.IRanges
 - type: software
   title: magrittr
   abstract: 'magrittr: A Forward-Pipe Operator for R'
@@ -169,8 +196,8 @@ references:
     email: stefan@stefanbache.dk
   - family-names: Wickham
     given-names: Hadley
-    email: hadley@rstudio.com
-  year: '2024'
+    email: hadley@posit.co
+  year: '2025'
   doi: 10.32614/CRAN.package.magrittr
 - type: software
   title: parallel
@@ -181,8 +208,7 @@ references:
   institution:
     name: R Foundation for Statistical Computing
     address: Vienna, Austria
-  year: '2024'
-  doi: 10.32614/CRAN.package.parallel
+  year: '2025'
 - type: software
   title: statip
   abstract: 'statip: Statistical Functions for Probability Distributions and Regression'
@@ -194,7 +220,7 @@ references:
     given-names: Paul
     email: paulponcet@yahoo.fr
   - name: The R Core Team
-  year: '2024'
+  year: '2025'
   doi: 10.32614/CRAN.package.statip
 - type: software
   title: stats
@@ -205,8 +231,7 @@ references:
   institution:
     name: R Foundation for Statistical Computing
     address: Vienna, Austria
-  year: '2024'
-  doi: 10.32614/CRAN.package.stats
+  year: '2025'
 - type: software
   title: utils
   abstract: 'R: A Language and Environment for Statistical Computing'
@@ -216,8 +241,7 @@ references:
   institution:
     name: R Foundation for Statistical Computing
     address: Vienna, Austria
-  year: '2024'
-  doi: 10.32614/CRAN.package.utils
+  year: '2025'
 - type: software
   title: checkmate
   abstract: 'checkmate: Fast and Versatile Argument Checks'
@@ -229,7 +253,7 @@ references:
     given-names: Michel
     email: michellang@gmail.com
     orcid: https://orcid.org/0000-0001-9754-0393
-  year: '2024'
+  year: '2025'
   doi: 10.32614/CRAN.package.checkmate
 - type: software
   title: knitr
@@ -242,7 +266,7 @@ references:
     given-names: Yihui
     email: xie@yihui.name
     orcid: https://orcid.org/0000-0003-0645-5666
-  year: '2024'
+  year: '2025'
   doi: 10.32614/CRAN.package.knitr
 - type: software
   title: rmarkdown
@@ -286,7 +310,7 @@ references:
     given-names: Richard
     email: rich@posit.co
     orcid: https://orcid.org/0000-0003-3925-190X
-  year: '2024'
+  year: '2025'
   doi: 10.32614/CRAN.package.rmarkdown
 - type: software
   title: spelling
@@ -297,12 +321,12 @@ references:
   authors:
   - family-names: Ooms
     given-names: Jeroen
-    email: jeroen@berkeley.edu
+    email: jeroenooms@gmail.com
     orcid: https://orcid.org/0000-0002-4035-0289
   - family-names: Hester
     given-names: Jim
     email: james.hester@rstudio.com
-  year: '2024'
+  year: '2025'
   doi: 10.32614/CRAN.package.spelling
 - type: software
   title: testthat
@@ -314,7 +338,7 @@ references:
   - family-names: Wickham
     given-names: Hadley
     email: hadley@posit.co
-  year: '2024'
+  year: '2025'
   doi: 10.32614/CRAN.package.testthat
   version: '>= 3.0.0'
 
