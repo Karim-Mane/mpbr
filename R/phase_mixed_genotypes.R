@@ -1,8 +1,8 @@
 #' Phase mixed genotypes
 #'
 #' Mixed genotype phasing is performed based on the number of reads supporting
-#' each allele at an heterozygous site (allelic depth). The phasing is based on
-#' the three methods described below in the argument `method`.
+#' each allele at a heterozygous site (allelic depth). The phasing is based on
+#' the two methods described below in the argument `method`.
 #'
 #' @param snpdata a `SNPdata` object
 #' @param genotype The name of the genotype matrix from which the mixed
@@ -11,15 +11,36 @@
 #'    the target genotype matrix.
 #' @param ncores A numeric that represents the number of cores to be used during
 #'    the phasing process. Default is 4.
+#' @param ration A float that represents one of the criteria described below. 
+#'    The ratio between the number of reads supporting the two alleles must be
+#'    greater than or equal to this cut-off. Default is `0.1`.
+#' @param min_ad An integer that represents one of the criteria described below.
+#'    The number of reads supporting the reference or alternative alleles must
+#'    be greater than or equal to this cut-off. Default is `2`.
 #' @param method A character with the name of the phasing method. The methods
 #'    implemented in the current version include:
 #' \enumerate{
-#'   \item major_call: transforms the mixed allele into the one with the highest
-#'        allelic depth.
-#'   \item bi_allelic: the mixed allele is transformed into either an
-#'        alternative allele or remains mixed.
-#'   \item least_frequent: transforms the mixed genotype into the least frequent
-#'      allele.
+#'   \item heterozygous: when the `ratio` in allelic depth > the specified ratio
+#'      cut-off and the specified `min_ad` >= the minimum allelic depth
+#'      (ratio > 0.1 & min_ad >= 2 by default), the site is considered a true
+#'      heterozygous. It will be recoded as `2` (the number used to represent
+#'      the mixed alleles). When a site is not a true heterozygous, it is
+#'      recoded into either `0` or `1` based on the `homozygous` method below.
+#'   \item homozygous: all mixed alleles will be recoded as `0` or `1` depending
+#'      on which one has a highest allelic depth. When the allelic depth of the
+#'      two alleles is the same, the site is transformed based on the value of
+#'      the `alternative_method` argument.
+#' }
+#' @param alternative_method A character with the name of the phasing approach
+#'    used when allelic depths of the two alleles are equal. The possible values
+#'    are:
+#' \enumerate{
+#'   \item bernoulli: the mixed allele is recoded into `0` or `1` based on a
+#'      Bernoulli simulation with a parameter equal to the minor allele
+#'      frequency of the SNPs on which the site is found.
+#'   \item minor_allele: the mixed allele is transformed into the least
+#'      represented allele (i.e. the allele with the minor frequency in the
+#'      population).
 #' }
 #'
 #' @return a `SNPdata` object with an additional table named as **Phased** that
@@ -35,17 +56,20 @@
 #'   output_dir = tempdir()
 #' )
 #'
-#' # perform mixed genotypes phasing using 'major_call' allele
+#' # perform mixed genotypes phasing using 'homozygous' method
 #' snpdata <- phase(
 #'   snpdata = snpdata,
 #'   genotype = "GT",
-#'   method = "major_call"
+#'   method = "homozygous"
 #' )
 #'  
 phase <- function(snpdata,
                   genotype = "GT",
-                  method = c("major_call", "bi_allelic", "least_frequent"),
-                  ncores = 4) {
+                  method = "homozygous",
+                  min_ad = 2,
+                  ratio = 0.1,
+                  ncores = 4,
+                  alternative_method = "bernoulli") {
   checkmate::assert_class(snpdata, "SNPdata", null.ok = FALSE)
   checkmate::assert_character(genotype, any.missing = FALSE, len = 1L,
                               null.ok = FALSE)
@@ -53,9 +77,21 @@ phase <- function(snpdata,
                               null.ok = FALSE)
   checkmate::assert_choice(
     method,
-    choices = c("major_call", "bi_allelic", "least_frequent"),
+    choices = c("heterozygous", "homozygous"),
     null.ok = FALSE
   )
+  checkmate::assert_character(alternative_method, any.missing = FALSE, len = 1L,
+                              null.ok = FALSE)
+  checkmate::assert_choice(
+    alternative_method,
+    choices = c("bernoulli", "minor_allele"),
+    null.ok = FALSE
+  )
+  checkmate::assert_number(min_ad, na.ok = FALSE, lower = 2, finite = TRUE,
+                           null.ok = FALSE)
+  checkmate::assert_number(ratio, na.ok = FALSE, finite = TRUE, null.ok = FALSE)
+  checkmate::assert_number(ncores, na.ok = FALSE, finite = TRUE,
+                           null.ok = FALSE)
 
   # Do not proceed if the specified genotype matrix does not exist
   check_genotype_matrix(snpdata, genotype)

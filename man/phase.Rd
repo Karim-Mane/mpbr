@@ -4,7 +4,15 @@
 \alias{phase}
 \title{Phase mixed genotypes}
 \usage{
-phase(snpdata, genotype = "GT", nsim = 100L)
+phase(
+  snpdata,
+  genotype = "GT",
+  method = "homozygous",
+  min_ad = 2,
+  ratio = 0.1,
+  ncores = 4,
+  alternative_method = "bernoulli"
+)
 }
 \arguments{
 \item{snpdata}{a \code{SNPdata} object}
@@ -14,24 +22,66 @@ genotypes will be phased. This can be either the raw genotype matrix
 (\code{GT}) or the imputed genotype matrix (\code{Imputed}) or any name given to
 the target genotype matrix.}
 
-\item{nsim}{an integer that represents the number of simulations to be
-performed}
+\item{method}{A character with the name of the phasing method. The methods
+implemented in the current version include:
+\enumerate{
+\item heterozygous: when the \code{ratio} in allelic depth > the specified ratio
+cut-off and the specified \code{min_ad} >= the minimum allelic depth
+(ratio > 0.1 & min_ad >= 2 by default), the site is considered a true
+heterozygous. It will be recoded as \code{2} (the number used to represent
+the mixed alleles). When a site is not a true heterozygous, it is
+recoded into either \code{0} or \code{1} based on the \code{homozygous} method below.
+\item homozygous: all mixed alleles will be recoded as \code{0} or \code{1} depending
+on which one has a highest allelic depth. When the allelic depth of the
+two alleles is the same, the site is transformed based on the value of
+the \code{alternative_method} argument.
+}}
+
+\item{min_ad}{An integer that represents one of the criteria described below.
+The number of reads supporting the reference or alternative alleles must
+be greater than or equal to this cut-off. Default is \code{2}.}
+
+\item{ncores}{A numeric that represents the number of cores to be used during
+the phasing process. Default is 4.}
+
+\item{alternative_method}{A character with the name of the phasing approach
+used when allelic depths of the two alleles are equal. The possible values
+are:
+\enumerate{
+\item bernoulli: the mixed allele is recoded into \code{0} or \code{1} based on a
+Bernoulli simulation with a parameter equal to the minor allele
+frequency of the SNPs on which the site is found.
+\item minor_allele: the mixed allele is transformed into the least
+represented allele (i.e. the allele with the minor frequency in the
+population).
+}}
+
+\item{ration}{A float that represents one of the criteria described below.
+The ratio between the number of reads supporting the two alleles must be
+greater than or equal to this cut-off. Default is \code{0.1}.}
 }
 \value{
-a \code{SNPdata} object with an additional table named as \strong{Phased}. This
-object will contain the phased genotype data
+a \code{SNPdata} object with an additional table named as \strong{Phased} that
+contains the phased genotype data.
 }
 \description{
 Mixed genotype phasing is performed based on the number of reads supporting
-each allele at an heterozygous site. The phasing will be run \code{nsim} times and
-phased data with the highest correlation between MAF from raw data and MAF
-from phased data will be retained.
+each allele at a heterozygous site (allelic depth). The phasing is based on
+the two methods described below in the argument \code{method}.
 }
-\details{
-When both alleles are not supported by any read or the total number
-of reads supporting both alleles at a given site is < 5, the genotype will
-be phased based on a Bernoulli distribution using the MAF as a parameter.
-Similarly, when the total number of reads is > 5 and the number of reads
-supporting one of the allele is not 2 times the number of the other,
-the genotype is phased using a Bernoulli distribution.
+\examples{
+# get SNPdata object
+snpdata <- get_snpdata(
+  vcf_file = system.file("extdata", "Input_Data.vcf.gz", package = "mpbr"),
+  meta_file = system.file("extdata", "SampleMetadata.RDS", package = "mpbr"),
+  output_dir = tempdir()
+)
+
+# perform mixed genotypes phasing using 'homozygous' method
+snpdata <- phase(
+  snpdata = snpdata,
+  genotype = "GT",
+  method = "homozygous"
+)
+ 
 }

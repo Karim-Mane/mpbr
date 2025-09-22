@@ -48,3 +48,11 @@ gene on which they are located.
 The function generates the input data needed for population genetics
 analyses using whole genome SNPs data genotyped from the malaria parasite.
 }
+\examples{
+snpdata <- get_snpdata(
+  vcf_file = system.file("extdata", "Input_Data.vcf.gz", package = "mpbr"),
+  meta_file = system.file("extdata", "SampleMetadata.RDS", package = "mpbr"),
+  output_dir = tempdir()
+)
+
+}
