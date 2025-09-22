@@ -1,54 +1,73 @@
 #' Phase mixed genotypes
 #'
 #' Mixed genotype phasing is performed based on the number of reads supporting
-#' each allele at an heterozygous site. The phasing will be run `nsim` times and
-#' phased data with the highest correlation between MAF from raw data and MAF
-#' from phased data will be retained.
+#' each allele at an heterozygous site (allelic depth). The phasing is based on
+#' the three methods described below in the argument `method`.
 #'
 #' @param snpdata a `SNPdata` object
-#' @param nsim an integer that represents the number of simulations to be
-#'    performed
 #' @param genotype The name of the genotype matrix from which the mixed
 #'    genotypes will be phased. This can be either the raw genotype matrix
 #'    (`GT`) or the imputed genotype matrix (`Imputed`) or any name given to
 #'    the target genotype matrix.
+#' @param ncores A numeric that represents the number of cores to be used during
+#'    the phasing process. Default is 4.
+#' @param method A character with the name of the phasing method. The methods
+#'    implemented in the current version include:
+#' \enumerate{
+#'   \item major_call: transforms the mixed allele into the one with the highest
+#'        allelic depth.
+#'   \item bi_allelic: the mixed allele is transformed into either an
+#'        alternative allele or remains mixed.
+#'   \item least_frequent: transforms the mixed genotype into the least frequent
+#'      allele.
+#' }
 #'
-#' @return a `SNPdata` object with an additional table named as **Phased**. This
-#'    object will contain the phased genotype data
-#'
-#' @details When both alleles are not supported by any read or the total number
-#'    of reads supporting both alleles at a given site is < 5, the genotype will
-#'    be phased based on a Bernoulli distribution using the MAF as a parameter.
-#'    Similarly, when the total number of reads is > 5 and the number of reads
-#'    supporting one of the allele is not 2 times the number of the other,
-#'    the genotype is phased using a Bernoulli distribution.
-#'
+#' @return a `SNPdata` object with an additional table named as **Phased** that
+#'    contains the phased genotype data.
 #'
 #' @export
-phase <- function(snpdata, genotype = "GT", nsim = 100L) {
+#' 
+#' @examples
+#' # get SNPdata object
+#' snpdata <- get_snpdata(
+#'   vcf_file = system.file("extdata", "Input_Data.vcf.gz", package = "mpbr"),
+#'   meta_file = system.file("extdata", "SampleMetadata.RDS", package = "mpbr"),
+#'   output_dir = tempdir()
+#' )
+#'
+#' # perform mixed genotypes phasing using 'major_call' allele
+#' snpdata <- phase(
+#'   snpdata = snpdata,
+#'   genotype = "GT",
+#'   method = "major_call"
+#' )
+#'  
+phase <- function(snpdata,
+                  genotype = "GT",
+                  method = c("major_call", "bi_allelic", "least_frequent"),
+                  ncores = 4) {
   checkmate::assert_class(snpdata, "SNPdata", null.ok = FALSE)
-  checkmate::assert_numeric(nsim, lower = 1L, any.missing = FALSE,
-                            null.ok = FALSE, len = 1L)
   checkmate::assert_character(genotype, any.missing = FALSE, len = 1L,
                               null.ok = FALSE)
+  checkmate::assert_character(method, any.missing = FALSE, len = 1L,
+                              null.ok = FALSE)
+  checkmate::assert_choice(
+    method,
+    choices = c("major_call", "bi_allelic", "least_frequent"),
+    null.ok = FALSE
+  )
 
   # Do not proceed if the specified genotype matrix does not exist
-  if (!(genotype %in% names(snpdata))) {
-    current_gt_matrices <- names(snpdata)[!(names(snpdata) %in% # nolint: object_usage_linter
-                                              c("meta", "details", "vcf"))]
-    cli::cli_abort(
-      c("x" = "The specified genotype matrix {.code genotype} does not exist",
-        "i" = "Current genotype matrices are: {.code {current_gt_matrices}}")
-    )
-  }
+  check_genotype_matrix(snpdata, genotype)
 
   # Do not proceed if the chosen genotype matrix does not contain any mixed
   # allele.
   if (sum(snpdata[[genotype]] == 2L, na.rm = TRUE) == 0L) {
-    cli::cli_abort(
-      c("x" = "No mixed genotypes found in the specified genotype matrix: 
-        {genotype}",
-        "i" = "")
+    cli::cli_abort(c(
+      "x" = "No mixed genotypes found in the specified genotype matrix: \\\
+      {genotype}",
+      "i" = "Set the value for {.emph genotypes} argument to {.strong GT} to \\\
+      perform phasing on the raw genotype data.")
     )
   }
 
@@ -64,11 +83,14 @@ phase <- function(snpdata, genotype = "GT", nsim = 100L) {
   
   # The genotype matrix might have undergone some filtration (removal of poor
   # quality samples and SNPs). We filter the allelic depth matrix to only keep
-  # the samples and SNPs that are currently in the genotype matrix
+  # the samples and SNPs that are currently in the genotype matrix.
   names(depth) <- c("Chrom", "Pos", sample_ids)
-  ad_chrom_pos <- paste(depth[["Chrom"]], "_", depth[["Pos"]])
-  gt_chrom_pos <- paste(snpdata[["details"]][["Chrom"]], "_",
-                        snpdata[["details"]][["Pos"]])
+  ad_chrom_pos <- paste(depth[["Chrom"]], depth[["Pos"]], sep = "_")
+  gt_chrom_pos <- paste(
+    snpdata[["details"]][["Chrom"]],
+    snpdata[["details"]][["Pos"]],
+    sep = "_"
+  )
   row_matches <- ad_chrom_pos %in% gt_chrom_pos
   depth <- depth[row_matches, ]
   col_matches <- which(sample_ids %in% colnames(snpdata[[genotype]]))
@@ -78,40 +100,55 @@ phase <- function(snpdata, genotype = "GT", nsim = 100L) {
       x = "The genotype and allelic depth matrices have different dimensions."
     ))
   }
-    
-  # create a temporary directory to store temporary files
-  path <- file.path(tempdir(), "phasing")
-  dir.create(path)
   
-  # Phasing algorithm:
-  # 1. the difference between the allelic depth of the reference and alternative
-  # alleles ('delta_alleles') is calculated.
-  # when 'delta_alleles' > (2 * sd(delta_alleles)), the mixed allele is replaced
-  # by the most represented allele.
-  # 2. The remaining alleles will be replaced based on:
-  #   a) the MAF at the corresponding locus
-  #   b) SNPs LD: look into the LD distribution to define the window size. A
-  #   mixed allele that fall within a specific window will be replaced based
-  #   on the allele composition in that window.
-  #   NOTE: look into this and discuss it with Alfred and David
-  #   c) the method used by Brezesky
-  genotype_data <- snpdata[[genotype]]
-  transposed_genotype <- t(genotype_data)
-  transposed_depth <- t(depth[, -c(1:2)])
-  x <- seq(1, length(transposed_genotype), by = dim(transposed_genotype)[[1L]])
+  # get indices of the mixed genotypes from allelic depth matrix
+  transposed_genotype <- t(snpdata[[genotype]])
+  x <- seq(
+    from = 1,
+    to = length(transposed_genotype),
+    by = dim(transposed_genotype)[[1L]]
+  )
   idx_mixed_alleles <- which(transposed_genotype == 2L)
+  rm(transposed_genotype)
   
-  # The data has been transposed. now we have the SNPs in column. we now know
-  # that snps on the first column ([line 1 to the end]) belong to first locus.
-  # indexes that fall within this interval will be associated to 1 from the
-  # findInterval function. that way, we easily pick the MAF of the first snp and
-  # perform the phasing of all mixed alleles in that interval. the same
-  # procedure is applied across the rest of the columns. 
+  # The data has been transposed. Now we have the SNPs in column. We now know
+  # that snps on the first column ([line 1 to the end, 1]) belong to first locus
+  # Indices of mixed allele which fall within this interval ([1-num_rows]) will
+  # be associated to 1 from the `findInterval()` function. That way, we easily
+  # pick the MAF of the first SNP and its minor allele to perform the phasing of
+  # all mixed alleles in that interval. The same procedure is applied across the
+  # rest of the columns.
+  transposed_depth <- t(depth[, -c(1:2)])
   intervals <- findInterval(idx_mixed_alleles, x)
-  mixed_allele_data <- data.frame(idx = idx_mixed_alleles,
-                                  col = intervals,
-                                  ad = transposed_depth[idx_mixed_alleles])
-  pased_data <- phase_genotypes(mixed_allele_data, nsim)
+  mixed_allele_data <- data.frame(
+    idx = idx_mixed_alleles,
+    col = intervals,
+    ad = transposed_depth[idx_mixed_alleles]
+  )
+  rm(x)
+  
+  # when the method is 'least_frequent', check if the minor allele frequency
+  # was already computed.
+  # Stop the process and ask the user to run 'compute_maf()' on the SNPdata
+  # object.
+  if (method == "least_frequent" & !("MAF" %in% names(snpdata[["details"]]))) {
+    cli::cli_abort(c(
+      x = "{.emph least_frequent} method requires minor allele frequency to \\\
+      be computed prior to phasing.",
+      "!" = "No column named as {.field MAF} found in the {.strong details} \\\
+      table of the input {.cls SNPdata} object.",
+      i = "Use the {.fn compute_maf} function to calculate the minor allele \\\
+      frequency before phasing the data."
+    ))
+  }
+  
+  # perform the mixed genotypes phasing
+  mixed_allele_data <- phaser(
+    mad = mixed_allele_data,
+    method = method,
+    ncores = ncores,
+    details = snpdata[["details"]]
+  )
 
   # The correlations vector will store the correlation coefficient between the
   # initial MAF and the MAF after every simulation.
@@ -179,7 +216,7 @@ phase_genotypes <- function(mixed_allele_data, nsim) {
   )
   
   # calculate the difference in allele count between reference and alternate
-  # allele
+  # alleles
   mixed_allele_data[["diff"]] <- mixed_allele_data[["ref_count"]] -
     mixed_allele_data[["alt_count"]]
   
@@ -189,6 +226,36 @@ phase_genotypes <- function(mixed_allele_data, nsim) {
   idx <- mixed_allele_data[["diff"]] > sd(mixed_allele_data[["diff"]]) &
     mixed_allele_data[["diff"]]
   
+  # send message around the allelic depth in the dataset
+  ref_is_major <- round(
+    (sum(mixed_allele_data[["diff"]] > 0, na.rm = TRUE) /
+       nrow(mixed_allele_data)) * 100,
+    digits = 2
+  )
+  alt_is_major <- round(
+    (sum(mixed_allele_data[["diff"]] < 0, na.rm = TRUE) /
+       nrow(mixed_allele_data)) * 100,
+    digits = 2
+  )
+  alt_same_as_ref <- round(
+    (sum(mixed_allele_data[["diff"]] == 0, na.rm = TRUE) /
+       nrow(mixed_allele_data)) * 100,
+    digits = 2
+  )
+  message("Reference allele count is higher in ", ref_is_major,
+  "% of the mixed alleles.")
+  message("Alternate allele count is higher in ", alt_is_major,
+  "% of the mixed alleles.")
+  message("Alternate allele count is same as reference count in ",
+          alt_same_as_ref,
+          "% of the mixed alleles.")
+  
+  # detect outliers
+  y <- mixed_allele_data[["diff"]]
+  test_out <- abs(y - median(y, na.rm = TRUE)) / mad(y, na.rm = TRUE)
+  # do not plot the below within the function. Return y and test_out and
+  # plot at the end of the phasing process
+  #plot(y, test_out, ylim=c(0,30), xlim=c(-600,300))
   
   # create a temporary directory to store temporary files
   path  <- file.path(tempdir(), "phasing")

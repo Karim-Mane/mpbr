@@ -30,13 +30,18 @@
 #'   }
 #'
 #' @export
-#' @importFrom magrittr %>%
-#'
-get_snpdata <- function(vcf_file    = NULL,
-                        meta_file   = NULL,
-                        output_dir  = NULL,
-                        gof         = NULL,
-                        gff         = NULL,
+#' @examples
+#' snpdata <- get_snpdata(
+#'   vcf_file = system.file("extdata", "Input_Data.vcf.gz", package = "mpbr"),
+#'   meta_file = system.file("extdata", "SampleMetadata.RDS", package = "mpbr"),
+#'   output_dir = tempdir()
+#' )
+#' 
+get_snpdata <- function(vcf_file = NULL,
+                        meta_file = NULL,
+                        output_dir = NULL,
+                        gof = NULL,
+                        gff = NULL,
                         num_threads = 4L) {
   checkmate::assert_file_exists(vcf_file)
   checkmate::assert_file_exists(meta_file)
@@ -48,6 +53,7 @@ get_snpdata <- function(vcf_file    = NULL,
   # the user need to provide the GOF file from which the gene ontology
   # annotation will be extracted.
   # otherwise, the pre-existing GOF file will be used
+  cli::cli_progress_step("Reading annotation files")
   if (!is.null(gof) && file.exists(gof)) {
     if (grepl(".RDS", basename(gof))) {
       go <- readRDS(gof)
@@ -75,10 +81,12 @@ get_snpdata <- function(vcf_file    = NULL,
     }
   } else {
     # read annotation from existing file
-    bed <- readRDS(system.file("extdata", "PlasmoDB-56_Pfalciparum3D7.RDS",
-                               package = "mpbr"))
+    bed <- readRDS(
+      system.file("extdata", "PlasmoDB-56_Pfalciparum3D7.RDS", package = "mpbr")
+    )
   }
   
+  cli::cli_progress_step("Building the genotype matrix")
   # the sample IDs will be used to create the sample metadata file.
   sample_ids <- get_sample_ids(vcf_file)
   
@@ -87,11 +95,12 @@ get_snpdata <- function(vcf_file    = NULL,
   genotype_data <- extract_genotype(vcf_file, which = "GT")
   names(genotype_data) <- c("Chrom", "Pos", "Ref", "Alt", "Qual", sample_ids)
   
+  cli::cli_progress_step("Building the SNPs genomic coordinates tables")
   # the details is needed to store the genomic coordinates of the variants
   details <- genotype_data[, c("Chrom", "Pos", "Ref", "Alt", "Qual")]
   snps <- as.matrix(subset(genotype_data, select = -(1L:5L)))
-  snps[snps == "0/0"]                 <- "0"
-  snps[snps == "1/1"]                 <- "1"
+  snps[snps == "0/0"] <- "0"
+  snps[snps == "1/1"] <- "1"
   snps[snps == "0/1" | snps == "1/0"] <- "2"
   snps[snps == "./." | snps == ".|."] <- NA
   snps <- apply(snps, 2L, as.integer)
@@ -101,6 +110,7 @@ get_snpdata <- function(vcf_file    = NULL,
 
   # adding the annotation data to the details table to associate each SNPs to
   # its gene of origin together with that gene's function.
+  cli::cli_progress_step("Annotating the SNPs genomic coordinates tables")
   details[["gene"]] <- get_gene_annotation(
     genomic_coordinates = details[, c("Chrom", "Pos")],
     go = go,
@@ -110,11 +120,12 @@ get_snpdata <- function(vcf_file    = NULL,
   
   # we created the SNPdata class to handle easily the combined set of all the
   # data needed for downstream analyses.
+  cli::cli_progress_step("Building the {.cls SNPdata} object")
   snp_table <- list(
-    meta    = meta,
+    meta = meta,
     details = details,
-    GT      = snps,
-    vcf     = vcf_file
+    GT = snps,
+    vcf = vcf_file
   )
   class(snp_table) <- "SNPdata"
   snp_table

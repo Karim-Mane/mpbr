@@ -44,7 +44,7 @@ compute_maf <- function(snpdata, genotype = "GT", include_het = FALSE,
               the 'GT' matrix or the imputed (non-phased) data in the 'Imputed'
               matrix" = any(genotype %in% c("GT", "Imputed")))
   }
-  x   <- snpdata[[genotype]]
+  x <- snpdata[[genotype]]
   ref <- rowSums(x == 0L, na.rm = TRUE)
   alt <- rowSums(x == 1L, na.rm = TRUE)
   het <- rowSums(x == 2L, na.rm = TRUE)

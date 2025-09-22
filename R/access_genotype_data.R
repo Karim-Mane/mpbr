@@ -26,10 +26,10 @@ extract_genotype <- function(file, which = "GT") {
   # users who have enabled openmp. will benefit from {data.table} multithreaded
   # data import 
   vcf <- data.table::fread(
-    cmd     = sprintf("pigz -dc < %s", file),
+    cmd = sprintf("pigz -dc < %s", file),
     nThread = (parallel::detectCores() - 2),
-    sep     = NULL, # line is column
-    header  = FALSE # 1st line is data
+    sep = NULL, # line is column
+    header = FALSE # 1st line is data
   )
 
   # there are 2 parts in the vcf file: the header (rows with '##' or '#') and
@@ -58,14 +58,15 @@ extract_genotype <- function(file, which = "GT") {
 
   # The GT data is located from the 6th column of the data, while the AD is
   # found from column 3. See the section above for the reasoning.
-  cols <- names(vcf)[idx_genotype_data:length(vcf)]
+  genotypes <- names(vcf)[idx_genotype_data:length(vcf)]
   
   # the genotype field is split based on ':' as a pattern. The genotypes data
   # is the first element, but the allelic depth is the second element
-  vcf[, (cols) := lapply(.SD, function(g) {
-    unlist(strsplit(g, ":", fixed = TRUE))[[idx_extraction]]
-  }), .SDcols = cols]
-  cli::cli_alert_success(sprintf("\nThe sample %s were successfully extracted.",
-                                 genotype))
-  vcf
+  get_gt_field <- function(x) {
+    x <- as.matrix(x)
+    sub(":.*", "", x, perl = TRUE) # keep text before first ":"
+  }
+  genotypes <- get_gt_field(vcf[, idx_genotype_data:length(vcf)])
+  genotypes <- cbind(vcf[, 1:(idx_genotype_data - 1)], genotypes)
+  return(as.data.frame(genotypes))
 }

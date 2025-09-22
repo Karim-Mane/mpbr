@@ -71,32 +71,31 @@ get_gene_annotation <- function(genomic_coordinates, go, bed, num_cores = 4L) {
   checkmate::assert_data_frame(bed, min.rows = 1L,
                                min.cols = 1L, null.ok = FALSE)
   
-  genes        <- as.character(parallel::mclapply(bed[["V10"]],
-                                                  get_clean_name,
-                                                  mc.cores = num_cores))
-  genes        <- as.character(parallel::mclapply(genes,
-                                                  rm_prf1,
-                                                  mc.cores = num_cores))
-  genes        <- as.character(parallel::mclapply(genes,
-                                                  rm_prf2,
-                                                  mc.cores = num_cores))
-  genes        <- as.character(parallel::mclapply(genes,
-                                                  rm_suf,
-                                                  mc.cores = num_cores))
-  genes        <- data.table::data.table(genes)
-  genes        <- cbind(bed[["V1"]], bed[["V2"]], bed[["V3"]], genes)
+  genes <- as.character(parallel::mclapply(bed[["V10"]],
+                                           get_clean_name,
+                                           mc.cores = num_cores))
+  genes <- as.character(parallel::mclapply(genes,
+                                           rm_prf1,
+                                           mc.cores = num_cores))
+  genes <- as.character(parallel::mclapply(genes,
+                                           rm_prf2,
+                                           mc.cores = num_cores))
+  genes <- as.character(parallel::mclapply(genes,
+                                           rm_suf,
+                                           mc.cores = num_cores))
+  genes <- data.table::data.table(genes)
+  genes <- cbind(bed[["V1"]], bed[["V2"]], bed[["V3"]], genes)
   names(genes) <- c("chrom", "start", "end", "gene_id")
-  go           <- subset(go, select = c(2, 10))
-  names(go)    <- c("gene_id", "gene_name")
+  go <- subset(go, select = c(2, 10))
+  names(go) <- c("gene_id", "gene_name")
   
   chrom <- gene_id <- gene_name <- start <- end <- NULL # nolint: object_name_linter
-  test         <- genes %>% dplyr::left_join(go, by = "gene_id",
-                                             relationship = "many-to-many")
-  test         <- dplyr::distinct(test, chrom, start, end, gene_id, gene_name)
+  test <- genes %>% dplyr::left_join(go, by = "gene_id",
+                                     relationship = "many-to-many")
+  test <- dplyr::distinct(test, chrom, start, end, gene_id, gene_name)
   genomic_coordinates[["Pos"]] <- as.numeric(genomic_coordinates[["Pos"]])
-  resultat     <- gene_annotation(target_gtf = test,
-                                  genomic_coordinates = genomic_coordinates)
-  resultat     <- gsub("NA:", "", resultat, fixed = TRUE)
-  cli::cli_alert_success("\nThe SNPs have been successfully annotated.")
+  resultat <- gene_annotation(target_gtf = test,
+                              genomic_coordinates = genomic_coordinates)
+  resultat <- gsub("NA:", "", resultat, fixed = TRUE)
   resultat
 }

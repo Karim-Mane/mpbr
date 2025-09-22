@@ -89,3 +89,23 @@ remove_snps_from_vcf <- function(vcf, loci_to_be_retained, path, index = 1L) {
   
   as.character(filtered_vcf)
 }
+
+#' Check whether the specified genotype matrix is part of the `snpdata` object
+#'
+#' @inheritParams phase 
+#'
+#' @returns Invisibly returns TRUE if the specified genotype matrix is part of
+#'    the `snpdata` object, raises an error otherwise.
+#' @keywords internal
+#'
+check_genotype_matrix <- function(snpdata, genotype) {
+  if (!(genotype %in% names(snpdata))) {
+    elts <- names(snpdata)
+    gt_matrices <- elts[!(elts %in% c("meta", "details", "vcf"))] # nolint: object_usage_linter
+    cli::cli_abort(
+      c("x" = "The specified genotype matrix {.strong genotype} does not exist.",
+        "i" = "Current genotype matrices are: {.code {gt_matrices}}")
+    )
+  }
+  invisible(TRUE)
+}

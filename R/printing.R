@@ -17,4 +17,10 @@ print.SNPdata <- function(x, ...) {
                   dim(x[["GT"]])[[2L]],
                   dim(x[["GT"]])[[1L]]))
   message(sprintf("\nData is generated from: %s", x[["vcf"]]))
+  
+  # make use of the following:
+  # cli::cat_line("This is ", "a ", "line of text.", col = "red")
+  # cli::cat_bullet(letters[1:5])
+  # cli::cat_bullet(letters[1:5], bullet = "tick", bullet_col = "green")
+  # cli::cat_rule()
 }
