@@ -1,8 +1,10 @@
 #' Phase mixed genotypes
 #'
 #' Mixed genotype phasing is performed based on the number of reads supporting
-#' each allele at a heterozygous site (allelic depth). The phasing is based on
-#' the two methods described below in the argument `method`.
+#' each allele at a heterozygous site (allelic depth). A mixed allele will be
+#' recoded into either `0` or `1` depending on which one has a highest allelic
+#' depth or into `2` when `heterozygous` is set to `TRUE` i.e. to consider
+#' mixed alleles as a third allele.
 #'
 #' @param snpdata a `SNPdata` object
 #' @param genotype The name of the genotype matrix from which the mixed
@@ -17,23 +19,19 @@
 #' @param min_ad An integer that represents one of the criteria described below.
 #'    The number of reads supporting the reference or alternative alleles must
 #'    be greater than or equal to this cut-off. Default is `2`.
-#' @param method A character with the name of the phasing method. The methods
-#'    implemented in the current version include:
+#' @param heterozygous A logical that is used to determine whether keep `true`
+#'    heterozygous sites (recode them as `2`) or not. Default is `FALSE`. A site
+#'    is considered as a true heterozygous when the following two conditions are
+#'    met:
 #' \enumerate{
-#'   \item heterozygous: when the `ratio` in allelic depth > the specified ratio
-#'      cut-off and the specified `min_ad` >= the minimum allelic depth
-#'      (ratio > 0.1 & min_ad >= 2 by default), the site is considered a true
-#'      heterozygous. It will be recoded as `2` (the number used to represent
-#'      the mixed alleles). When a site is not a true heterozygous, it is
-#'      recoded into either `0` or `1` based on the `homozygous` method below.
-#'   \item homozygous: all mixed alleles will be recoded as `0` or `1` depending
-#'      on which one has a highest allelic depth. When the allelic depth of the
-#'      two alleles is the same, the site is transformed based on the value of
-#'      the `alternative_method` argument.
+#'   \item condition 1: the `ratio` in allelic depth > the specified ratio
+#'      cut-off.
+#'   \item condition2: the `min_ad` >= the specified minimum allelic depth i.e.
+#'      (ratio > 0.1 & min_ad >= 2 by default).
 #' }
-#' @param alternative_method A character with the name of the phasing approach
-#'    used when allelic depths of the two alleles are equal. The possible values
-#'    are:
+#' @param phase_equal_ad A character with the name of the phasing approach
+#'    used when the allelic depths of the two alleles are equal. The possible
+#'    values are:
 #' \enumerate{
 #'   \item bernoulli: the mixed allele is recoded into `0` or `1` based on a
 #'      Bernoulli simulation with a parameter equal to the minor allele
@@ -56,34 +54,34 @@
 #'   output_dir = tempdir()
 #' )
 #'
-#' # perform mixed genotypes phasing using 'homozygous' method
+#' # perform mixed genotypes phasing
 #' snpdata <- phase(
 #'   snpdata = snpdata,
 #'   genotype = "GT",
-#'   method = "homozygous"
+#'   heterozygous = FALSE, # recode all mixed alleles as 0 or 1
+#'   ncores = 4,
+#'   phase_equal_ad = "bernoulli"
 #' )
 #'  
 phase <- function(snpdata,
                   genotype = "GT",
-                  method = "homozygous",
+                  heterozygous = FALSE,
                   min_ad = 2,
                   ratio = 0.1,
                   ncores = 4,
-                  alternative_method = "bernoulli") {
+                  phase_equal_ad = "bernoulli") {
   checkmate::assert_class(snpdata, "SNPdata", null.ok = FALSE)
   checkmate::assert_character(genotype, any.missing = FALSE, len = 1L,
                               null.ok = FALSE)
-  checkmate::assert_character(method, any.missing = FALSE, len = 1L,
+  checkmate::assert_character(phase_equal_ad, any.missing = FALSE, len = 1L,
                               null.ok = FALSE)
-  checkmate::assert_choice(
-    method,
-    choices = c("heterozygous", "homozygous"),
-    null.ok = FALSE
+  checkmate::assert_logical(
+    heterozygous, null.ok = FALSE, any.missing = FALSE, len = 1L
   )
-  checkmate::assert_character(alternative_method, any.missing = FALSE, len = 1L,
+  checkmate::assert_character(phase_equal_ad, any.missing = FALSE, len = 1L,
                               null.ok = FALSE)
   checkmate::assert_choice(
-    alternative_method,
+    phase_equal_ad,
     choices = c("bernoulli", "minor_allele"),
     null.ok = FALSE
   )
@@ -102,8 +100,7 @@ phase <- function(snpdata,
     cli::cli_abort(c(
       "x" = "No mixed genotypes found in the specified genotype matrix: \\\
       {genotype}",
-      "i" = "Set the value for {.emph genotypes} argument to {.strong GT} to \\\
-      perform phasing on the raw genotype data.")
+      "i" = "The genotype matrix must contain mixed alleles i.e. {.strong 2}.")
     )
   }
 
@@ -138,53 +135,184 @@ phase <- function(snpdata,
   }
   
   # get indices of the mixed genotypes from allelic depth matrix
-  transposed_genotype <- t(snpdata[[genotype]])
+  snpdata[["PH"]] <- t(snpdata[[genotype]])
   x <- seq(
     from = 1,
-    to = length(transposed_genotype),
-    by = dim(transposed_genotype)[[1L]]
+    to = length(snpdata[["PH"]]),
+    by = dim(snpdata[["PH"]])[[1L]]
   )
-  idx_mixed_alleles <- which(transposed_genotype == 2L)
-  rm(transposed_genotype)
+  idx_mixed_alleles <- which(snpdata[["PH"]] == 2L)
   
   # The data has been transposed. Now we have the SNPs in column. We now know
   # that snps on the first column ([line 1 to the end, 1]) belong to first locus
   # Indices of mixed allele which fall within this interval ([1-num_rows]) will
   # be associated to 1 from the `findInterval()` function. That way, we easily
   # pick the MAF of the first SNP and its minor allele to perform the phasing of
-  # all mixed alleles in that interval. The same procedure is applied across the
+  # all mixed alleles on that locus. The same procedure is applied across the
   # rest of the columns.
   transposed_depth <- t(depth[, -c(1:2)])
   intervals <- findInterval(idx_mixed_alleles, x)
   mixed_allele_data <- data.frame(
     idx = idx_mixed_alleles,
     col = intervals,
-    ad = transposed_depth[idx_mixed_alleles]
+    ad = transposed_depth[idx_mixed_alleles],
+    new_allele = NA
   )
   rm(x)
+  
+  # identify mixed alleles with no AD (AD=NA) and set them their corresponding
+  # genotypes to NA as phasing cannot be performed on them
+  if (anyNA(mixed_allele_data[["ad"]])) {
+    idx <- mixed_allele_data[["idx"]][is.na(mixed_allele_data[["ad"]])]
+    cli::cli_inform(c(
+      "!" = "Found {.strong {length(idx)}} mixed alleles with missing allelic depth.",
+      "i" = "They will be set to {.strong NA} in the phased genotype matrix."
+    ))
+    snpdata[["PH"]][idx] <- NA
+    mixed_allele_data <- mixed_allele_data[!is.na(mixed_allele_data[["ad"]]), ]
+  }
+  
+  # extract the reference allele count from the allelic depth
+  mixed_allele_data[["ref_count"]] <- as.numeric(
+    unlist(
+      parallel::mclapply(
+        mixed_allele_data[["ad"]],
+        split_and_extract,
+        sep = ",",
+        part = 1L,
+        mc.cores = ncores
+      )
+    )
+  )
+  
+  # extract the alternate allele count from the allelic depth
+  mixed_allele_data[["alt_count"]] <- as.numeric(
+    unlist(
+      parallel::mclapply(
+        mixed_allele_data[["ad"]],
+        split_and_extract,
+        sep = ",",
+        part = 2L,
+        mc.cores = ncores
+      )
+    )
+  )
+  
+  # get the sum of allelic depths
+  mixed_allele_data[["sum"]] <-
+    mixed_allele_data[["alt_count"]] + mixed_allele_data[["ref_count"]]
+  
+  # Determine whether the allelic depths of the reference and alternate alleles
+  # are the same. 
+  mixed_allele_data[["is_equal"]] <- mixed_allele_data[["ref_count"]] ==
+    mixed_allele_data[["alt_count"]]
+  
+  # get the minimum and maximum AD and 
+  mixed_allele_data[["min_ad"]] <- pmin(
+    mixed_allele_data[["ref_count"]], mixed_allele_data[["alt_count"]]
+  )
+  mixed_allele_data[["max_ad"]] <- pmax(
+    mixed_allele_data[["ref_count"]], mixed_allele_data[["alt_count"]]
+  )
+  
+  # identify 'true' mixed allele and recode them '2' when 'heterozygous = TRUE'
+  if (heterozygous) {
+    eff_ratio <- mixed_allele_data[["min_ad"]] / mixed_allele_data[["max_ad"]]
+    are_true_mixed <- eff_ratio > ratio &
+      mixed_allele_data[["min_ad"]] >= min_ad
+    mixed_allele_data[["new_allele"]][are_true_mixed] <- 2
+  }
+  
+  # phase the remaining mixed allele
+  if (anyNA(mixed_allele_data[["new_allele"]])) {
+    not_same_ad <- is.na(mixed_allele_data[["new_allele"]]) &
+      !mixed_allele_data[["is_equal"]]
+    if (sum(not_same_ad) > 0) {
+      cols <- c("ref_count", "alt_count")
+      m <- as.matrix(mixed_allele_data[which(not_same_ad), cols])
+      mixed_allele_data[["new_allele"]][which(not_same_ad)] <- max.col(
+        replace(m, is.na(m), -Inf), ties.method = "first") - 1
+    }
+    
+    # Now deal with mixed alleles with equal AD
+    have_equal_ad <- is.na(mixed_allele_data[["new_allele"]]) &
+      mixed_allele_data[["is_equal"]]
+    if (sum(have_equal_ad) > 0) {
+      idx <- which(have_equal_ad)
+      if (phase_equal_ad == "bernoulli") {
+        probs <- mixed_allele_data[["min_ad"]][idx] /
+          mixed_allele_data[["sum"]][idx]
+        mixed_allele_data[["new_allele"]][idx] <- rbinom(
+          n = sum(have_equal_ad),
+          size = 1,
+          prob =  probs
+        )
+      } else {
+        # stop if the minor allele frequencies have not been computed
+        if (!("MAF" %in% names(snpdata[["details"]]))) {
+          cli::cli_abort(c(
+            x = "{.emph minor_allele} method requires minor allele frequency \\\
+            to be computed prior to phasing.",
+            "!" = "No column named as {.field MAF} found in the \\\
+            {.strong details} table of the input {.cls SNPdata} object.",
+            i = "Use the {.fn compute_maf} function to calculate the minor \\\
+            allele frequency before phasing the data."
+          ))
+        }
+        
+        # proceed with phasing if the MAF is already computed
+        mixed_allele_data[["new_allele"]][idx] <- as.numeric(
+          snpdata[["details"]][["MAF_allele"]][mixed_allele_data[["col"]][idx]]
+        )
+      }
+      
+    }
+  }
+  
+  snpdata[["PH"]] <- t(snpdata[[genotype]])
+  snpdata[["PH"]][mixed_allele_data[["idx"]]] <- mixed_allele_data[["new_allele"]]
+  snpdata[["PH"]] <- t(snpdata[["PH"]])
+  
+  # the ratio between the AD of the less represented
+  # allele and the sum of allelic depths
+  # mixed_allele_data[["probs"]] <- unique(
+  #   mixed_allele_data[["min_ad"]] / mixed_allele_data[["sum"]]
+  # )
+  
+    # mixed_allele_data[["new_allele"]][are_equal] = rbinom(
+    #   n = sum(are_equal),
+    #   size = 1,
+    #   prob =  mixed_allele_data[["probs"]][are_equal]
+    # )
+    
+  
   
   # when the method is 'least_frequent', check if the minor allele frequency
   # was already computed.
   # Stop the process and ask the user to run 'compute_maf()' on the SNPdata
   # object.
-  if (method == "least_frequent" & !("MAF" %in% names(snpdata[["details"]]))) {
-    cli::cli_abort(c(
-      x = "{.emph least_frequent} method requires minor allele frequency to \\\
-      be computed prior to phasing.",
-      "!" = "No column named as {.field MAF} found in the {.strong details} \\\
-      table of the input {.cls SNPdata} object.",
-      i = "Use the {.fn compute_maf} function to calculate the minor allele \\\
-      frequency before phasing the data."
-    ))
-  }
+  # if (alternative_method == "minor_allele" &
+  #     !("MAF" %in% names(snpdata[["details"]]))) {
+  #   cli::cli_abort(c(
+  #     x = "{.emph minor_allele} method requires minor allele frequency to \\\
+  #     be computed prior to phasing.",
+  #     "!" = "No column named as {.field MAF} found in the {.strong details} \\\
+  #     table of the input {.cls SNPdata} object.",
+  #     i = "Use the {.fn compute_maf} function to calculate the minor allele \\\
+  #     frequency before phasing the data."
+  #   ))
+  # }
   
   # perform the mixed genotypes phasing
-  mixed_allele_data <- phaser(
-    mad = mixed_allele_data,
-    method = method,
-    ncores = ncores,
-    details = snpdata[["details"]]
-  )
+  # mixed_allele_data <- phaser(
+  #   mad = mixed_allele_data,
+  #   method = method,
+  #   ratio = ratio,
+  #   min_ad = min_ad,
+  #   alternative_method = alternative_method,
+  #   ncores = ncores,
+  #   details = snpdata[["details"]]
+  # )
 
   # The correlations vector will store the correlation coefficient between the
   # initial MAF and the MAF after every simulation.

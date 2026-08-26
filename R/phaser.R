@@ -10,7 +10,13 @@
 #' @returns The input data frame with an additional column named as
 #'    `phased_genotype`.
 #' @keywords internal
-phaser <- function(mad, method, ncores = 4, details = NULL) {
+phaser <- function(mad,
+                   method,
+                   ratio,
+                   min_ad,
+                   alternative_method,
+                   ncores = 4,
+                   details = NULL) {
   checkmate::assert_data_frame(mad, min.rows = 1L, ncols = 3L,
                                null.ok = FALSE)
   checkmate::assert_data_frame(details, min.rows = 1L, min.cols = 9L,
@@ -18,16 +24,99 @@ phaser <- function(mad, method, ncores = 4, details = NULL) {
   # ad represents the allelic depth
   mad[["phased_genotype"]] <- switch(
     method,
-    major_call = major_call_phaser(mad),
-    bi_allelic = bi_allelic_phaser(mad, ncores = ncores),
-    least_frequent = least_frequent_phaser(
+    heterozygous = heterozygous_phaser(
       mad = mad,
-      ncores = ncores,
-      details = details
+      ratio = ratio,
+      min_ad = min_ad,
+      alternative_method = alternative_method,
+      details = details,
+      ncores = ncores
+    ),
+    homozygous = homozygous_phaser(
+      mad = mad,
+      alternative_method = alternative_method,
+      details = details,
+      ncores = ncores
     )
   )
   
   return(mad)
+}
+
+split_and_extract <- function(x, sep, part) {
+  if (is.na(x)) {
+    return(NA)
+  }
+  unlist(strsplit(x, split = sep, fixed = TRUE))[[part]]
+}
+
+homozygous_phaser <- function(mad, alternative_method, details, ncores) {
+  m <- match(mad[["col"]], seq_len(nrow(details)))
+  m <- m[!is.na(m)]
+  mad[["maf_allele"]] <- details[["MAF_allele"]][m]
+  phase_one_allele <- function(mad, alternative_method) {
+    ad <- mad[[3]]
+    col <- mad[[2]]
+    maf_allele <- mad[[4]]
+    # return NA when the AD is missing
+    if (is.na(ad)) {
+      return(NA)
+    }
+    
+    # identify the allele with the highest allelic depth
+    # if found, use the allele with the major call
+    ad <- as.numeric(unlist(strsplit(ad, ",", fixed = TRUE)))
+    if (ad[[1]] == ad[[2]]) {
+      # when the AD of the ref and alt alleles are the same, the mixed allele
+      # will be recoded based on a Bernoulli simulation or replaced by the
+      # least frequent allele depending on the value of the 'alternative_method'
+      # argument.
+      res <- ifelse(
+        alternative_method == "bernoulli",
+        statip::rbern(1L, ad[[1]] / sum(ad)),
+        maf_allele
+      )
+    } else {
+      res <- which.max(ad) - 1
+    }
+    
+    return(res)
+  }
+  
+  res <- as.numeric(
+    parallel::mclapply(
+      mad[["ad"]], phase_one_allele, mad[["col"]], details, mc.cores = ncores
+    )
+  )
+}
+
+heterozygous_phaser <- function(mad, ratio, min_ad, ncores) {
+  bi_allelic_phaser <- function(ad, min_ad, ratio) {
+    # return NA when the AD is missing
+    if (is.na(ad)) {
+      return(NA)
+    }
+    ad <- as.numeric(unlist(strsplit(ad, ",", fixed = TRUE)))
+    read_ratio <- min(ad) / max(ad)
+    is_heterozygous <- min(ad) >= min_ad & read_ratio > ratio
+    if (is_heterozygous) {
+      res <- 2
+    } else {
+      res <- homozygous_phaser(
+        mad = mad,
+        alternative_method = alternative_method,
+        details = details,
+        ncores = ncores
+      )
+    }
+    # res <- ifelse(is_heterozygous, 2, ifelse(which.max(ad) == 1, 0, 1))
+    # return(res)
+  }
+  res <- as.numeric(
+    parallel::mclapply(mad[["ad"]], bi_allelic_phaser, min_ad, ratio,
+                       mc.cores = ncores)
+  )
+  return(res)
 }
 
 #' Phase mixed alleles using the 'major_call' method
