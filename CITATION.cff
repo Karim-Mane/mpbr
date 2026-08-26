@@ -1,7 +1,7 @@
-# --------------------------------------------
-# CITATION file created with {cffr} R package
+# ------------------------------------------------
+# CITATION.cff file created with {cffr} R package
 # See also: https://docs.ropensci.org/cffr/
-# --------------------------------------------
+# ------------------------------------------------
  
 cff-version: 1.2.0
 message: 'To cite package "mpbr" in publications use:'
@@ -45,7 +45,7 @@ preferred-citation:
   - family-names: Jeffries
     given-names: David
     email: djeffries@mrc.gm
-  year: '2025'
+  year: '2026'
   url: https://Karim-Mane.github.io/mpbr/
   identifiers:
   - type: url
@@ -75,7 +75,7 @@ references:
   - family-names: Csárdi
     given-names: Gábor
     email: gabor@posit.co
-  year: '2025'
+  year: '2026'
   doi: 10.32614/CRAN.package.cli
 - type: software
   title: data.table
@@ -96,11 +96,14 @@ references:
     email: asrini@pm.me
   - family-names: Gorecki
     given-names: Jan
+    email: j.gorecki@wit.edu.pl
   - family-names: Chirico
     given-names: Michael
+    email: michaelchirico4@gmail.com
     orcid: https://orcid.org/0000-0003-0787-087X
   - family-names: Hocking
     given-names: Toby
+    email: toby.hocking@r-project.org
     orcid: https://orcid.org/0000-0002-3146-0865
   - family-names: Schwendinger
     given-names: Benjamin
@@ -109,7 +112,7 @@ references:
     given-names: Ivan
     email: ikrylov@disroot.org
     orcid: https://orcid.org/0000-0002-0172-3812
-  year: '2025'
+  year: '2026'
   doi: 10.32614/CRAN.package.data.table
 - type: software
   title: dplyr
@@ -134,7 +137,7 @@ references:
     given-names: Davis
     email: davis@posit.co
     orcid: https://orcid.org/0000-0003-4777-038X
-  year: '2025'
+  year: '2026'
   doi: 10.32614/CRAN.package.dplyr
 - type: software
   title: GenomicRanges
@@ -150,7 +153,7 @@ references:
     email: hpages.on.github@gmail.com
   - family-names: Lawrence
     given-names: Michael
-  year: '2025'
+  year: '2026'
   doi: 10.18129/B9.bioc.GenomicRanges
 - type: software
   title: glue
@@ -166,7 +169,7 @@ references:
     given-names: Jennifer
     email: jenny@posit.co
     orcid: https://orcid.org/0000-0002-6983-2759
-  year: '2025'
+  year: '2026'
   doi: 10.32614/CRAN.package.glue
 - type: software
   title: IRanges
@@ -182,7 +185,7 @@ references:
     given-names: Patrick
   - family-names: Lawrence
     given-names: Michael
-  year: '2025'
+  year: '2026'
   doi: 10.18129/B9.bioc.IRanges
 - type: software
   title: magrittr
@@ -197,7 +200,7 @@ references:
   - family-names: Wickham
     given-names: Hadley
     email: hadley@posit.co
-  year: '2025'
+  year: '2026'
   doi: 10.32614/CRAN.package.magrittr
 - type: software
   title: parallel
@@ -205,10 +208,13 @@ references:
   notes: Imports
   authors:
   - name: R Core Team
+    website: https://ror.org/02zz1nj61
   institution:
     name: R Foundation for Statistical Computing
+    website: https://ror.org/05qewa988
     address: Vienna, Austria
-  year: '2025'
+  year: '2026'
+  doi: 10.32614/R.manuals
 - type: software
   title: statip
   abstract: 'statip: Statistical Functions for Probability Distributions and Regression'
@@ -220,7 +226,7 @@ references:
     given-names: Paul
     email: paulponcet@yahoo.fr
   - name: The R Core Team
-  year: '2025'
+  year: '2026'
   doi: 10.32614/CRAN.package.statip
 - type: software
   title: stats
@@ -228,20 +234,26 @@ references:
   notes: Imports
   authors:
   - name: R Core Team
+    website: https://ror.org/02zz1nj61
   institution:
     name: R Foundation for Statistical Computing
+    website: https://ror.org/05qewa988
     address: Vienna, Austria
-  year: '2025'
+  year: '2026'
+  doi: 10.32614/R.manuals
 - type: software
   title: utils
   abstract: 'R: A Language and Environment for Statistical Computing'
   notes: Imports
   authors:
   - name: R Core Team
+    website: https://ror.org/02zz1nj61
   institution:
     name: R Foundation for Statistical Computing
+    website: https://ror.org/05qewa988
     address: Vienna, Austria
-  year: '2025'
+  year: '2026'
+  doi: 10.32614/R.manuals
 - type: software
   title: checkmate
   abstract: 'checkmate: Fast and Versatile Argument Checks'
@@ -253,7 +265,7 @@ references:
     given-names: Michel
     email: michellang@gmail.com
     orcid: https://orcid.org/0000-0001-9754-0393
-  year: '2025'
+  year: '2026'
   doi: 10.32614/CRAN.package.checkmate
 - type: software
   title: knitr
@@ -266,7 +278,7 @@ references:
     given-names: Yihui
     email: xie@yihui.name
     orcid: https://orcid.org/0000-0003-0645-5666
-  year: '2025'
+  year: '2026'
   doi: 10.32614/CRAN.package.knitr
 - type: software
   title: rmarkdown
@@ -310,7 +322,7 @@ references:
     given-names: Richard
     email: rich@posit.co
     orcid: https://orcid.org/0000-0003-3925-190X
-  year: '2025'
+  year: '2026'
   doi: 10.32614/CRAN.package.rmarkdown
 - type: software
   title: spelling
@@ -326,7 +338,7 @@ references:
   - family-names: Hester
     given-names: Jim
     email: james.hester@rstudio.com
-  year: '2025'
+  year: '2026'
   doi: 10.32614/CRAN.package.spelling
 - type: software
   title: testthat
@@ -338,7 +350,7 @@ references:
   - family-names: Wickham
     given-names: Hadley
     email: hadley@posit.co
-  year: '2025'
+  year: '2026'
   doi: 10.32614/CRAN.package.testthat
   version: '>= 3.0.0'
 
