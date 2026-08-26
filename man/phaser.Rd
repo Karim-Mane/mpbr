@@ -4,27 +4,24 @@
 \alias{phaser}
 \title{Perform phasing of a given mixed genotype}
 \usage{
-phaser(mad, method, ncores = 4, details = NULL)
+phaser(
+  mad,
+  method,
+  ratio,
+  min_ad,
+  alternative_method,
+  ncores = 4,
+  details = NULL
+)
 }
 \arguments{
 \item{mad}{A \code{data.frame} with three columns that represents the indices of
 the mixed alleles, the indices of the SNPs they are found on, and their
 allelic depths supporting both reads.}
 
-\item{method}{A character with the name of the phasing method. The methods
-implemented in the current version include:
-\enumerate{
-\item heterozygous: when the \code{ratio} in allelic depth > the specified ratio
-cut-off and the specified \code{min_ad} >= the minimum allelic depth
-(ratio > 0.1 & min_ad >= 2 by default), the site is considered a true
-heterozygous. It will be recoded as \code{2} (the number used to represent
-the mixed alleles). When a site is not a true heterozygous, it is
-recoded into either \code{0} or \code{1} based on the \code{homozygous} method below.
-\item homozygous: all mixed alleles will be recoded as \code{0} or \code{1} depending
-on which one has a highest allelic depth. When the allelic depth of the
-two alleles is the same, the site is transformed based on the value of
-the \code{alternative_method} argument.
-}}
+\item{min_ad}{An integer that represents one of the criteria described below.
+The number of reads supporting the reference or alternative alleles must
+be greater than or equal to this cut-off. Default is \code{2}.}
 
 \item{ncores}{A numeric that represents the number of cores to be used during
 the phasing process. Default is 4.}

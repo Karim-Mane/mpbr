@@ -2,7 +2,8 @@
 % Please edit documentation in R/annotation.R
 \name{gene_annotation}
 \alias{gene_annotation}
-\title{Associate each SNPs to a gene name on which it belongs}
+\title{Associate each SNPs to a gene id, name and description based on the gene
+they fall under}
 \usage{
 gene_annotation(target_gtf, genomic_coordinates)
 }
@@ -16,6 +17,7 @@ A vector with gene annotation. This should be of the same length as
 the number of SNPs.
 }
 \description{
-Associate each SNPs to a gene name on which it belongs
+Associate each SNPs to a gene id, name and description based on the gene
+they fall under
 }
 \keyword{internal}

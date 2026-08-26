@@ -5,16 +5,18 @@
 #'    genomic coordinates of the regions of interest. It must contain at least
 #'    the CHROM, START, and END columns
 #'
-#' @returns Writes out files with the variants overlapping each region and the
+#' @returns A list of two elements: the variants overlapping each region and the
 #'    region's variant counts.
 #' @export
 #'
 #' @examples
 #' \dontrun{
-#'   get_region_variants(
+#'   res <- get_region_variants(
 #'     snpdata = snpdata,
 #'     regions = file.path("data", "genes_cordinates_on_v68.txt")
 #'   )
+#'   region_variants <- res[["region_variants"]]
+#'   variant_count <- res[["variant_count"]]
 #' }
 get_region_variants <- function(snpdata, regions) {
   checkmate::assert_class(snpdata, classes = "SNPdata", null.ok = FALSE)

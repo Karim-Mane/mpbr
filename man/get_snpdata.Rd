@@ -2,57 +2,55 @@
 % Please edit documentation in R/get_snpdata.R
 \name{get_snpdata}
 \alias{get_snpdata}
-\title{Create the \code{SNPdata} object}
+\title{Create A \code{SNPdata} object}
 \usage{
-get_snpdata(
-  vcf_file = NULL,
-  meta_file = NULL,
-  output_dir = NULL,
-  gof = NULL,
-  gff = NULL,
-  num_threads = 4L
-)
+get_snpdata(vcf_file, meta_file, output_dir, gaf, gff, num_threads = 4L)
 }
 \arguments{
-\item{vcf_file}{The path to the input VCF file (required)}
+\item{vcf_file}{A character with the path to the input VCF file (required)}
 
-\item{meta_file}{The path to the sample metadata file (required)}
+\item{meta_file}{A character with the path to the sample metadata file
+(required)}
 
-\item{output_dir}{The path to the folder where the output and temporary files
-will be stored (optional)}
+\item{output_dir}{A character with the path to the folder where the output
+and temporary files will be stored (optional)}
 
-\item{gof}{The gene ontology annotation file (optional). If not provided, the
-default file obtained from the \href{https://plasmodb.org/plasmo/app/downloads/Current_Release/Pfalciparum3D7/gaf/}{PlasmoDB} # nolint: line_length_linter
-will be used}
+\item{gaf}{A character with the path to the file with the gene ontology
+annotation file (required). This can be downloaded from
+\href{https://plasmodb.org/plasmo/app/downloads/Current_Release/Pfalciparum3D7/gaf/}{PlasmoDB} # nolint: line_length_linter}
 
-\item{gff}{The gene annotation file (optional). If not provided, the default
-file obtained from the \href{https://plasmodb.org/plasmo/app/downloads/Current_Release/Pfalciparum3D7/gff/}{PlasmoDB} # nolint: line_length_linter
-will be used}
+\item{gff}{A character with the path to the gene annotation file. This file
+can be downloaded from
+\href{https://plasmodb.org/plasmo/app/downloads/Current_Release/Pfalciparum3D7/gff/}{PlasmoDB} # nolint: line_length_linter}
 
-\item{num_threads}{The number of threads to be used when reading in the data
-from the VCF file. default is 4}
+\item{num_threads}{The number of threads to be during data processing}
 }
 \value{
-An object of class \code{SNPdata} with the following 4 elements:
+An object of class \if{html}{\out{<SNPdata>}} that contains the following 4 elements:
 \enumerate{
-\item meta: A \code{data.frame} that contains the sample's metadata
-\item details: A \code{data.frame} with the SNPs genomic coordinates, the
-fraction of missing data per SNP and the names and descriptions of the
-gene on which they are located.
-\item GT: An integer \code{matrix} with the genotype data. 0='reference allele',
-1='alternate allele', 2='mixed allele', NA='missing allele'
-\item vcf: the full path to the VCF file from which the data is generated.
+\item meta: A \code{data.frame} that with the sample's metadata
+\item details: A \code{data.frame} with the SNPs genomic coordinates, and their
+associated annotations from both the VCF and input annotation files
+\item GT: An integer \code{matrix} with the sample's genotype data where:
+0 represents the reference allele, 1 the alternative allele, 2 is a
+mixed allele, and NA a missing genotype.
+\item vcf: the full path to the input VCF file from which the data is
+generated.
 }
 }
 \description{
-The function generates the input data needed for population genetics
-analyses using whole genome SNPs data genotyped from the malaria parasite.
+The function generates the input object type require to use functions in
+the {mpbr} package.
 }
 \examples{
-snpdata <- get_snpdata(
-  vcf_file = system.file("extdata", "Input_Data.vcf.gz", package = "mpbr"),
-  meta_file = system.file("extdata", "SampleMetadata.RDS", package = "mpbr"),
-  output_dir = tempdir()
-)
-
+\dontrun{
+  snpdata <- get_snpdata(
+    vcf_file = system.file("extdata", "test_data.vcf.gz", package = "mpbr"),
+    meta_file = system.file("extdata", "sample_metadata.RDS",
+                            package = "mpbr"),
+    output_dir = tempdir(),
+    gaf = file.path("data", "PlasmoDB-68_Pfalciparum3D7_Curated_GO.gaf.gz"),
+    gff = file.path("data", "PlasmoDB-68_Pfalciparum3D7.gff")
+  )
+}
 }

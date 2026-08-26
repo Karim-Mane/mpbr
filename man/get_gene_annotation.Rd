@@ -5,7 +5,7 @@
 \title{Add gene ontology and names annotation details to every SNPs in the table
 that contains their genomic coordinates}
 \usage{
-get_gene_annotation(genomic_coordinates, go, bed, num_cores = 4L)
+get_gene_annotation(genomic_coordinates, go, bed, nthreads = 4L)
 }
 \arguments{
 \item{genomic_coordinates}{The table with SNPs genomic coordinates}
@@ -14,7 +14,7 @@ get_gene_annotation(genomic_coordinates, go, bed, num_cores = 4L)
 
 \item{bed}{A data frame with the gene name annotation}
 
-\item{num_cores}{The number of cores to be used}
+\item{nthreads}{The number of cores to be used}
 }
 \value{
 An object of type \code{data.frame} with the SNPs genomic coordinates and

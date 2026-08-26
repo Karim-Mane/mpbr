@@ -7,11 +7,11 @@
 phase(
   snpdata,
   genotype = "GT",
-  method = "homozygous",
+  heterozygous = FALSE,
   min_ad = 2,
   ratio = 0.1,
   ncores = 4,
-  alternative_method = "bernoulli"
+  phase_equal_ad = "bernoulli"
 )
 }
 \arguments{
@@ -22,19 +22,15 @@ genotypes will be phased. This can be either the raw genotype matrix
 (\code{GT}) or the imputed genotype matrix (\code{Imputed}) or any name given to
 the target genotype matrix.}
 
-\item{method}{A character with the name of the phasing method. The methods
-implemented in the current version include:
+\item{heterozygous}{A logical that is used to determine whether keep \code{true}
+heterozygous sites (recode them as \code{2}) or not. Default is \code{FALSE}. A site
+is considered as a true heterozygous when the following two conditions are
+met:
 \enumerate{
-\item heterozygous: when the \code{ratio} in allelic depth > the specified ratio
-cut-off and the specified \code{min_ad} >= the minimum allelic depth
-(ratio > 0.1 & min_ad >= 2 by default), the site is considered a true
-heterozygous. It will be recoded as \code{2} (the number used to represent
-the mixed alleles). When a site is not a true heterozygous, it is
-recoded into either \code{0} or \code{1} based on the \code{homozygous} method below.
-\item homozygous: all mixed alleles will be recoded as \code{0} or \code{1} depending
-on which one has a highest allelic depth. When the allelic depth of the
-two alleles is the same, the site is transformed based on the value of
-the \code{alternative_method} argument.
+\item condition 1: the \code{ratio} in allelic depth > the specified ratio
+cut-off.
+\item condition2: the \code{min_ad} >= the specified minimum allelic depth i.e.
+(ratio > 0.1 & min_ad >= 2 by default).
 }}
 
 \item{min_ad}{An integer that represents one of the criteria described below.
@@ -44,9 +40,9 @@ be greater than or equal to this cut-off. Default is \code{2}.}
 \item{ncores}{A numeric that represents the number of cores to be used during
 the phasing process. Default is 4.}
 
-\item{alternative_method}{A character with the name of the phasing approach
-used when allelic depths of the two alleles are equal. The possible values
-are:
+\item{phase_equal_ad}{A character with the name of the phasing approach
+used when the allelic depths of the two alleles are equal. The possible
+values are:
 \enumerate{
 \item bernoulli: the mixed allele is recoded into \code{0} or \code{1} based on a
 Bernoulli simulation with a parameter equal to the minor allele
@@ -66,8 +62,10 @@ contains the phased genotype data.
 }
 \description{
 Mixed genotype phasing is performed based on the number of reads supporting
-each allele at a heterozygous site (allelic depth). The phasing is based on
-the two methods described below in the argument \code{method}.
+each allele at a heterozygous site (allelic depth). A mixed allele will be
+recoded into either \code{0} or \code{1} depending on which one has a highest allelic
+depth or into \code{2} when \code{heterozygous} is set to \code{TRUE} i.e. to consider
+mixed alleles as a third allele.
 }
 \examples{
 # get SNPdata object
@@ -77,11 +75,13 @@ snpdata <- get_snpdata(
   output_dir = tempdir()
 )
 
-# perform mixed genotypes phasing using 'homozygous' method
+# perform mixed genotypes phasing
 snpdata <- phase(
   snpdata = snpdata,
   genotype = "GT",
-  method = "homozygous"
+  heterozygous = FALSE, # recode all mixed alleles as 0 or 1
+  ncores = 4,
+  phase_equal_ad = "bernoulli"
 )
  
 }
