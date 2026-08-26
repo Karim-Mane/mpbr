@@ -20,8 +20,40 @@ library(mpbr)
 
 ## Mixed genotypes Phasing
 
-when AD is:
+Phasing is the process of transforming a mixed allele into either the reference
+or alternate allele. There are several statistical approaches that can be used
+to perform mixed genotype phasing. The following method is implemented in the `phase()` function:
 
-* 0/0, ./., 3/1 (supported by no reads or total number of reads < 5): use MAF in Bernoulli simulation
-* 4/3 (#reads > 5 but 4 is not double of 3): use MAF in Bernoulli simulation
-* 30/10, 12/25 (#reads > 5 and one is double of the other): use the most supported allele
+* All mixed genotypes will be transformed into `0` or `1` based on the allele
+with the highest supporting reads at the corresponding positions, except when
+`heterozygous` is set to `TRUE`. When this option is activated, the function
+will identify and transform the `true` mixed alleles into `2`. An allele is
+considered as a `true` mixed allele when the following two conditions are met:
+  * the `ratio` in allelic depth is greater than the specified ratio cut-off,
+  * and the `min_ad` (minimum allelic depth between the reference and alternate
+  alleles) is greater than or equal to the specified minimum allelic depth
+  cut-off.
+* When the two alleles have an equal allelic depth (AD), then the mixed genotype
+is transformed based on the value of the `phase_equal_ad` argument. Its possible
+values are:
+  * `bernoulli`: the mixed allele is recoded into `0` or `1` based on a
+  Bernoulli simulation with a parameter equal to the minor allele frequency of
+  the SNPs on which the site is found.
+  * `minor_allele`: the mixed allele is transformed into the least represented
+  allele (i.e. the allele with the minor frequency in the population).
+
+The `phase()` function takes the following arguments:
+
+* `snpdata`: the input <SNPdata> object
+* `genotype`: the name of the genotype matrix that contains the mixed alleles to
+be phased.
+* `heterozygous`: a logical that is used to determine whether keep `true`
+heterozygous sites (recode them as `2`) or not. Default is `FALSE`.
+* `ration`: a numeric that varies between 0 and 1. It represents the ratio in
+allelic depth cut-off. Default is 0.1.
+* `min_ad`: an integer that represents the minimum allelic depth cut-off.
+Default is 2. A site is considered as a `true` heterozygous site when the
+`ratio` and the `min_ad` criteria are satisfied.
+* `ncores`: an integer that represents the number of cores to be used during the
+phasing process. Default is 4.
+
