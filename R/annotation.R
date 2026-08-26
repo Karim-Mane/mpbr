@@ -1,4 +1,5 @@
-#' Associate each SNPs to a gene name on which it belongs
+#' Associate each SNPs to a gene id, name and description based on the gene
+#' they fall under
 #'
 #' @param target_gtf A data frame with the gene annotation
 #' @param genomic_coordinates A data frame with the SNPs genomic coordinates
@@ -10,31 +11,31 @@
 gene_annotation <- function(target_gtf, genomic_coordinates) {
   checkmate::assert_data_frame(target_gtf, min.rows = 1L, min.cols = 1L,
                                null.ok = FALSE)
-  
-  names(genomic_coordinates)   <- c("chrom", "start")
+
+  names(genomic_coordinates) <- c("chrom", "start")
   genomic_coordinates[["end"]] <- genomic_coordinates[["start"]]
-  subject                      <- IRanges::IRanges(target_gtf[["start"]],
-                                                   target_gtf[["end"]])
-  query       <- IRanges::IRanges(genomic_coordinates[["start"]],
-                                  genomic_coordinates[["end"]])
-  my_overlaps <-
-    data.table::data.table(as.matrix(GenomicRanges::findOverlaps(
+  subject <- IRanges::IRanges(target_gtf[["start"]], target_gtf[["end"]])
+  query <- IRanges::IRanges(
+    genomic_coordinates[["start"]],
+    genomic_coordinates[["end"]]
+  )
+  my_overlaps <- data.table::data.table(
+    as.matrix(GenomicRanges::findOverlaps(
       query,
       subject,
-      type = "within"))) #nolint: line_length_linter
-  my_overlaps[["gene"]] <- target_gtf[["gene_name"]][my_overlaps[["subjectHits"]]] #nolint: line_length_linter
-  gene <- queryHits <- NULL # nolint: object_name_linter
-  the_genes <- my_overlaps %>%
-    dplyr::group_by(queryHits) %>%
-    dplyr::distinct(queryHits, gene) %>%
-    dplyr::filter(!is.na(gene)) %>%
-    dplyr::ungroup() %>%
-    dplyr::group_by(queryHits) %>%
-    dplyr::summarize(gene = glue::glue_collapse(gene, sep = ":"))
-  genomic_coordinates[["gene"]]    <- NA
-  genomic_coordinates[["gene"]][the_genes[["queryHits"]]] <- the_genes[["gene"]]
+      type = "within"))
+  )
+  my_overlaps[["gene_id"]] <- target_gtf[["gene_id"]][my_overlaps[["subjectHits"]]] #nolint: line_length_linter
+  my_overlaps[["gene_name"]] <- target_gtf[["gene_name"]][my_overlaps[["subjectHits"]]] #nolint: line_length_linter
+  my_overlaps[["gene_desc"]] <- target_gtf[["gene_desc"]][my_overlaps[["subjectHits"]]] #nolint: line_length_linter
+  my_overlaps <- my_overlaps[, lapply(.SD, paste, collapse = ":"), by = queryHits]
+  my_overlaps[["queryHits"]] <- NULL
+  my_overlaps[["subjectHits"]] <- NULL
   
-  genomic_coordinates[["gene"]]
+  genomic_coordinates[["end"]] <- NULL
+  genomic_coordinates <- cbind(genomic_coordinates, my_overlaps)
+
+  return(genomic_coordinates)
 }
 
 #' Clean gene names
@@ -51,51 +52,101 @@ get_clean_name <- function(y) {
     ";", fixed = TRUE))[[1L]]
 }
 
+get_gene_id_name_desc <- function(bed) {
+  # extract gene IDs
+  gene_id <- as.character(
+    lapply(bed[["V10"]], function(x) {
+      unlist(strsplit(x, ";", fixed = TRUE))[[1]]
+    })
+  )
+  gene_id <- as.character(
+    lapply(gene_id, function(x) {unlist(strsplit(x, "=", fixed = TRUE))[[2]]})
+  )
+  
+  # extract gene names
+  gene_name <- as.character(
+    lapply(bed[["V10"]], function(x) {
+      unlist(strsplit(x, ";", fixed = TRUE))[[2]]
+    })
+  )
+  gene_name <- as.character(
+    lapply(gene_name, function(x) {unlist(strsplit(x, "=", fixed = TRUE))[[2]]})
+  )
+  
+  # extract gene descriptions
+  gene_desc <- as.character(
+    lapply(bed[["V10"]], function(x) {
+      unlist(strsplit(x, ";", fixed = TRUE))[[3]]
+    })
+  )
+  gene_desc <- as.character(
+    lapply(gene_desc, function(x) {unlist(strsplit(x, "=", fixed = TRUE))[[2]]})
+  )
+  
+  return(data.frame(
+    gene_id = gene_id,
+    gene_name = gene_name,
+    gene_desc = gene_desc,
+    stringsAsFactors = FALSE
+  ))
+}
+
 #' Add gene ontology and names annotation details to every SNPs in the table
 #' that contains their genomic coordinates
 #'
 #' @param genomic_coordinates The table with SNPs genomic coordinates
 #' @param go A data frame with the gene ontology annotation details
 #' @param bed A data frame with the gene name annotation
-#' @param num_cores The number of cores to be used
+#' @param nthreads The number of cores to be used
 #'
 #' @return An object of type `data.frame` with the SNPs genomic coordinates and
 #'    their corresponding annotation details
 #' @keywords internal
 #'
-get_gene_annotation <- function(genomic_coordinates, go, bed, num_cores = 4L) {
+get_gene_annotation <- function(genomic_coordinates, go, bed, nthreads = 4L) {
   checkmate::assert_data_frame(genomic_coordinates, min.rows = 1L,
                                min.cols = 1L, null.ok = FALSE)
   checkmate::assert_data_frame(go, min.rows = 1L,
                                min.cols = 1L, null.ok = FALSE)
   checkmate::assert_data_frame(bed, min.rows = 1L,
                                min.cols = 1L, null.ok = FALSE)
-  
-  genes <- as.character(parallel::mclapply(bed[["V10"]],
-                                           get_clean_name,
-                                           mc.cores = num_cores))
-  genes <- as.character(parallel::mclapply(genes,
-                                           rm_prf1,
-                                           mc.cores = num_cores))
-  genes <- as.character(parallel::mclapply(genes,
-                                           rm_prf2,
-                                           mc.cores = num_cores))
-  genes <- as.character(parallel::mclapply(genes,
-                                           rm_suf,
-                                           mc.cores = num_cores))
-  genes <- data.table::data.table(genes)
-  genes <- cbind(bed[["V1"]], bed[["V2"]], bed[["V3"]], genes)
-  names(genes) <- c("chrom", "start", "end", "gene_id")
+
+  # define an IRanges object with the gene genomic coordinates
+  # genes_genomic_coordinates <- GenomicRanges::GRanges(
+  #   seqnames = bed[["V1"]],
+  #   ranges = IRanges::IRanges(start = bed[["V2"]], end = bed[["V3"]])
+  # )
+  # genes_genomic_coordinates <- sort(genes_genomic_coordinates)
+  genes_genomic_coordinates <- subset(bed, select = 1:3)
+  names(genes_genomic_coordinates) <- c("chrom", "start", "end")
+
+  # extract the gene IDs, names, and description
+  gene_annot <- get_gene_id_name_desc(bed)
+  gene_annot <- cbind(genes_genomic_coordinates, gene_annot)
+
+  # select the gene ID and description columns from the gene ontology
   go <- subset(go, select = c(2, 10))
   names(go) <- c("gene_id", "gene_name")
   
   chrom <- gene_id <- gene_name <- start <- end <- NULL # nolint: object_name_linter
-  test <- genes %>% dplyr::left_join(go, by = "gene_id",
-                                     relationship = "many-to-many")
-  test <- dplyr::distinct(test, chrom, start, end, gene_id, gene_name)
+  # joint gene annotation and ontology
+  gene_annot_onto <- gene_annot |>
+    dplyr::left_join(go, by = "gene_id", relationship = "many-to-many")
+  gene_annot_onto <- dplyr::distinct(gene_annot_onto, .keep_all = TRUE)
+  gene_annot_onto[["gene_desc"]] <- gene_annot_onto[["gene_name.y"]]
+  gene_annot_onto[["gene_name.y"]] <- NULL
+  names(gene_annot_onto)[[5]] <- "gene_name"
+  
+  # add annotation to each SNP
   genomic_coordinates[["Pos"]] <- as.numeric(genomic_coordinates[["Pos"]])
-  resultat <- gene_annotation(target_gtf = test,
-                              genomic_coordinates = genomic_coordinates)
-  resultat <- gsub("NA:", "", resultat, fixed = TRUE)
-  resultat
+  resultat <- gene_annotation(
+    target_gtf = gene_annot_onto,
+    genomic_coordinates = genomic_coordinates
+  )
+  resultat <- data.frame(
+    apply(resultat, 2, function(x) {gsub("NA:", "", x, fixed = TRUE)})
+  )
+  return(resultat)
 }
+
+
