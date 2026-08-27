@@ -8,7 +8,7 @@
 #'
 get_sample_ids <- function(vcf_file) {
   as.character(data.table::fread(
-    cmd     = sprintf("gzcat %s | grep '^#CHROM' | cut -d$'\t' -f 10-",
+    cmd     = sprintf("gzcat %s | grep '^#CHROM' | cut -d'\t' -f 10-",
                       vcf_file),
     header  = FALSE # 1st line is data
   ))
