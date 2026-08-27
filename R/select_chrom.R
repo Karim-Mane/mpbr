@@ -14,7 +14,7 @@ select_chrom <- function(snpdata, chrom = "all") {
   system(sprintf("tabix -f %s", snpdata[["vcf"]]))
   ## make sure to output the metadata
   percentage_missing_sites <- Fws <- COI <- NULL
-  meta   <- snpdata[["meta"]] %>%
+  meta   <- snpdata[["meta"]] |>
     dplyr::select(-c(percentage_missing_sites, Fws, COI)) # nolint: object_name_linter
   
   # return the input object if no chromosome is specified

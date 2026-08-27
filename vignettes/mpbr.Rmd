@@ -144,7 +144,7 @@ If you want to remove some loci from the current `SNPdata` object, use the `drop
 
 ```{r eval=FALSE}
 ## drop a set of SNPs based on their genomic coordinates
-snp_to_be_dropped <- chrom7_snpdata$details %>% dplyr::select(Chrom, Pos)
+snp_to_be_dropped <- chrom7_snpdata$details |> dplyr::select(Chrom, Pos)
 idx               <- sample(seq_len(nrow(snp_to_be_dropped)), 100,
                             replace = FALSE)
 snp_to_be_dropped <- snp_to_be_dropped[idx, ]

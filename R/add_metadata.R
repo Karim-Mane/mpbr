@@ -40,7 +40,7 @@ add_metadata <- function(sample_ids, metadata) {
   }
   
   # joining the samples IDs from the VCF file with the sample metadata
-  meta <- data.frame(sample = samples) %>%
+  meta <- data.frame(sample = samples) |>
     dplyr::left_join(meta, by = "sample")
   
   return(meta)
