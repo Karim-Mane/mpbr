@@ -114,7 +114,7 @@ get_snpdata <- function(vcf_file,
   # This is converted into BED format because the {GenomicRange}
   # package requires that file type.
   bed_file <- file.path(output_dir, "gene_annotation.bed")
-  system(sprintf("gff2bed < %s > %s", gff, bed_file))
+  system(sprintf("gff2bed --do-not-sort < %s > %s", gff, bed_file))
   gene_level_bed <- file.path(output_dir, "genes_only.bed")
   system(sprintf("awk '$8 ~ /_gene$/' %s > %s", bed_file, gene_level_bed))
   bed <- data.table::fread(gene_level_bed, nThread = num_threads, sep = "\t")
