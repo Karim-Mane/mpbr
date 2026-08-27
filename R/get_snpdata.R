@@ -63,7 +63,7 @@ get_snpdata <- function(vcf_file,
     skip = "#CHROM",
     header = TRUE,
     sep = "\t",
-    nThread = nthreads
+    nThread = num_threads
   )
   # rename #CHROM to CHROM
   data.table::setnames(vcf_data, "#CHROM", "CHROM")
