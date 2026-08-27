@@ -71,7 +71,7 @@ get_region_variants <- function(snpdata, regions) {
   result <- result |> dplyr::arrange(chrom)
   
   return(list(
-    region_variants <- result,
-    variant_count <- counts
+    region_variants = result,
+    variant_count = counts
   ))
 }
