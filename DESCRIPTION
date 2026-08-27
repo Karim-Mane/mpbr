@@ -37,6 +37,7 @@ VignetteBuilder:
     knitr
 SystemRequirements: 
     bcftools
+    bedops
 biocViews:
 Config/Needs/website: epiverse-trace/epiversetheme
 Config/testthat/edition: 3
