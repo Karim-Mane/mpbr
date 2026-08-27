@@ -12,28 +12,27 @@ gene_annotation <- function(target_gtf, genomic_coordinates) {
   checkmate::assert_data_frame(target_gtf, min.rows = 1L, min.cols = 1L,
                                null.ok = FALSE)
 
+  # prepare a data frame to find overlap between the genomic coordinates and the
+  # region annotation
   names(genomic_coordinates) <- c("chrom", "start")
   genomic_coordinates[["end"]] <- genomic_coordinates[["start"]]
-  subject <- IRanges::IRanges(target_gtf[["start"]], target_gtf[["end"]])
-  query <- IRanges::IRanges(
-    genomic_coordinates[["start"]],
-    genomic_coordinates[["end"]]
-  )
-  my_overlaps <- data.table::data.table(
-    as.matrix(GenomicRanges::findOverlaps(
-      query,
-      subject,
-      type = "within"))
-  )
-  my_overlaps[["gene_id"]] <- target_gtf[["gene_id"]][my_overlaps[["subjectHits"]]] #nolint: line_length_linter
-  my_overlaps[["gene_name"]] <- target_gtf[["gene_name"]][my_overlaps[["subjectHits"]]] #nolint: line_length_linter
-  my_overlaps[["gene_desc"]] <- target_gtf[["gene_desc"]][my_overlaps[["subjectHits"]]] #nolint: line_length_linter
-  my_overlaps <- my_overlaps[, lapply(.SD, paste, collapse = ":"), by = queryHits]
-  my_overlaps[["queryHits"]] <- NULL
-  my_overlaps[["subjectHits"]] <- NULL
+  genomic_coordinates <- data.table::as.data.table(genomic_coordinates)
+  data.table::setkeyv(target_gtf, c("chrom", "start", "end"))
   
+  # find the overlaps between the regions and the SNPs genomic coordinates
+  data.table::setkeyv(target_gtf, c("chrom", "start", "end"))
+  result <- data.table::foverlaps(
+    genomic_coordinates, target_gtf, type = "within", nomatch = NA
+  )
+  result <- result[, lapply(.SD, paste, collapse = ":"),
+                   by = c("chrom", "i.start")]
+  result[["i.end"]] <- NULL
+  names(result)[[2]] <- "pos"
   genomic_coordinates[["end"]] <- NULL
-  genomic_coordinates <- cbind(genomic_coordinates, my_overlaps)
+  names(genomic_coordinates)[[2]] <- "pos"
+  genomic_coordinates <- genomic_coordinates |>
+    dplyr::left_join(result, by = c("chrom", "pos"))
+  names(genomic_coordinates)[3:4] <- c("gene_start_pos", "gene_end_pos")
 
   return(genomic_coordinates)
 }
