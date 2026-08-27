@@ -23,6 +23,7 @@ Imports:
     IRanges,
     magrittr,
     parallel,
+    rio,
     statip,
     stats,
     utils

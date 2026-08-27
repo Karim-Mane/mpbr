@@ -15,12 +15,8 @@
 add_metadata <- function(sample_ids, metadata) {
   checkmate::assert_vector(sample_ids, min.len = 1L, null.ok = FALSE)
   checkmate::assert_file_exists(metadata)
-  if (grepl(".RDS", basename(metadata))) {
-    meta <- readRDS(metadata)
-  } else {
-    meta <- data.table::fread(metadata, key = "sample", nThread = 4L)
-  }
-  
+  meta <- data.table::as.data.table(rio::import(file = metadata))
+  data.table::setkey(meta, "sample")
   samples <- meta[["sample"]]
   
   # sample from the VCF file must match with those in the metadata file
@@ -47,5 +43,5 @@ add_metadata <- function(sample_ids, metadata) {
   meta <- data.frame(sample = samples) %>%
     dplyr::left_join(meta, by = "sample")
   
-  meta
+  return(meta)
 }
