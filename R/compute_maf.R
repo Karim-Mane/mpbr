@@ -1,15 +1,15 @@
-#' Calculate minor allele frequency (MAF) at every loci
+#' Calculate minor allele frequency (MAF) at every SNP
 #'
-#' @param snpdata An object of class `SNPdata`
+#' @param snpdata An object of class <SNPdata>
 #' @param genotype A string with the name of the matrix to be used. Default is
 #'    "GT". The other possible values are "Phased", "Imputed", "Phased_imputed".
 #' @param include_het A Boolean that specifies whether to account for the
 #'    heterozygous allele or not. This can only be activated when
 #'    `genotype = "GT"` or `genotype = "Imputed"`.
 #' @param name A character with the name of the new column that will created to
-#'    store the MAF values.
+#'    store the MAF values. Default is `MAF`.
 #'
-#' @return The input `SNPdata` object with following 2 additional columns in the
+#' @return The input <SNPdata> object with following 2 additional columns in the
 #'    **details** table:
 #' \enumerate{
 #'   \item MAF: minor allele frequency at every each SNPs
@@ -25,7 +25,25 @@
 #'    in the MAF calculation.
 #'
 #' @export
-#'
+#' @examples
+#' \dontrun{
+#'  # create the SNPdata object
+#'  snpdata <- get_snpdata(
+#'    vcf_file = system.file("extdata", "test_data.vcf.gz", package = "mpbr"),
+#'    meta_file = system.file("extdata", "sample_metadata.RDS",
+#'                             package = "mpbr"),
+#'    output_dir = getwd(),
+#'    gaf = file.path("data", "PlasmoDB-68_Pfalciparum3D7_Curated_GO.gaf.gz"),
+#'    gff = file.path("data", "PlasmoDB-68_Pfalciparum3D7.gff")
+#'  )
+#'  # calculate MAF
+#'  snpdata <- compute_maf(
+#'    snpdata = snpdata,
+#'    genotype = "GT",
+#'    include_het = FALSE,
+#'    name = NULL
+#'  )
+#' }
 compute_maf <- function(snpdata, genotype = "GT", include_het = FALSE,
                         name = NULL) {
   checkmate::assert_class(snpdata, "SNPdata", null.ok = FALSE)
@@ -39,10 +57,13 @@ compute_maf <- function(snpdata, genotype = "GT", include_het = FALSE,
     genotype,
     choices = c("GT", "Phased", "Imputed", "Phased_imputed")
   )
-  if (include_het) {
-    stopifnot("'include_het = TRUE' is only valid for the raw genotype data in
-              the 'GT' matrix or the imputed (non-phased) data in the 'Imputed'
-              matrix" = any(genotype %in% c("GT", "Imputed")))
+  if (!genotype %in% c("GT", "Imputed") && include_het) {
+    cli::cli_abort(c(
+      i = "{.emph include_het} can only be {.val TRUE} for unphased genotype \\\
+      matrix ({.val GT} or {.val Imputed}).",
+      x = "Chosen genotype matrix is not suitable with the value of the \\\
+      {.emph include_het} argument."
+    ))
   }
   x <- snpdata[[genotype]]
   ref <- rowSums(x == 0L, na.rm = TRUE)
@@ -53,15 +74,15 @@ compute_maf <- function(snpdata, genotype = "GT", include_het = FALSE,
   } else {
     tmp_mat <- cbind(ref, alt)
   }
-  res       <- t(apply(tmp_mat, 1L, get_maf))
+  res <- t(apply(tmp_mat, 1L, get_maf))
 
   if (is.null(name)) {
     name <- "MAF"
   }
-  snpdata[["details"]][[name]]        <- as.numeric(res[, 1L])
+  snpdata[["details"]][[name]] <- as.numeric(res[, 1L])
   snpdata[["details"]][["MAF_allele"]] <- as.character(res[, 2L])
 
-  snpdata
+  return(snpdata)
 }
 
 #' Get the minor allele frequency (MAF) and the corresponding allele

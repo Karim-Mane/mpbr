@@ -2,12 +2,12 @@
 % Please edit documentation in R/compute_maf.R
 \name{compute_maf}
 \alias{compute_maf}
-\title{Calculate minor allele frequency (MAF) at every loci}
+\title{Calculate minor allele frequency (MAF) at every SNP}
 \usage{
 compute_maf(snpdata, genotype = "GT", include_het = FALSE, name = NULL)
 }
 \arguments{
-\item{snpdata}{An object of class \code{SNPdata}}
+\item{snpdata}{An object of class \if{html}{\out{<SNPdata>}}}
 
 \item{genotype}{A string with the name of the matrix to be used. Default is
 "GT". The other possible values are "Phased", "Imputed", "Phased_imputed".}
@@ -17,10 +17,10 @@ heterozygous allele or not. This can only be activated when
 \code{genotype = "GT"} or \code{genotype = "Imputed"}.}
 
 \item{name}{A character with the name of the new column that will created to
-store the MAF values.}
+store the MAF values. Default is \code{MAF}.}
 }
 \value{
-The input \code{SNPdata} object with following 2 additional columns in the
+The input \if{html}{\out{<SNPdata>}} object with following 2 additional columns in the
 \strong{details} table:
 \enumerate{
 \item MAF: minor allele frequency at every each SNPs
@@ -33,9 +33,29 @@ The input \code{SNPdata} object with following 2 additional columns in the
 }
 }
 \description{
-Calculate minor allele frequency (MAF) at every loci
+Calculate minor allele frequency (MAF) at every SNP
 }
 \details{
 If \code{include_het = FALSE}, the mixed alleles will not be considered
 in the MAF calculation.
+}
+\examples{
+\dontrun{
+ # create the SNPdata object
+ snpdata <- get_snpdata(
+   vcf_file = system.file("extdata", "test_data.vcf.gz", package = "mpbr"),
+   meta_file = system.file("extdata", "sample_metadata.RDS",
+                            package = "mpbr"),
+   output_dir = getwd(),
+   gaf = file.path("data", "PlasmoDB-68_Pfalciparum3D7_Curated_GO.gaf.gz"),
+   gff = file.path("data", "PlasmoDB-68_Pfalciparum3D7.gff")
+ )
+ # calculate MAF
+ snpdata <- compute_maf(
+   snpdata = snpdata,
+   genotype = "GT",
+   include_het = FALSE,
+   name = NULL
+ )
+}
 }
