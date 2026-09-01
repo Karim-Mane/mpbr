@@ -34,7 +34,7 @@
 #'  )
 #' }
 remove_snps <- function(snpdata, snps = NULL,
-                      chrom = NULL, start = NULL, end = NULL) {
+                        chrom = NULL, start = NULL, end = NULL) {
   checkmate::assert_class(snpdata, "SNPdata", null.ok = FALSE)
   checkmate::assert_data_frame(snps, ncols = 2L, null.ok = TRUE)
   checkmate::assert_vector(chrom, min.len = 1L, any.missing = FALSE,
@@ -60,7 +60,7 @@ remove_snps <- function(snpdata, snps = NULL,
 
 #' Drops SNPs from a `SNPdata` object using their genomic coordinates
 #'
-#' @inheritParams drop_snps
+#' @inheritParams remove_snps
 #'
 #' @keywords internal
 #'
@@ -81,7 +81,7 @@ drop_snps_using_gc <- function(snpdata, snp_to_be_dropped) {
 
 #' Remove SNPs with a specified region of the genome.
 #'
-#' @inheritParams drop_snps
+#' @inheritParams remove_snps snpdata chrom start end
 #'
 #' @keywords internal
 #'

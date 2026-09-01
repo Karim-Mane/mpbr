@@ -6,6 +6,19 @@
 \usage{
 remove_region_from_snpdata(snpdata, chrom, start, end)
 }
+\arguments{
+\item{snpdata}{The input \if{html}{\out{<SNPdata>}} object}
+
+\item{chrom}{A vector of chromosome names containing the SNPs to be dropped.
+This is only used for filtering SNPs within specific regions of the
+genome.}
+
+\item{start}{A numeric vector of region's start positions of the region
+covering the SNPs to be discarded.}
+
+\item{end}{A numeric vector of region's end positions of the region covering
+the SNPs to be discarded.}
+}
 \description{
 Remove SNPs with a specified region of the genome.
 }
