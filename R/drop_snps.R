@@ -1,23 +1,42 @@
-#' Drop a of set SNPs from a `SNPdata` object
+#' Remove a set of SNPs from a <SNPdata> object
 #'
-#' @param snpdata The input `SNPdata` object
-#' @param snp_to_be_dropped A data frame with 2 columns: "Chrom" and "Pos".
-#' @param chrom The chromosome from which loci should be dropped
-#' @param start The starting position of the region to be discarded
-#' @param end The end position of the region to be discarded
+#' @param snpdata The input <SNPdata> object
+#' @param snps A data frame with 2 columns named as `Chrom` and `Pos`
+#' @param chrom A vector of chromosome names containing the SNPs to be dropped.
+#'    This is only used for filtering SNPs within specific regions of the
+#'    genome.
+#' @param start A numeric vector of region's start positions of the region
+#'    covering the SNPs to be discarded.
+#' @param end A numeric vector of region's end positions of the region covering
+#'    the SNPs to be discarded.
 #'
-#' @return A `SNPdata` object where the specified SNPs have been removed.
+#' @returns A <SNPdata> object where the specified SNPs have been removed.
 #'
-#' @details When 'snp_to_be_dropped' is not NULL (i.e. the genomic
-#'     coordinates of snps to be removed are in a data frame), then the rest of
-#'     the arguments can be ignored or set to NULL (chrom = NULL,
-#'     start = NULL, end = NULL)
+#' @details When the value for the `snps` argument is not NULL, then the rest of
+#'     the arguments will be ignored.
 #' @export
-#'
-drop_snps <- function(snpdata, snp_to_be_dropped = NULL,
+#' @examples
+#' \dontrun{
+#'  # create the SNPdata object
+#'  snpdata <- get_snpdata(
+#'    vcf_file = system.file("extdata", "test_data.vcf.gz", package = "mpbr"),
+#'    meta_file = system.file("extdata", "sample_metadata.RDS",
+#'                             package = "mpbr"),
+#'    output_dir = getwd(),
+#'    gaf = file.path("data", "PlasmoDB-68_Pfalciparum3D7_Curated_GO.gaf.gz"),
+#'    gff = file.path("data", "PlasmoDB-68_Pfalciparum3D7.gff")
+#'  )
+#'  # remove SNPs
+#'  idx_snps <- sample(1:nrow(snpdata[["details"]]), size = 5, replace = FALSE)
+#'  snpdata <- remove_snps(
+#'    snpdata = snpdata,
+#'    snps = snpdata[["details"]][idx_snps, c("Chrom", "Pos")]
+#'  )
+#' }
+remove_snps <- function(snpdata, snps = NULL,
                       chrom = NULL, start = NULL, end = NULL) {
   checkmate::assert_class(snpdata, "SNPdata", null.ok = FALSE)
-  checkmate::assert_data_frame(snp_to_be_dropped, ncols = 2L, null.ok = TRUE)
+  checkmate::assert_data_frame(snps, ncols = 2L, null.ok = TRUE)
   checkmate::assert_vector(chrom, min.len = 1L, any.missing = FALSE,
                            null.ok = TRUE)
   checkmate::assert_vector(start, min.len = 1L, any.missing = FALSE,
@@ -25,18 +44,18 @@ drop_snps <- function(snpdata, snp_to_be_dropped = NULL,
   checkmate::assert_vector(end, min.len = 1L, any.missing = FALSE,
                            null.ok = TRUE)
   
-  if (!is.null(snp_to_be_dropped)) {
-    snpdata <- drop_snps_using_gc(snpdata, snp_to_be_dropped)
+  if (!is.null(snps)) {
+    snpdata <- drop_snps_using_gc(snpdata, snps)
   } else {
     snpdata <- remove_region_from_snpdata(snpdata, chrom, start, end)
   }
   
-  message("Re-calculating the percent of missing SNPs for every sample from ", 
-          "the 'GT' matrix ...")
+  # re-calculating the percent of missing SNPs for every sample from the 'GT'
+  # matrix
   snpdata[["meta"]][["percentage_missing_sites"]] <-
     colSums(is.na(snpdata[["GT"]])) / nrow(snpdata[["GT"]])
   
-  snpdata
+  return(snpdata)
 }
 
 #' Drops SNPs from a `SNPdata` object using their genomic coordinates

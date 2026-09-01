@@ -6,11 +6,6 @@
 \usage{
 drop_snps_using_gc(snpdata, snp_to_be_dropped)
 }
-\arguments{
-\item{snpdata}{The input \code{SNPdata} object}
-
-\item{snp_to_be_dropped}{A data frame with 2 columns: "Chrom" and "Pos".}
-}
 \description{
 Drops SNPs from a \code{SNPdata} object using their genomic coordinates
 }
