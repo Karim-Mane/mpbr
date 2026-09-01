@@ -2,22 +2,17 @@
 % Please edit documentation in R/filter_snps_and_samples.R
 \name{filter}
 \alias{filter}
-\title{Filter a \code{SNPdata} object}
+\title{Filter a \if{html}{\out{<SNPdata>}} object}
 \usage{
 filter(
   snpdata,
-  min_qual = 1000L,
   max_missing_sites = 0.2,
   max_missing_samples = 0.2,
   maf_cutoff = 0.01
 )
 }
 \arguments{
-\item{snpdata}{An object of class \code{SNPdata}}
-
-\item{min_qual}{An integer that represents the The minimum call quality
-score. Loci with a quality score below this will be discarded.
-Default is 1000.}
+\item{snpdata}{An object of class \if{html}{\out{<SNPdata>}}}
 
 \item{max_missing_sites}{A numeric representing the maximum fraction of
 missing sites above which a sample should be dropped. Default is 0.2.}
@@ -29,10 +24,30 @@ missing samples above which a loci should be discarded. Default is 0.2.}
 Loci with a \code{MAF < maf_cutoff} will be discarded.}
 }
 \value{
-a filtered \code{SNPdata} object
+a filtered \if{html}{\out{<SNPdata>}} object
 }
 \description{
 SNPs and samples are filtered based on the user-specified thresholds. Both
 the \code{meta}, \code{details} and the different genotype tables will be affected
 depending on the filtration conditions.
+}
+\examples{
+\dontrun{
+ # create the SNPdata object
+ snpdata <- get_snpdata(
+   vcf_file = system.file("extdata", "test_data.vcf.gz", package = "mpbr"),
+   meta_file = system.file("extdata", "sample_metadata.RDS",
+                            package = "mpbr"),
+   output_dir = getwd(),
+   gaf = file.path("data", "PlasmoDB-68_Pfalciparum3D7_Curated_GO.gaf.gz"),
+   gff = file.path("data", "PlasmoDB-68_Pfalciparum3D7.gff")
+ )
+ # filter the SNPdata object
+ snpdata <- filter(
+   snpdata = snpdata,
+   max_missing_sites = 0.2,
+   max_missing_samples = 0.2,
+   maf_cutoff = 0.01
+ )
+}
 }
