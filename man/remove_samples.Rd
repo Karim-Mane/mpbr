@@ -26,9 +26,14 @@ Remove a set of samples from a \if{html}{\out{<SNPdata>}} object
    vcf_file = system.file("extdata", "test_data.vcf.gz", package = "mpbr"),
    meta_file = system.file("extdata", "sample_metadata.RDS",
                             package = "mpbr"),
-   output_dir = tempdir(),
+   output_dir = getwd(),
    gaf = file.path("data", "PlasmoDB-68_Pfalciparum3D7_Curated_GO.gaf.gz"),
    gff = file.path("data", "PlasmoDB-68_Pfalciparum3D7.gff")
+ )
+ # remove samples
+ snpdata <- remove_samples(
+   snpdata = snpdata,
+   samples = c("PA0007-C", "PA0008-C")
  )
 } 
 }

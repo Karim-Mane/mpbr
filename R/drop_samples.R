@@ -5,7 +5,7 @@
 #'    samples to be dropped from the provided <SNPdata> object. When the value
 #'    of this argument is a file, the column must be named as `sample`.
 #'
-#' @return A <SNPdata> object where the specified samples have been removed
+#' @returns A <SNPdata> object where the specified samples have been removed
 #'
 #' @export
 #' @examples
@@ -15,9 +15,14 @@
 #'    vcf_file = system.file("extdata", "test_data.vcf.gz", package = "mpbr"),
 #'    meta_file = system.file("extdata", "sample_metadata.RDS",
 #'                             package = "mpbr"),
-#'    output_dir = tempdir(),
+#'    output_dir = getwd(),
 #'    gaf = file.path("data", "PlasmoDB-68_Pfalciparum3D7_Curated_GO.gaf.gz"),
 #'    gff = file.path("data", "PlasmoDB-68_Pfalciparum3D7.gff")
+#'  )
+#'  # remove samples
+#'  snpdata <- remove_samples(
+#'    snpdata = snpdata,
+#'    samples = c("PA0007-C", "PA0008-C")
 #'  )
 #' } 
 remove_samples <- function(snpdata, samples) {
