@@ -61,10 +61,12 @@ filter <- function(snpdata,
   idx <- x[["percentage_missing_samples"]] <= max_missing_samples &
     x[["MAF"]] >= maf_cutoff
   if (sum(idx) == 0) {
-    cli::cli_abort(
-      x = "No SNP in the input <SNPdata> object has satisfied the specified \\\
-      filtering thresholds."
-    )
+    cli::cli_abort(c(
+      i = "No SNP in the input <SNPdata> object has satisfied the specified \\\
+      filtering thresholds.",
+      x = "SNPs filtering thresholds might be too high. Consider using less \\\
+      strict thresholds."
+    ))
   }
   if (sum(idx) < nrow(snpdata[["details"]])) {
     x <- x[idx, ]
@@ -80,10 +82,12 @@ filter <- function(snpdata,
   # filter the meta table
   idx <- snpdata[["meta"]][["percentage_missing_sites"]] <= max_missing_sites
   if (sum(idx) == 0) {
-    cli::cli_abort(
-      x = "No sample in input <SNPdata> object has satisfied the specified \\\
-      filtering thresholds."
-    )
+    cli::cli_abort(c(
+      i = "No sample in input <SNPdata> object has satisfied the specified \\\
+      filtering thresholds.",
+      x = "samples filtering thresholds might be too high. Consider using \\\
+      less strict thresholds."
+    ))
   }
   samples_to_be_dropped <- character()
   if (sum(idx) < nrow(snpdata[["meta"]])) {
