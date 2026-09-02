@@ -26,21 +26,18 @@ get_region_variants <- function(snpdata, regions) {
   details <- snpdata[["details"]]
   genomic_coordinates <- details |>
     dplyr::select(Chrom, Pos)
+  names(genomic_coordinates) <- c("chrom", "start")
+  genomic_coordinates[["end"]] <- genomic_coordinates[["start"]]
+  genomic_coordinates <- data.table::as.data.table(genomic_coordinates)
+  data.table::setkeyv(genomic_coordinates, c("chrom", "start", "end"))
   
   # read in the region file
   regions <- data.table::fread(regions)
-  
-  # prepare a data frame to find overlap between the genomic coordinates and the
-  # region annotation
-  pos_dt <- data.table::data.table(
-    start = genomic_coordinates[["Pos"]],
-    end = genomic_coordinates[["Pos"]]
-  )
+  data.table::setkeyv(regions, c("chrom", "start", "end"))
   
   # find the overlaps between the regions and the SNPs genomic coordinates
-  data.table::setkey(regions, start, end)
   result <- data.table::foverlaps(
-    pos_dt, regions, type = "within", nomatch = NULL
+    genomic_coordinates, regions, type = "within", nomatch = NULL
   )
   result <- result |>
     dplyr::select(chrom, i.start, gene_id, gene_name, gene_description)
