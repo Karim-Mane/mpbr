@@ -48,16 +48,16 @@ filter <- function(snpdata,
                             finite = TRUE, any.missing = FALSE, null.ok = FALSE,
                             len = 1L)
   # filter the details table and the genotype matrices
-  x <- snpdata[["details"]]
   fields <- names(snpdata)[!(names(snpdata) %in% c("meta", "details", "vcf"))]
   # calculate the MAF if it was not
-  if (!"MAF" %in% names(x)) {
+  if (!"MAF" %in% names(snpdata[["details"]])) {
     snpdata <- compute_maf(
       snpdata = snpdata,
       include_het = FALSE,
       genotype = "GT"
     )
   }
+  x <- snpdata[["details"]]
   idx <- x[["percentage_missing_samples"]] <= max_missing_samples &
     x[["MAF"]] >= maf_cutoff
   if (sum(idx) == 0) {
