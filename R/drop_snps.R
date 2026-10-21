@@ -124,15 +124,16 @@ drop_snps_using_gc <- function(snpdata, coordinates) {
 #' @keywords internal
 #'
 remove_region_from_snpdata <- function(snpdata, chrom, start, end) {
-  stopifnot("Please provide the 'chrom', 'start', 'end' of the region to drop" =
-              !is.null(chrom), !is.null(start), !is.null(end))
   idx <- which(
     snpdata[["details"]][["Chrom"]] == chrom &
       (snpdata[["details"]][["Pos"]] >= start &
          snpdata[["details"]][["Pos"]] <= end)
   )
-  stopifnot("There is no loci overlapping the specified region." =
-              length(idx) > 0L)
+  if (!length(idx)) {
+    cli::cli_abort(
+      "There is no SNP overlapping the specified region."
+    )
+  }
   meta <- snpdata[["meta"]]
   m <- which(names(snpdata) %in% c("meta", "vcf"))
   fields <- names(snpdata)[-m]
