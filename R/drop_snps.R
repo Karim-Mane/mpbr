@@ -62,7 +62,7 @@ remove_snps <- function(snpdata, coordinates = NULL,
 
 #' Drops SNPs belonging to the specified chromosome from a <SNPdata> object
 #'
-#' @inheritParams remove_snps
+#' @inheritParams remove_snps snpdata chrom
 #'
 #' @keywords internal
 #'
@@ -82,7 +82,7 @@ remove_chrom_from_snpdata <- function(snpdata, chrom) {
   for (field in fields) {
     snpdata[[field]] <- snpdata[[field]][-idx, ]
   }
-  snpdata[["meta"]]  <- meta
+  snpdata[["meta"]] <- meta
   
   # re-calculating the percent of missing SNPs for every sample from the 'GT'
   # matrix
@@ -93,22 +93,22 @@ remove_chrom_from_snpdata <- function(snpdata, chrom) {
 
 #' Drops SNPs from a <SNPdata> object using their genomic coordinates
 #'
-#' @inheritParams remove_snps
+#' @inheritParams remove_snps snpdata coordinates
 #'
 #' @keywords internal
 #'
-drop_snps_using_gc <- function(snpdata, snp_to_be_dropped) {
+drop_snps_using_gc <- function(snpdata, coordinates) {
   idx <- which(
-    snpdata[["details"]][["Chrom"]] %in% snp_to_be_dropped[["Chrom"]] &
-      snpdata[["details"]][["Pos"]] %in% snp_to_be_dropped[["Pos"]]
+    snpdata[["details"]][["Chrom"]] %in% coordinates[["Chrom"]] &
+      snpdata[["details"]][["Pos"]] %in% coordinates[["Pos"]]
   )
-  meta   <- snpdata[["meta"]]
-  m      <- which(names(snpdata) %in% c("meta", "vcf"))
+  meta <- snpdata[["meta"]]
+  m <- which(names(snpdata) %in% c("meta", "vcf"))
   fields <- names(snpdata)[-m]
   for (field in fields) {
     snpdata[[field]] <- snpdata[[field]][-idx, ]
   }
-  snpdata[["meta"]]  <- meta
+  snpdata[["meta"]] <- meta
   
   # re-calculating the percent of missing SNPs for every sample from the 'GT'
   # matrix
@@ -117,7 +117,7 @@ drop_snps_using_gc <- function(snpdata, snp_to_be_dropped) {
   return(snpdata)
 }
 
-#' Remove SNPs with a specified region of the genome.
+#' Remove SNPs within a specified region of the genome.
 #'
 #' @inheritParams remove_snps snpdata chrom start end
 #'
@@ -133,13 +133,13 @@ remove_region_from_snpdata <- function(snpdata, chrom, start, end) {
   )
   stopifnot("There is no loci overlapping the specified region." =
               length(idx) > 0L)
-  meta   <- snpdata[["meta"]]
-  m      <- which(names(snpdata) %in% c("meta", "vcf"))
+  meta <- snpdata[["meta"]]
+  m <- which(names(snpdata) %in% c("meta", "vcf"))
   fields <- names(snpdata)[-m]
   for (field in fields) {
     snpdata[[field]] <- snpdata[[field]][-idx, ]
   }
-  snpdata[["meta"]]  <- meta
+  snpdata[["meta"]] <- meta
   
   # re-calculating the percent of missing SNPs for every sample from the 'GT'
   # matrix

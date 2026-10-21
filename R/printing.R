@@ -1,9 +1,9 @@
-#' Print the `SNPdata` object
+#' Print information about the <SNPdata> object
 #'
-#' @param x An object of class `SNPdata`
+#' @param x An object of class <SNPdata>
 #' @param ... further arguments passed to or from other methods.
 #'
-#' @returns prints the structure of the `SNPdata` object
+#' @returns prints out the structure of the <SNPdata> object on the console
 #'
 #' @export
 #'
