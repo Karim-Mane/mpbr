@@ -2,7 +2,7 @@
 % Please edit documentation in R/drop_snps.R
 \name{drop_snps_using_gc}
 \alias{drop_snps_using_gc}
-\title{Drops SNPs from a \code{SNPdata} object using their genomic coordinates}
+\title{Drops SNPs from a \if{html}{\out{<SNPdata>}} object using their genomic coordinates}
 \usage{
 drop_snps_using_gc(snpdata, snp_to_be_dropped)
 }
@@ -10,6 +10,6 @@ drop_snps_using_gc(snpdata, snp_to_be_dropped)
 \item{snpdata}{The input \if{html}{\out{<SNPdata>}} object}
 }
 \description{
-Drops SNPs from a \code{SNPdata} object using their genomic coordinates
+Drops SNPs from a \if{html}{\out{<SNPdata>}} object using their genomic coordinates
 }
 \keyword{internal}

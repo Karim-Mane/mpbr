@@ -4,12 +4,19 @@
 \alias{remove_snps}
 \title{Remove a set of SNPs from a \if{html}{\out{<SNPdata>}} object}
 \usage{
-remove_snps(snpdata, snps = NULL, chrom = NULL, start = NULL, end = NULL)
+remove_snps(
+  snpdata,
+  coordinates = NULL,
+  chrom = NULL,
+  start = NULL,
+  end = NULL
+)
 }
 \arguments{
 \item{snpdata}{The input \if{html}{\out{<SNPdata>}} object}
 
-\item{snps}{A data frame with 2 columns named as \code{Chrom} and \code{Pos}}
+\item{coordinates}{A 2 columns data frame with the genomic coordinates of
+SNPs to filter out}
 
 \item{chrom}{A vector of chromosome names containing the SNPs to be dropped.
 This is only used for filtering SNPs within specific regions of the
@@ -22,7 +29,8 @@ covering the SNPs to be discarded.}
 the SNPs to be discarded.}
 }
 \value{
-A \if{html}{\out{<SNPdata>}} object where the specified SNPs have been removed.
+A \if{html}{\out{<SNPdata>}} object where the specified SNPs, regions, or chromosomes
+have been removed.
 }
 \description{
 Remove a set of SNPs from a \if{html}{\out{<SNPdata>}} object

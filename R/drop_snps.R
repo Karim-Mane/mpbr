@@ -1,7 +1,8 @@
 #' Remove a set of SNPs from a <SNPdata> object
 #'
 #' @param snpdata The input <SNPdata> object
-#' @param snps A data frame with 2 columns named as `Chrom` and `Pos`
+#' @param coordinates A 2 columns data frame with the genomic coordinates of
+#'    SNPs to filter out
 #' @param chrom A vector of chromosome names containing the SNPs to be dropped.
 #'    This is only used for filtering SNPs within specific regions of the
 #'    genome.
@@ -10,7 +11,8 @@
 #' @param end A numeric vector of region's end positions of the region covering
 #'    the SNPs to be discarded.
 #'
-#' @returns A <SNPdata> object where the specified SNPs have been removed.
+#' @returns A <SNPdata> object where the specified SNPs, regions, or chromosomes
+#'    have been removed.
 #'
 #' @details When the value for the `snps` argument is not NULL, then the rest of
 #'     the arguments will be ignored.
@@ -33,32 +35,63 @@
 #'    snps = snpdata[["details"]][idx_snps, c("Chrom", "Pos")]
 #'  )
 #' }
-remove_snps <- function(snpdata, snps = NULL,
+remove_snps <- function(snpdata, coordinates = NULL,
                         chrom = NULL, start = NULL, end = NULL) {
   checkmate::assert_class(snpdata, "SNPdata", null.ok = FALSE)
-  checkmate::assert_data_frame(snps, ncols = 2L, null.ok = TRUE)
+  checkmate::assert_data_frame(coordinates, ncols = 2L, null.ok = TRUE)
   checkmate::assert_vector(chrom, min.len = 1L, any.missing = FALSE,
                            null.ok = TRUE)
   checkmate::assert_vector(start, min.len = 1L, any.missing = FALSE,
                            null.ok = TRUE)
   checkmate::assert_vector(end, min.len = 1L, any.missing = FALSE,
                            null.ok = TRUE)
-  
-  if (!is.null(snps)) {
-    snpdata <- drop_snps_using_gc(snpdata, snps)
+  # filter SNPs based on provided genomic coordinates
+  if (!is.null(coordinates)) {
+    snpdata <- drop_snps_using_gc(snpdata, coordinates)
+    return(snpdata)
+  }
+  # filter out an entire chromosome
+  if (!is.null(chrom) && all(is.null(c(start, end)))) {
+    snpdata <- remove_chrom_from_snpdata(snpdata, chrom)
   } else {
     snpdata <- remove_region_from_snpdata(snpdata, chrom, start, end)
   }
+  
+  return(snpdata)
+}
+
+#' Drops SNPs belonging to the specified chromosome from a <SNPdata> object
+#'
+#' @inheritParams remove_snps
+#'
+#' @keywords internal
+#'
+remove_chrom_from_snpdata <- function(snpdata, chrom) {
+  if (!all(chrom %in% snpdata[["details"]][["Chrom"]])) {
+    cli::cli_abort(c(
+      i = "Specified {qty(chrom)} chromosome name{?s} not found in the input \\\
+      {.cls SNPdata} object.",
+      x = "Chromosome name must be one of: \\\
+      {.val {toString(unique(snpdata[[\"details\"]][[\"Chrom\"]]))}}."
+    ))
+  }
+  idx <- which(snpdata[["details"]][["Chrom"]] %in% chrom)
+  meta <- snpdata[["meta"]]
+  m <- which(names(snpdata) %in% c("meta", "vcf"))
+  fields <- names(snpdata)[-m]
+  for (field in fields) {
+    snpdata[[field]] <- snpdata[[field]][-idx, ]
+  }
+  snpdata[["meta"]]  <- meta
   
   # re-calculating the percent of missing SNPs for every sample from the 'GT'
   # matrix
   snpdata[["meta"]][["percentage_missing_sites"]] <-
     colSums(is.na(snpdata[["GT"]])) / nrow(snpdata[["GT"]])
-  
   return(snpdata)
 }
 
-#' Drops SNPs from a `SNPdata` object using their genomic coordinates
+#' Drops SNPs from a <SNPdata> object using their genomic coordinates
 #'
 #' @inheritParams remove_snps
 #'
@@ -76,7 +109,12 @@ drop_snps_using_gc <- function(snpdata, snp_to_be_dropped) {
     snpdata[[field]] <- snpdata[[field]][-idx, ]
   }
   snpdata[["meta"]]  <- meta
-  snpdata
+  
+  # re-calculating the percent of missing SNPs for every sample from the 'GT'
+  # matrix
+  snpdata[["meta"]][["percentage_missing_sites"]] <-
+    colSums(is.na(snpdata[["GT"]])) / nrow(snpdata[["GT"]])
+  return(snpdata)
 }
 
 #' Remove SNPs with a specified region of the genome.
@@ -103,5 +141,10 @@ remove_region_from_snpdata <- function(snpdata, chrom, start, end) {
   }
   snpdata[["meta"]]  <- meta
   
-  snpdata
+  # re-calculating the percent of missing SNPs for every sample from the 'GT'
+  # matrix
+  snpdata[["meta"]][["percentage_missing_sites"]] <-
+    colSums(is.na(snpdata[["GT"]])) / nrow(snpdata[["GT"]])
+  
+  return(snpdata)
 }
