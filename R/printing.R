@@ -9,18 +9,17 @@
 #'
 print.SNPdata <- function(x, ...) {
   checkmate::assert_class(x, "SNPdata", null.ok = FALSE)
-  message("metadata...")
+  cli::cli_alert_info("sample metadata")
   print(utils::head(x[["meta"]]))
-  message("\ndetails on genomic coordinates...")
+  cli::cli_alert_info("\nSNPs genomic coordinates and annotations")
   print(utils::head(x[["details"]]))
-  message(sprintf("\nData contains: %d samples for %d snp loci",
-                  dim(x[["GT"]])[[2L]],
-                  dim(x[["GT"]])[[1L]]))
-  message(sprintf("\nData is generated from: %s", x[["vcf"]]))
-  
-  # make use of the following:
-  # cli::cat_line("This is ", "a ", "line of text.", col = "red")
-  # cli::cat_bullet(letters[1:5])
-  # cli::cat_bullet(letters[1:5], bullet = "tick", bullet_col = "green")
-  # cli::cat_rule()
+  cli::cli_inform(c(
+    "*" = "Number of samples: {dim(x[[\"GT\"]])[[2]]}",
+    "*" = "Number of SNPs: {dim(x[[\"GT\"]])[[1]]}",
+    "*" = "Input VCF file: {x[[\"vcf\"]]}"
+  ))
+  # message(sprintf("\nData contains: %d samples for %d snp loci",
+  #                 dim(x[["GT"]])[[2L]],
+  #                 dim(x[["GT"]])[[1L]]))
+  # message(sprintf("\nData is generated from: %s", x[["vcf"]]))
 }
