@@ -14,12 +14,8 @@ print.SNPdata <- function(x, ...) {
   cli::cli_alert_info("\nSNPs genomic coordinates and annotations")
   print(utils::head(x[["details"]]))
   cli::cli_inform(c(
-    "*" = "Number of samples: {dim(x[[\"GT\"]])[[2]]}",
-    "*" = "Number of SNPs: {dim(x[[\"GT\"]])[[1]]}",
-    "*" = "Input VCF file: {x[[\"vcf\"]]}"
+    "*" = "\nNumber of samples: {.val {dim(x[[\"GT\"]])[[2]]}}",
+    "*" = "Number of SNPs: {.val {dim(x[[\"GT\"]])[[1]]}}",
+    "*" = "Input VCF file: {.file {x[[\"vcf\"]]}}"
   ))
-  # message(sprintf("\nData contains: %d samples for %d snp loci",
-  #                 dim(x[["GT"]])[[2L]],
-  #                 dim(x[["GT"]])[[1L]]))
-  # message(sprintf("\nData is generated from: %s", x[["vcf"]]))
 }
