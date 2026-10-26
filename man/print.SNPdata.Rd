@@ -2,18 +2,18 @@
 % Please edit documentation in R/printing.R
 \name{print.SNPdata}
 \alias{print.SNPdata}
-\title{Print the \code{SNPdata} object}
+\title{Print information about the \if{html}{\out{<SNPdata>}} object}
 \usage{
 \method{print}{SNPdata}(x, ...)
 }
 \arguments{
-\item{x}{An object of class \code{SNPdata}}
+\item{x}{An object of class \if{html}{\out{<SNPdata>}}}
 
 \item{...}{further arguments passed to or from other methods.}
 }
 \value{
-prints the structure of the \code{SNPdata} object
+prints out the structure of the \if{html}{\out{<SNPdata>}} object on the console
 }
 \description{
-Print the \code{SNPdata} object
+Print information about the \if{html}{\out{<SNPdata>}} object
 }

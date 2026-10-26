@@ -2,7 +2,7 @@
 % Please edit documentation in R/drop_snps.R
 \name{remove_region_from_snpdata}
 \alias{remove_region_from_snpdata}
-\title{Remove SNPs with a specified region of the genome.}
+\title{Remove SNPs within a specified region of the genome.}
 \usage{
 remove_region_from_snpdata(snpdata, chrom, start, end)
 }
@@ -20,6 +20,6 @@ covering the SNPs to be discarded.}
 the SNPs to be discarded.}
 }
 \description{
-Remove SNPs with a specified region of the genome.
+Remove SNPs within a specified region of the genome.
 }
 \keyword{internal}
