@@ -37,7 +37,7 @@ call file (VCF).
     skip = "#CHROM",
     header = TRUE,
     sep = "\t",
-    nThread = nthreads
+    nThread = 5
   )
   # extract genotype matrix
   genotypes <- extract_genotype(

@@ -25,7 +25,7 @@
 #'     skip = "#CHROM",
 #'     header = TRUE,
 #'     sep = "\t",
-#'     nThread = nthreads
+#'     nThread = 5
 #'   )
 #'   # extract genotype matrix
 #'   genotypes <- extract_genotype(
@@ -54,9 +54,13 @@ extract_genotype <- function(vcf_data, which = "GT", nthreads) {
   idx <- c(3, 6, 7, 8, 9)
   idx_genotype_data <- 5
   genotype <- "genotypes"
+  regex1 <- ":.*" # keep text before first ":"
+  regex2 <- ""
   if (which == "AD") {
     idx <- 3:9
     idx_genotype_data <- 3
+    regex1 <- "^[^:]*:([^:]*):.*$" # keep text between first ":" and second ":"
+    regex2 <- "\\1"
   }
   vcf_data <- subset(vcf_data, select = -idx)
   
@@ -64,7 +68,7 @@ extract_genotype <- function(vcf_data, which = "GT", nthreads) {
   # is the first element, but the allelic depth (AD) is the second element
   get_gt_field <- function(x) {
     x <- as.matrix(x)
-    sub(":.*", "", x, perl = TRUE) # keep text before first ":"
+    sub(regex1, regex2, x, perl = TRUE)
   }
   genotypes <- get_gt_field(vcf_data[, idx_genotype_data:length(vcf_data)])
   genotypes <- cbind(vcf_data[, 1:(idx_genotype_data - 1)], genotypes)
