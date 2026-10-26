@@ -2,6 +2,7 @@
 
 S3method(print,SNPdata)
 export(compute_maf)
+export(compute_wsmaf)
 export(extract_annotation)
 export(extract_genotype)
 export(filter)
