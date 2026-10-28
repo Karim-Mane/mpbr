@@ -1,7 +1,7 @@
-#' Create A `SNPdata` object
+#' Create A <SNPdata> object
 #'
 #' The function generates the input object type require to use functions in
-#' the {mpbr} package.
+#' the `{mpbr}` package.
 #'
 #' @param vcf_file A character with the path to the input VCF file (required)
 #' @param meta_file A character with the path to the sample metadata file

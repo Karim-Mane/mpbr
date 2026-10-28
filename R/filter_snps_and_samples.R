@@ -47,19 +47,13 @@ filter <- function(snpdata,
   checkmate::assert_numeric(maf_cutoff, lower = 0L, upper = 1L,
                             finite = TRUE, any.missing = FALSE, null.ok = FALSE,
                             len = 1L)
+  # save input number of variants ans samples
+  n_snps_samples <- dim(snpdata[["GT"]])
+  
   # filter the details table and the genotype matrices
   fields <- names(snpdata)[!(names(snpdata) %in% c("meta", "details", "vcf"))]
-  # calculate the MAF if it was not
-  if (!"MAF" %in% names(snpdata[["details"]])) {
-    snpdata <- compute_maf(
-      snpdata = snpdata,
-      include_het = FALSE,
-      genotype = "GT"
-    )
-  }
   x <- snpdata[["details"]]
-  idx <- x[["percentage_missing_samples"]] <= max_missing_samples &
-    x[["MAF"]] >= maf_cutoff
+  idx <- x[["percentage_missing_samples"]] <= max_missing_samples
   if (sum(idx) == 0) {
     cli::cli_abort(c(
       i = "No SNP in the input <SNPdata> object has satisfied the specified \\\
@@ -81,14 +75,6 @@ filter <- function(snpdata,
   
   # filter the meta table
   idx <- snpdata[["meta"]][["percentage_missing_sites"]] <= max_missing_sites
-  if (sum(idx) == 0) {
-    cli::cli_abort(c(
-      i = "No sample in input <SNPdata> object has satisfied the specified \\\
-      filtering thresholds.",
-      x = "samples filtering thresholds might be too high. Consider using \\\
-      less strict thresholds."
-    ))
-  }
   samples_to_be_dropped <- character()
   if (sum(idx) < nrow(snpdata[["meta"]])) {
     samples_to_be_dropped <- snpdata[["meta"]][["sample"]][!idx]
@@ -116,13 +102,29 @@ filter <- function(snpdata,
     # recalculate the percent of missing genotypes for every SNP
     snpdata[["details"]][["percentage_missing_samples"]] <-
       rowSums(is.na(snpdata[["GT"]])) / ncol(snpdata[["GT"]])
-    
-    # recalculate the MAF
-    snpdata <- compute_maf(
-      snpdata,
-      include_het = FALSE,
-      genotype    = "GT"
-    )
+  }
+  
+  # filter out SNPs based on MAF
+  snpdata <- compute_maf(
+    snpdata = snpdata,
+    include_het = FALSE,
+    genotype = "GT"
+  )
+  x <- snpdata[["details"]]
+  idx <- x[["MAF"]] <= maf_cutoff
+  if (sum(idx) < nrow(x)) {
+    x <- x[idx, ]
+    snpdata[["details"]] <- x
+    for (field in fields) {
+      snpdata[[field]] <- snpdata[[field]][idx, ]
+    }
+  }
+  
+  if (n_snps_samples == dim(snpdata[["GT"]])) {
+    cli::cli_abort(c(
+      i = "Consider increasing the filtration thresholds.",
+      x = "No variants or samples has been filtered out."
+    ))
   }
   
   # recalculate the percent of missing data per sample

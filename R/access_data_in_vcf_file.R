@@ -16,7 +16,7 @@
 #'    SNPs genomic coordinates and their associated alleles (if which = "GT").
 #' @export
 #' @importFrom data.table %like%
-#' @author Banky
+#' @author Karim, Banky
 #' @examples
 #' \dontrun{
 #'   # read in the VCF file
