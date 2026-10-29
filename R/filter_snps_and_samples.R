@@ -111,7 +111,7 @@ filter <- function(snpdata,
     genotype = "GT"
   )
   x <- snpdata[["details"]]
-  idx <- x[["MAF"]] <= maf_cutoff
+  idx <- x[["MAF"]] >= maf_cutoff
   if (sum(idx) < nrow(x)) {
     x <- x[idx, ]
     snpdata[["details"]] <- x
