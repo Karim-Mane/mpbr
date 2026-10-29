@@ -120,7 +120,7 @@ filter <- function(snpdata,
     }
   }
   
-  if (n_snps_samples == dim(snpdata[["GT"]])) {
+  if (identical(n_snps_samples, dim(snpdata[["GT"]]))) {
     cli::cli_abort(c(
       i = "Consider increasing the filtration thresholds.",
       x = "No variants or samples has been filtered out."
